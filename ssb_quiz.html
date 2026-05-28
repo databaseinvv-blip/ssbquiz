@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSB Capital Readiness Test</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0ede8;
+    --muted: #888;
+    --muted2: #555;
+    --blue: #4a9eff;
+    --green: #5cb85c;
+    --purple: #a78bfa;
+    --gold: #f0c060;
+    --red: #ff6b6b;
+    --amber: #f5a623;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 80px;
+  }
+
+  .wrap { width: 100%; max-width: 680px; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── INTRO ── */
+  .intro-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 24px;
+  }
+  .intro-eyebrow::before {
+    content: ''; width: 24px; height: 1px; background: var(--gold);
+  }
+
+  .intro-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 6vw, 52px);
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .intro-title span {
+    display: block; color: var(--muted); font-size: .55em;
+    font-family: 'DM Sans', sans-serif; font-weight: 300;
+    margin-top: 8px; letter-spacing: .01em;
+  }
+
+  .intro-desc {
+    font-size: 15px; color: var(--muted); line-height: 1.7;
+    margin: 24px 0; max-width: 520px;
+  }
+
+  .pillars-row {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 10px; margin: 28px 0;
+  }
+
+  .pillar-card {
+    border: .5px solid var(--border);
+    border-radius: 12px; padding: 14px;
+    background: var(--surface);
+  }
+
+  .pillar-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .1em; margin-bottom: 8px;
+  }
+
+  .pillar-dims {
+    font-size: 12px; color: var(--muted); line-height: 1.8;
+  }
+
+  .note-box {
+    border: .5px solid var(--border);
+    border-left: 2px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    background: rgba(240,192,96,.04);
+    font-size: 13px; color: var(--muted); line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 28px;
+    border: .5px solid var(--border2);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+
+  .btn:hover { background: var(--surface2); border-color: rgba(255,255,255,.3); }
+
+  .btn.primary {
+    background: var(--gold);
+    color: #111;
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+
+  .btn.primary:hover { background: #e8b450; border-color: #e8b450; }
+  .btn.ghost { color: var(--muted); font-size: 13px; padding: 10px 16px; }
+
+  /* ── QUIZ ── */
+  .q-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .q-counter {
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pct-label { font-size: 12px; color: var(--muted); }
+
+  .progress-track {
+    height: 2px; background: var(--surface2);
+    border-radius: 2px; margin-bottom: 36px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 2px; background: var(--gold);
+    border-radius: 2px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .q-text {
+    font-size: 20px; font-weight: 500; line-height: 1.5;
+    color: var(--text); margin-bottom: 6px;
+  }
+
+  .q-sub {
+    font-size: 13px; color: var(--muted); line-height: 1.5;
+    margin-bottom: 28px; min-height: 20px;
+  }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+
+  .choice {
+    border: .5px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, transform .1s;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+
+  .choice:hover {
+    border-color: var(--border2);
+    background: var(--surface);
+  }
+
+  .choice.selected {
+    border-color: var(--gold);
+    background: rgba(240,192,96,.06);
+  }
+
+  .choice-letter {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: .5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: var(--muted);
+    flex-shrink: 0; margin-top: 1px;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+
+  .choice.selected .choice-letter {
+    background: var(--gold); border-color: var(--gold); color: #111;
+  }
+
+  .choice-body {}
+  .choice-zh { font-size: 15px; color: var(--text); line-height: 1.5; }
+  .choice-en { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .nav-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 28px;
+  }
+
+  .shake { animation: shake .35s ease; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    60%{transform:translateX(6px)}
+  }
+
+  /* ── GATE ── */
+  .gate-wrap {
+    max-width: 480px; margin: 0 auto; padding-top: 20px;
+  }
+
+  .gate-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px; color: var(--text); margin-bottom: 8px;
+  }
+
+  .gate-sub {
+    font-size: 14px; color: var(--muted); line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  .form-label {
+    display: block; font-size: 12px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%; padding: 13px 16px;
+    background: var(--surface);
+    border: .5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .form-input:focus { border-color: var(--gold); }
+  .form-input::placeholder { color: var(--muted2); }
+
+  .form-note {
+    font-size: 12px; color: var(--muted2); margin-top: 20px;
+    line-height: 1.6;
+  }
+
+  .error-msg {
+    font-size: 12px; color: var(--red); margin-top: 6px;
+    display: none;
+  }
+
+  /* ── RESULT ── */
+  .result-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 20px;
+  }
+  .result-eyebrow::before {
+    content: ''; width: 24px; height: 1px; background: var(--gold);
+  }
+
+  .result-arch {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 5vw, 40px); line-height: 1.2;
+    color: var(--text); margin-bottom: 6px;
+  }
+
+  .result-arch-en { color: var(--gold); }
+
+  .result-desc {
+    font-size: 15px; color: var(--muted); line-height: 1.7;
+    margin-bottom: 32px; max-width: 560px;
+  }
+
+  .hex-section { margin-bottom: 36px; }
+  .hex-center { display: flex; flex-direction: column; align-items: center; }
+
+  .hex-legend {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    justify-content: center; margin-top: 16px;
+  }
+
+  .leg-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--muted);
+  }
+
+  .leg-swatch { width: 28px; height: 2.5px; border-radius: 2px; }
+
+  .pillar-sections { margin-bottom: 28px; }
+
+  .pillar-section { margin-bottom: 20px; }
+
+  .pillar-header {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .1em; margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: .5px solid var(--border);
+  }
+
+  .dims-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .dim-card {
+    border: .5px solid var(--border);
+    border-radius: 10px; padding: 14px;
+    background: var(--surface);
+  }
+
+  .dim-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+
+  .dim-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .dim-name-en { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .dim-badge {
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 20px; letter-spacing: .06em; white-space: nowrap;
+  }
+
+  .badge-high { background: rgba(92,184,92,.15); color: #7de07d; }
+  .badge-mid { background: rgba(245,166,35,.15); color: var(--amber); }
+  .badge-low { background: rgba(255,107,107,.15); color: var(--red); }
+
+  .dim-bar-wrap { height: 3px; background: var(--surface2); border-radius: 2px; margin: 8px 0 6px; }
+  .dim-bar { height: 3px; border-radius: 2px; transition: width 1s ease; }
+  .dim-score { font-size: 20px; font-weight: 600; color: var(--text); }
+  .dim-note { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+
+  .move-box {
+    border: .5px solid rgba(240,192,96,.3);
+    border-left: 2px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    padding: 18px 20px;
+    background: rgba(240,192,96,.04);
+    margin-bottom: 24px;
+  }
+
+  .move-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--gold); font-weight: 600; margin-bottom: 8px;
+  }
+
+  .move-text { font-size: 15px; color: var(--text); line-height: 1.7; }
+
+  .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+  .divider {
+    height: .5px; background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* greeting */
+  .greeting { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+  /* pattern badge */
+  .pattern-badge {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; letter-spacing: .15em;
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(240,192,96,.12);
+    border: .5px solid rgba(240,192,96,.3);
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  canvas { display: block; }
+
+  @media (max-width: 480px) {
+    .pillars-row { grid-template-columns: 1fr; }
+    .dims-grid { grid-template-columns: 1fr; }
+    .hex-legend { gap: 12px; }
+    body { padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ══ INTRO ══ -->
+  <div id="s-intro" class="screen active">
+    <div class="intro-eyebrow">SSB Capital Readiness Test</div>
+    <h1 class="intro-title">
+      你的生意，值多少钱？
+      <span>How much is your business really worth?</span>
+    </h1>
+    <p class="intro-desc">
+      从100道题中随机抽取30题，六个维度，测出你生意在资本眼中的真实形状。<br>
+      30 questions drawn from a bank of 100. Every test is unique.
+    </p>
+    <div class="pillars-row">
+      <div class="pillar-card">
+        <div class="pillar-label" style="color:#4a9eff">Scalability 可复制</div>
+        <div class="pillar-dims"><div>S1 系统化</div><div>S2 复制性</div></div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-label" style="color:#5cb85c">Sustainability 可持续</div>
+        <div class="pillar-dims"><div>S3 护城河</div><div>S4 财务韧性</div></div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-label" style="color:#a78bfa">Brand Influence 品牌</div>
+        <div class="pillar-dims"><div>S5 话语权</div><div>S6 品牌独立</div></div>
+      </div>
+    </div>
+    <div class="note-box">
+      题目顺序随机，不显示维度标签。选最诚实反映你生意现状的答案，不是你希望它是什么样子。<br>
+      <span style="font-size:12px;color:#555">Questions are randomised with no category labels. Choose what's true, not what sounds good.</span>
+    </div>
+    <button class="btn primary" onclick="startQuiz()">
+      开始测试 &nbsp;→
+    </button>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="s-quiz" class="screen">
+    <div class="q-header">
+      <span class="q-counter">题目 <span id="qnum">1</span> / <span id="qtotal">30</span></span>
+      <span class="pct-label" id="qpct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="prog" style="width:3%"></div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="q-sub" id="q-sub"></div>
+    <div class="choices" id="choices"></div>
+    <div class="nav-row">
+      <button class="btn ghost" id="btn-prev" onclick="prevQ()" disabled>← 上一题</button>
+      <button class="btn primary" id="btn-next" onclick="nextQ()">下一题 →</button>
+    </div>
+  </div>
+
+  <!-- ══ GATE ══ -->
+  <div id="s-gate" class="screen">
+    <div class="gate-wrap">
+      <div class="intro-eyebrow" style="margin-bottom:20px">测试完成 Test Complete</div>
+      <h2 class="gate-title">查看你的结果</h2>
+      <p class="gate-sub">
+        你的 SSB 六边形档案已经生成。填写以下资料即可查看完整分析报告。<br>
+        <span style="font-size:12px;color:#444">Your SSB hexagon profile is ready. Enter your details to unlock the full report.</span>
+      </p>
+      <div class="form-group">
+        <label class="form-label">姓名 / Name</label>
+        <input type="text" id="inp-name" class="form-input" placeholder="你的名字 Your name">
+        <div class="error-msg" id="err-name">请输入姓名 / Please enter your name</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">联系电话 / Contact Number</label>
+        <input type="tel" id="inp-phone" class="form-input" placeholder="+60 12-345 6789">
+        <div class="error-msg" id="err-phone">请输入有效电话号码 / Please enter a valid number</div>
+      </div>
+      <button class="btn primary" style="width:100%;justify-content:center;margin-top:8px" onclick="unlockResult()">
+        查看我的结果 View My Results &nbsp;→
+      </button>
+      <p class="form-note">
+        📌 你的资料仅用于发送报告，不会用于其他用途。<br>
+        Your details are only used to send your report and will not be shared.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ RESULT ══ -->
+  <div id="s-result" class="screen">
+    <div class="greeting" id="r-greeting"></div>
+    <div class="result-eyebrow">你的 SSB 档案 / Your SSB Profile</div>
+    <div class="pattern-badge" id="r-pattern"></div>
+    <h2 class="result-arch" id="r-arch"></h2>
+    <p class="result-desc" id="r-desc"></p>
+
+    <div class="hex-section">
+      <div class="hex-center">
+        <canvas id="hexC" width="340" height="340" role="img" aria-label="Three-layer SSB hexagon radar chart"></canvas>
+        <div class="hex-legend">
+          <div class="leg-item"><div class="leg-swatch" style="background:#4a9eff"></div>Scalability (S1+S2)</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#5cb85c"></div>Sustainability (S3+S4)</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#a78bfa"></div>Brand Influence (S5+S6)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pillar-sections">
+      <div class="pillar-section">
+        <div class="pillar-header" style="color:#4a9eff">Scalability 可复制性</div>
+        <div class="dims-grid" id="dims-s"></div>
+      </div>
+      <div class="pillar-section">
+        <div class="pillar-header" style="color:#5cb85c">Sustainability 可持续性</div>
+        <div class="dims-grid" id="dims-su"></div>
+      </div>
+      <div class="pillar-section">
+        <div class="pillar-header" style="color:#a78bfa">Brand Influence 品牌影响力</div>
+        <div class="dims-grid" id="dims-b"></div>
+      </div>
+    </div>
+
+    <div class="move-box">
+      <div class="move-label">最关键的一步 / The One Next Move</div>
+      <div class="move-text" id="r-move"></div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn ghost" onclick="restartQuiz()">↺ 重新测试 Restart</button>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+const BANK=[
+  {d:0,zh:"老板不在，日常运营怎样？",en:"Daily ops when you're away?",c:[{zh:"照常运行，员工知道该做什么",en:"Runs normally, staff know what to do",s:3},{zh:"能撑，但会有些混乱",en:"Survives but gets messy",s:2},{zh:"明显吃力",en:"Struggles noticeably",s:1},{zh:"很可能出问题",en:"Likely breaks down",s:0}]},
+  {d:0,zh:"你的岗位职责有书面文件吗？",en:"Are role responsibilities documented?",c:[{zh:"全部文件齐全，员工在执行",en:"Fully documented and followed",s:3},{zh:"部分有，核心岗位没有",en:"Partial — core roles missing",s:1},{zh:"基本没有",en:"Mostly no",s:0}]},
+  {d:0,zh:"新员工上手需要多久才能独立工作？",en:"How long for a new hire to work independently?",c:[{zh:"1-2周，有清晰的培训流程",en:"1–2 weeks with clear onboarding",s:3},{zh:"1-2个月，靠老员工带",en:"1–2 months via shadowing",s:2},{zh:"3个月以上，很多靠感觉",en:"3+ months, mostly by feel",s:0}]},
+  {d:0,zh:"你的业务如果系统崩溃一天，损失是？",en:"If your systems went down for a day, impact is?",c:[{zh:"有备份流程，能正常运作",en:"Backup processes exist, ops continue",s:3},{zh:"明显放缓但不停止",en:"Noticeably slower but doesn't stop",s:2},{zh:"基本瘫痪",en:"Basically paralysed",s:0}]},
+  {d:0,zh:"你的员工能在没有你的情况下处理客户投诉吗？",en:"Can staff handle complaints without you?",c:[{zh:"可以，有明确的处理流程",en:"Yes, there's a clear process",s:3},{zh:"简单的可以，复杂的要找我",en:"Simple ones yes, complex need me",s:2},{zh:"基本都要找我",en:"Almost everything comes to me",s:0}]},
+  {d:0,zh:"你上次更新内部操作手册是什么时候？",en:"When did you last update your operations manual?",c:[{zh:"3个月内",en:"Within 3 months",s:3},{zh:"半年到一年前",en:"6–12 months ago",s:2},{zh:"从来没有过",en:"Never had one",s:0}]},
+  {d:0,zh:"你的财务报表是每月自动生成的吗？",en:"Do financial reports generate automatically each month?",c:[{zh:"是，系统自动跑",en:"Yes, system generates them",s:3},{zh:"半自动，还需要人工整理",en:"Semi-auto, needs manual work",s:2},{zh:"全靠手工",en:"Fully manual",s:0}]},
+  {d:0,zh:"公司日常决策中，有多少比例需要你亲自拍板？",en:"What % of daily decisions require your personal approval?",c:[{zh:"不到20%，团队有授权",en:"Under 20%, team is empowered",s:3},{zh:"约50%",en:"Around 50%",s:2},{zh:"超过70%",en:"Over 70%",s:0}]},
+  {d:0,zh:"如果你生病住院一个月，谁来做你现在的工作？",en:"If hospitalised for a month, who does your job?",c:[{zh:"有明确的代理人，已经培训好",en:"Clear deputy exists, already trained",s:3},{zh:"团队会分担，但会很吃力",en:"Team would cover but struggle",s:2},{zh:"没有人，生意会严重受影响",en:"No one, business would be seriously hit",s:0}]},
+  {d:0,zh:"你的供应链如果一个关键供应商消失，应对方案是？",en:"If a key supplier disappeared, your response is?",c:[{zh:"有备用供应商和切换流程",en:"Backup suppliers and switch process exist",s:3},{zh:"会紧张但能找到替代",en:"Stressful but can find alternatives",s:2},{zh:"会非常被动，没有预案",en:"Reactive, no contingency plan",s:0}]},
+  {d:1,zh:"你有没有想过开第二家分店或拓展新渠道？",en:"Have you considered a second outlet or new channel?",c:[{zh:"有，模型已验证，随时可以复制",en:"Yes, model proven and ready to replicate",s:3},{zh:"想过，但还不确定是否可行",en:"Considered it but unsure if feasible",s:2},{zh:"没有，现在这家都顾不过来",en:"No, barely managing this one",s:0}]},
+  {d:1,zh:"你的产品或服务，核心价值在于？",en:"The core value of your product lies in?",c:[{zh:"可标准化的流程和体系",en:"Standardisable processes and systems",s:3},{zh:"独特体验，但可以部分标准化",en:"Unique experience, partially standardisable",s:2},{zh:"高度依赖个人手艺或判断",en:"Highly dependent on personal craft",s:0}]},
+  {d:1,zh:"如果给你足够的钱，你能在6个月内复制现在的生意吗？",en:"With enough capital, replicate this business in 6 months?",c:[{zh:"可以，流程和模型都清晰",en:"Yes, processes and model are clear",s:3},{zh:"也许，但会花很多时间磨合",en:"Maybe, but lots of calibration needed",s:2},{zh:"很难，太多依赖我个人",en:"Hard — too much relies on me personally",s:0}]},
+  {d:1,zh:"你的单位经济模型清楚吗？",en:"Is your unit economics model clear?",c:[{zh:"非常清楚，可以用数字说话",en:"Very clear, I can explain with numbers",s:3},{zh:"大概知道，但没有精确计算",en:"Roughly know but not calculated precisely",s:2},{zh:"不清楚",en:"Not clear",s:0}]},
+  {d:1,zh:"你的定价结构是固定的还是每次都要重新谈？",en:"Is your pricing structure fixed or renegotiated each time?",c:[{zh:"固定，有价格表",en:"Fixed, we have a price list",s:3},{zh:"半固定，小幅调整",en:"Semi-fixed with minor adjustments",s:2},{zh:"每次都重新谈",en:"Negotiated each time",s:0}]},
+  {d:1,zh:"你目前的获客方式，能在10倍规模时还有效吗？",en:"Would your customer acquisition work at 10x scale?",c:[{zh:"可以，是系统化的渠道",en:"Yes, it's a systematic channel",s:3},{zh:"部分可以，需要改造",en:"Partially, needs restructuring",s:2},{zh:"不行，现在靠人脉和口碑",en:"No, relies on relationships and referrals",s:0}]},
+  {d:1,zh:"你的培训体系能让新员工达到老员工的标准吗？",en:"Can training bring new hires to veteran standard?",c:[{zh:"可以，有标准化培训流程",en:"Yes, standardised training exists",s:3},{zh:"大概可以，但不稳定",en:"Roughly, but inconsistently",s:2},{zh:"不行，太多靠经验积累",en:"No, too much relies on experience",s:0}]},
+  {d:1,zh:"你的业务模型是否在不同城市都能成立？",en:"Can your business model work in different cities?",c:[{zh:"可以，已经验证或有信心",en:"Yes, validated or confident it can",s:3},{zh:"也许，但需要本地化改造",en:"Maybe, needs localisation",s:2},{zh:"不行，太多本地因素",en:"No, too many local dependencies",s:0}]},
+  {d:1,zh:"你最赚钱的产品，利润来自哪里？",en:"Where does profit come from in your best product?",c:[{zh:"来自可扩展的规模效应",en:"From scalable volume effects",s:3},{zh:"来自我的个人议价能力",en:"From my personal negotiation ability",s:2},{zh:"来自我直接参与的高附加值服务",en:"From my direct high-value involvement",s:0}]},
+  {d:1,zh:"你的商业模式是否曾经被别人成功复制过？",en:"Has anyone successfully copied your business model?",c:[{zh:"有，说明模型是可行的",en:"Yes — proves the model works",s:3},{zh:"有人尝试但没成功",en:"Someone tried but failed",s:2},{zh:"没有，因为太难复制了",en:"No, because it's too hard to replicate",s:0}]},
+  {d:2,zh:"客户为什么选你而不是竞争对手？",en:"Why do customers choose you over competitors?",c:[{zh:"有竞争对手难以复制的核心优势",en:"We have advantages competitors can't easily replicate",s:3},{zh:"价格更好或服务更好，但可以被复制",en:"Better price or service, but replicable",s:2},{zh:"方便或习惯，没有特别的壁垒",en:"Convenience or habit, no strong barrier",s:0}]},
+  {d:2,zh:"你的老客户复购率大概是多少？",en:"What is your approximate repeat customer rate?",c:[{zh:"超过60%",en:"Over 60%",s:3},{zh:"30-60%",en:"30–60%",s:2},{zh:"低于30%",en:"Under 30%",s:0}]},
+  {d:2,zh:"你花了多少年才建立现在的竞争优势？",en:"How many years to build your current advantage?",c:[{zh:"超过3年，而且还在加深",en:"Over 3 years and still deepening",s:3},{zh:"1-3年",en:"1–3 years",s:2},{zh:"不到1年，或者还没有明显优势",en:"Under 1 year or no clear advantage yet",s:0}]},
+  {d:2,zh:"你的核心客户如果要换掉你，转换成本高吗？",en:"How high is the switching cost for your core customers?",c:[{zh:"很高，换掉会痛",en:"High — switching would be painful",s:3},{zh:"中等",en:"Medium",s:2},{zh:"很低，随时可以换",en:"Low — they can switch anytime",s:0}]},
+  {d:2,zh:"你最近一年有没有因为竞争而被迫降价？",en:"Have you been forced to cut prices due to competition?",c:[{zh:"没有，定价能力稳定",en:"No, pricing power is stable",s:3},{zh:"小幅调整",en:"Small adjustments",s:2},{zh:"是的，竞争压力很大",en:"Yes, significant competitive pressure",s:0}]},
+  {d:2,zh:"你的竞争对手在过去两年里增加了还是减少了？",en:"Has the number of competitors increased or decreased?",c:[{zh:"减少了，行业在整合",en:"Decreased — industry consolidating",s:3},{zh:"差不多",en:"About the same",s:2},{zh:"增加了很多",en:"Increased significantly",s:0}]},
+  {d:2,zh:"在你的行业里，你有没有某些话语权（定标准、领趋势）？",en:"In your industry, do you set standards or lead trends?",c:[{zh:"有，我们经常被同行参考",en:"Yes, peers often reference us",s:3},{zh:"偶尔",en:"Occasionally",s:2},{zh:"没有，我们跟随市场",en:"No, we follow the market",s:0}]},
+  {d:2,zh:"你有没有任何知识产权、专利或受保护的方法论？",en:"Do you have any IP, patents, or protected methodologies?",c:[{zh:"有正式的IP保护",en:"Yes, formal IP protection exists",s:3},{zh:"有内部独特方法但没有保护",en:"Unique methods exist but unprotected",s:2},{zh:"没有",en:"No",s:0}]},
+  {d:2,zh:"客户愿意为你溢价多少？",en:"How much premium would customers pay for you vs competitors?",c:[{zh:"超过20%的溢价",en:"Over 20% premium",s:3},{zh:"5-20%",en:"5–20%",s:2},{zh:"基本没有溢价空间",en:"Minimal to no premium",s:0}]},
+  {d:2,zh:"你的供应链或原材料有没有专属优势？",en:"Do you have exclusive supply chain advantages?",c:[{zh:"有，独家或长期锁定的供应关系",en:"Yes, exclusive or long-term locked supply",s:3},{zh:"有一些优惠但不独家",en:"Some advantages but not exclusive",s:2},{zh:"没有，跟市场价格一样",en:"No, same as market pricing",s:0}]},
+  {d:3,zh:"你的毛利率大概是多少？",en:"What is your approximate gross margin?",c:[{zh:"超过50%",en:"Over 50%",s:3},{zh:"30-50%",en:"30–50%",s:2},{zh:"低于30%",en:"Under 30%",s:0}]},
+  {d:3,zh:"最大单一客户占总营收的比例？",en:"What % of revenue from your single largest customer?",c:[{zh:"低于15%",en:"Under 15%",s:3},{zh:"15-40%",en:"15–40%",s:2},{zh:"超过40%",en:"Over 40%",s:0}]},
+  {d:3,zh:"你的现金流能支撑多少个月的零收入？",en:"How many months of zero revenue can cash flow support?",c:[{zh:"超过6个月",en:"Over 6 months",s:3},{zh:"3-6个月",en:"3–6 months",s:2},{zh:"不到3个月",en:"Under 3 months",s:0}]},
+  {d:3,zh:"你的净利率大概是多少？",en:"What is your approximate net profit margin?",c:[{zh:"超过15%",en:"Over 15%",s:3},{zh:"5-15%",en:"5–15%",s:2},{zh:"低于5%或亏损",en:"Under 5% or at a loss",s:0}]},
+  {d:3,zh:"你有没有分散收入来源？",en:"Do you have diversified revenue streams?",c:[{zh:"有，多个渠道都健康",en:"Yes, multiple healthy channels",s:3},{zh:"有一些分散，但主要还是一个来源",en:"Some diversification but one dominant source",s:2},{zh:"基本靠一个",en:"Mostly one source",s:0}]},
+  {d:3,zh:"你上个财年有没有做过财务审计？",en:"Did you have a financial audit last fiscal year?",c:[{zh:"有正式审计",en:"Yes, formal audit",s:3},{zh:"内部审阅，没有外部审计",en:"Internal review, no external audit",s:2},{zh:"没有",en:"No",s:0}]},
+  {d:3,zh:"过去3年，你的营收趋势是？",en:"Over the past 3 years, your revenue trend?",c:[{zh:"持续增长",en:"Consistently growing",s:3},{zh:"平稳",en:"Flat",s:2},{zh:"波动或下降",en:"Volatile or declining",s:0}]},
+  {d:3,zh:"你的固定成本占总成本的比例高吗？",en:"Is the ratio of fixed to variable costs high?",c:[{zh:"偏变动成本，收缩时成本也会降",en:"Mostly variable — costs shrink with revenue",s:3},{zh:"混合",en:"Mixed",s:2},{zh:"高固定成本，收入下降时风险大",en:"High fixed costs — risky when revenue drops",s:0}]},
+  {d:3,zh:"你有没有银行授信或融资能力？",en:"Do you have banking credit lines or financing capacity?",c:[{zh:"有，银行有授信额度",en:"Yes, established credit lines",s:3},{zh:"有一点，但额度小",en:"Some but limited",s:2},{zh:"没有或被拒过",en:"None or been rejected",s:0}]},
+  {d:3,zh:"你的应收账款平均回款周期？",en:"Average accounts receivable collection period?",c:[{zh:"30天以内",en:"Under 30 days",s:3},{zh:"30-60天",en:"30–60 days",s:2},{zh:"超过60天或经常坏账",en:"Over 60 days or frequent bad debt",s:0}]},
+  {d:4,zh:"如果目标客户要找你这类服务，你是第一个想到的吗？",en:"Are you the first thought for your target customers?",c:[{zh:"大多数情况下是",en:"In most cases yes",s:3},{zh:"有时候是",en:"Sometimes",s:2},{zh:"基本不是",en:"Rarely",s:0}]},
+  {d:4,zh:"你在行业里有没有被媒体或行业平台报道过？",en:"Have you been covered by media or industry platforms?",c:[{zh:"多次，有主动来找我们的报道",en:"Multiple times, media approaches us",s:3},{zh:"偶尔，主要靠我们主动",en:"Occasionally, mostly we initiate",s:2},{zh:"从来没有",en:"Never",s:0}]},
+  {d:4,zh:"你的品牌在目标市场里代表什么？",en:"What does your brand represent in the target market?",c:[{zh:"有清晰的品类定位，客户知道我们代表什么",en:"Clear category positioning customers recognise",s:3},{zh:"知道我们好，但说不清我们最擅长什么",en:"Know we're good but can't articulate our specialty",s:2},{zh:"基本没有清晰定位",en:"No clear positioning",s:0}]},
+  {d:4,zh:"你的社交媒体或内容平台，自然流量怎么样？",en:"How is your organic traffic on content platforms?",c:[{zh:"稳定增长，内容有影响力",en:"Steadily growing, content has influence",s:3},{zh:"有一些，但不稳定",en:"Some but inconsistent",s:2},{zh:"基本靠付费",en:"Mostly paid",s:0}]},
+  {d:4,zh:"你的竞争对手有没有主动模仿过你的营销或定位？",en:"Have competitors actively copied your marketing?",c:[{zh:"有，说明我们在领跑",en:"Yes — we're setting the pace",s:3},{zh:"有一点",en:"A little",s:2},{zh:"没有",en:"No",s:0}]},
+  {d:4,zh:"你的品牌名字，客户能直接记住并搜索吗？",en:"Can customers remember and search for your brand directly?",c:[{zh:"可以，有直接搜索流量",en:"Yes, direct search traffic exists",s:3},{zh:"有时候，但经常搜类别不搜品牌",en:"Sometimes, often search category not brand",s:2},{zh:"基本搜不到我们",en:"Rarely searched directly",s:0}]},
+  {d:4,zh:"你的定价，相比竞争对手处于什么区间？",en:"Your pricing vs similar competitors — where do you sit?",c:[{zh:"溢价区间，客户接受并认可",en:"Premium tier, customers accept and recognise it",s:3},{zh:"中间区间",en:"Mid tier",s:2},{zh:"低价或价格战区间",en:"Low or price-war tier",s:0}]},
+  {d:4,zh:"客户会不会主动在社交媒体上提到你？",en:"Do customers proactively mention you on social media?",c:[{zh:"经常有，不用我们引导",en:"Often, without prompting",s:3},{zh:"偶尔，需要引导",en:"Occasionally, needs prompting",s:2},{zh:"基本没有",en:"Rarely",s:0}]},
+  {d:4,zh:"你有没有建立过自己的社群或粉丝群体？",en:"Have you built your own community or fan base?",c:[{zh:"有，活跃的社群",en:"Yes, active community",s:3},{zh:"有开始，但不活跃",en:"Started one but not active",s:2},{zh:"没有",en:"No",s:0}]},
+  {d:4,zh:"你有没有在行业论坛、峰会或媒体上发言被引用？",en:"Spoken at or quoted in industry forums or media?",c:[{zh:"多次",en:"Multiple times",s:3},{zh:"一两次",en:"Once or twice",s:2},{zh:"从来没有",en:"Never",s:0}]},
+  {d:5,zh:"你的生意品牌和你个人品牌是分开的吗？",en:"Is your business brand separate from your personal brand?",c:[{zh:"完全分开，客户认品牌不认人",en:"Fully separate — customers follow the brand",s:3},{zh:"部分分开，品牌有一定独立性",en:"Partially separate, some independence",s:2},{zh:"基本是一体的，我就是品牌",en:"Basically the same — I am the brand",s:0}]},
+  {d:5,zh:"如果你的脸从所有营销材料上消失，销售会怎样？",en:"If your face disappeared from all marketing, sales would?",c:[{zh:"基本不受影响",en:"Basically unaffected",s:3},{zh:"有些影响，但品牌能撑住",en:"Some impact, but brand holds",s:2},{zh:"会明显下降",en:"Would drop significantly",s:0}]},
+  {d:5,zh:"你的品牌有独立的视觉体系（logo、色彩、设计语言）吗？",en:"Does your brand have an independent visual system?",c:[{zh:"有，完整一致的视觉体系",en:"Yes, complete and consistent",s:3},{zh:"有基础的，但不完整",en:"Basic elements exist but incomplete",s:2},{zh:"基本没有",en:"Minimal",s:0}]},
+  {d:5,zh:"你的客户忠诚度，主要是对品牌还是对你个人？",en:"Customer loyalty is primarily to the brand or to you?",c:[{zh:"主要对品牌",en:"Primarily to the brand",s:3},{zh:"混合，两者都有",en:"Mixed, both",s:2},{zh:"主要对我个人",en:"Primarily to me personally",s:0}]},
+  {d:5,zh:"有没有人可以代表你的品牌发声？",en:"Is there anyone who can speak for your brand in your absence?",c:[{zh:"有，培训好了的团队或代言人",en:"Yes, trained team or spokesperson",s:3},{zh:"有一两个，但能力有限",en:"One or two but limited capability",s:2},{zh:"没有，只有我能代表品牌",en:"No, only I can represent the brand",s:0}]},
+  {d:5,zh:"你的员工都能清楚说出品牌故事或价值主张吗？",en:"Can all staff articulate your brand story and value proposition?",c:[{zh:"有，员工能清楚表达",en:"Yes, staff can articulate it clearly",s:3},{zh:"有但不一致，说法各有不同",en:"Exists but inconsistent across staff",s:2},{zh:"基本没有，或只有我知道",en:"Mostly absent or only I know it",s:0}]},
+  {d:5,zh:"如果你明天把生意卖掉，新老板能继续用你的品牌吗？",en:"Could a new owner operate under your brand if you sold tomorrow?",c:[{zh:"可以，品牌是独立资产",en:"Yes, brand is a standalone asset",s:3},{zh:"可以，但需要你配合一段时间",en:"Yes but would need your involvement",s:2},{zh:"很难，品牌太依赖我本人",en:"Hard — brand relies too much on me",s:0}]},
+  {d:5,zh:"你的品牌名字、商标有没有正式注册保护？",en:"Is your brand name and trademark formally registered?",c:[{zh:"有，已注册",en:"Yes, registered",s:3},{zh:"在进行中",en:"In progress",s:2},{zh:"没有",en:"No",s:0}]},
+  {d:5,zh:"你的品牌资产（网站、社媒、内容库）在你不在时还能运转吗？",en:"Can your brand assets operate without you?",c:[{zh:"可以，有团队管理",en:"Yes, team manages them",s:3},{zh:"部分可以",en:"Partially",s:2},{zh:"基本不行，全靠我",en:"No, mostly dependent on me",s:0}]},
+  {d:5,zh:"你的品牌有没有超越产品本身的文化认同感？",en:"Does your brand create cultural identity beyond the product?",c:[{zh:"有，客户认同我们代表的价值观",en:"Yes, customers identify with our values",s:3},{zh:"有一点苗头",en:"Emerging",s:2},{zh:"没有，我们只是卖产品",en:"No, we just sell products",s:0}]}
+];
+
+const ARCHETYPES=[
+  {p:'HHH',name:'资本宠儿',en:'Capital Darling',desc:'六维均衡强劲，PE倍数最高。系统、护城河、品牌三位一体，这是资本最想买的生意形态。',move:'你已具备资本准备度。现在的任务不是继续优化内部，而是找到对的买家或战略投资人，把价值变现。'},
+  {p:'HHL',name:'隐形冠军',en:'Hidden Champion',desc:'系统和护城河都强，但品牌影响力极低。你建了真正的价值，却没人知道——PE倍数因此被大幅压低。',move:'立刻投资品牌话语权建设。先解决潜意识占领问题，让市场知道你的护城河价值。'},
+  {p:'HLH',name:'网红老板',en:'Celebrity Boss',desc:'品牌强、系统可以，但没有真正的护城河。一旦风潮过去或个人品牌减弱，生意就脆弱了。',move:'把品牌流量转化为可防御的护城河资产。现在赚的是注意力，不是资本价值。'},
+  {p:'LHH',name:'困住的明星',en:'Trapped Star',desc:'护城河深、品牌强，但系统无法复制——你是最大的瓶颈，PE投资人看不到退出路径。',move:'下一个90天只做一件事：把你脑子里的东西系统化。你的天花板是你自己，不是市场。'},
+  {p:'HLL',name:'扩张型经营者',en:'Growth Operator',desc:'系统有了，但没有护城河也没有品牌话语权。正在扩张一个还没有差异化的模型，风险在放大。',move:'停止扩张，先找到你的局部优势。复制一个没有护城河的模型只是在放大风险。'},
+  {p:'LHL',name:'困住的乌龟',en:'Trapped Turtle',desc:'有一定护城河但无法复制，品牌也弱。生意稳定但没有增长引擎，资本看不到规模化的可能。',move:'二选一：系统化让自己可以退出，或建立品牌让人知道你的护城河价值。两者都不做就是原地踏步。'},
+  {p:'LLH',name:'空壳网红',en:'Shell Influencer',desc:'品牌有流量，但内部系统和护城河几乎为零。看起来大，实际上空心——流量进来也留不住。',move:'立即停止对外扩张，转向内部建设。品牌带来的流量正在流向一个漏水的桶。'},
+  {p:'LLL',name:'经营者',en:'Operator',desc:'三个维度都低。这是一门生意，不是一个资产。可以赚钱维生，但在资本眼里没有估值价值。',move:'先选择一个维度开始建设——建议从系统化开始，因为它是其他一切的基础。'}
+];
+
+const DIM_INFO=[
+  {name:'S1 系统化',en:'System Readiness',color:'#4a9eff',note:'运营能否在没有老板时正常运转'},
+  {name:'S2 复制性',en:'Replication Potential',color:'#2d7dd2',note:'模型能否在新地点或渠道复制相同结果'},
+  {name:'S3 护城河',en:'Moat Depth',color:'#5cb85c',note:'竞争壁垒有多深，是否持续复利'},
+  {name:'S4 财务韧性',en:'Financial Resilience',color:'#3a8a3a',note:'GP/NP健康状况与客户集中度风险'},
+  {name:'S5 话语权',en:'Category Ownership',color:'#a78bfa',note:'你是否在客户潜意识中占据位置'},
+  {name:'S6 品牌独立性',en:'Brand Independence',color:'#7c5cdb',note:'品牌是否能脱离创始人独立存在'}
+];
+
+let pool=[],cur=0,ans=[],userName='';
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function buildPool(){
+  const byDim=[[],[],[],[],[],[]];
+  BANK.forEach(q=>byDim[q.d].push(q));
+  byDim.forEach(d=>shuffle(d));
+  const sel=[];
+  for(let d=0;d<6;d++) for(let i=0;i<Math.min(5,byDim[d].length);i++) sel.push(byDim[d][i]);
+  return shuffle(sel);
+}
+
+function startQuiz(){
+  pool=buildPool();
+  cur=0;
+  ans=new Array(pool.length).fill(null);
+  document.getElementById('qtotal').textContent=pool.length;
+  showScreen('s-quiz');
+  renderQ();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderQ(){
+  const q=pool[cur];
+  const total=pool.length;
+  document.getElementById('qnum').textContent=cur+1;
+  document.getElementById('qpct').textContent=Math.round(cur/total*100)+'%';
+  document.getElementById('prog').style.width=((cur+1)/total*100)+'%';
+  document.getElementById('q-text').textContent=q.zh;
+  document.getElementById('q-sub').textContent=q.en;
+  const cl=document.getElementById('choices');
+  cl.innerHTML='';
+  ['A','B','C','D'].slice(0,q.c.length).forEach((lb,i)=>{
+    const div=document.createElement('div');
+    div.className='choice'+(ans[cur]===i?' selected':'');
+    div.innerHTML=`<div class="choice-letter">${lb}</div><div class="choice-body"><div class="choice-zh">${q.c[i].zh}</div><div class="choice-en">${q.c[i].en}</div></div>`;
+    div.onclick=()=>{ans[cur]=i;document.querySelectorAll('.choice').forEach((el,idx)=>el.classList.toggle('selected',idx===i));};
+    cl.appendChild(div);
+  });
+  document.getElementById('btn-prev').disabled=cur===0;
+  document.getElementById('btn-next').textContent=cur===total-1?'完成 Finish ✓':'下一题 →';
+}
+
+function nextQ(){
+  if(ans[cur]===null){
+    const cl=document.getElementById('choices');
+    cl.classList.add('shake');
+    setTimeout(()=>cl.classList.remove('shake'),400);
+    return;
+  }
+  if(cur<pool.length-1){cur++;renderQ();}
+  else showScreen('s-gate');
+}
+
+function prevQ(){if(cur>0){cur--;renderQ();}}
+
+function unlockResult(){
+  const name=document.getElementById('inp-name').value.trim();
+  const phone=document.getElementById('inp-phone').value.trim();
+  let ok=true;
+  document.getElementById('err-name').style.display='none';
+  document.getElementById('err-phone').style.display='none';
+  if(!name){document.getElementById('err-name').style.display='block';ok=false;}
+  if(!phone||phone.replace(/[\s\-\+\(\)]/g,'').length<8){document.getElementById('err-phone').style.display='block';ok=false;}
+  if(!ok)return;
+  userName=name;
+  showResults();
+}
+
+function getDimScores(){
+  const acc=[[],[],[],[],[],[]];
+  pool.forEach((q,i)=>{if(ans[i]!==null)acc[q.d].push(q.c[ans[i]].s);});
+  return acc.map(sc=>{
+    if(!sc.length)return 0;
+    return Math.round(sc.reduce((a,b)=>a+b,0)/(sc.length*3)*100);
+  });
+}
+
+function showResults(){
+  const scores=getDimScores();
+  const sH=(scores[0]+scores[1])/2>=50;
+  const suH=(scores[2]+scores[3])/2>=50;
+  const bH=(scores[4]+scores[5])/2>=50;
+  const pat=(sH?'H':'L')+(suH?'H':'L')+(bH?'H':'L');
+  const arch=ARCHETYPES.find(a=>a.p===pat)||ARCHETYPES[7];
+
+  document.getElementById('r-greeting').textContent=userName+'，这是你的 SSB 资本准备度报告 / '+userName+', here is your SSB Capital Readiness Report';
+  document.getElementById('r-pattern').textContent='SSB Pattern: '+pat;
+  document.getElementById('r-arch').innerHTML=arch.name+' <span class="result-arch-en">· '+arch.en+'</span>';
+  document.getElementById('r-desc').textContent=arch.desc;
+  document.getElementById('r-move').textContent=arch.move;
+
+  showScreen('s-result');
+  setTimeout(()=>renderHex(scores),80);
+  renderDims(scores);
+}
+
+function renderHex(scores){
+  const canvas=document.getElementById('hexC');
+  const ctx=canvas.getContext('2d');
+  const cx=170,cy=170,R=120;
+  const n=6;
+  const angles=Array.from({length:n},(_,i)=>-Math.PI/2+(2*Math.PI*i/n));
+
+  ctx.clearRect(0,0,340,340);
+
+  // grid
+  const gridC='rgba(255,255,255,0.06)';
+  for(let r=1;r<=4;r++){
+    const rr=R*r/4;
+    ctx.beginPath();
+    for(let i=0;i<n;i++){const x=cx+rr*Math.cos(angles[i]),y=cy+rr*Math.sin(angles[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.closePath();ctx.strokeStyle=gridC;ctx.lineWidth=0.5;ctx.stroke();
+  }
+  for(let i=0;i<n;i++){
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*Math.cos(angles[i]),cy+R*Math.sin(angles[i]));
+    ctx.strokeStyle=gridC;ctx.lineWidth=0.5;ctx.stroke();
+  }
+
+  function drawPillar(d0,d1,color,fillAlpha){
+    const r0=R*scores[d0]/100,r1=R*scores[d1]/100;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    const steps=16;
+    for(let s=0;s<=steps;s++){
+      const t=s/steps;
+      const a=angles[d0]+(angles[d1]-angles[d0])*t;
+      const r=r0+(r1-r0)*t;
+      ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+    }
+    ctx.closePath();
+    ctx.fillStyle=color.replace('rgb(','rgba(').replace(')',','+fillAlpha+')');
+    ctx.fill();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=2;
+    ctx.stroke();
+    // dots
+    [[d0,r0],[d1,r1]].forEach(([d,r])=>{
+      const x=cx+r*Math.cos(angles[d]),y=cy+r*Math.sin(angles[d]);
+      ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);
+      ctx.fillStyle=color;ctx.fill();
+    });
+  }
+
+  drawPillar(0,1,'rgb(74,158,255)',0.18);
+  drawPillar(2,3,'rgb(92,184,92)',0.18);
+  drawPillar(4,5,'rgb(167,139,250)',0.18);
+
+  // labels
+  const labs=['S1\n系统化','S2\n复制性','S3\n护城河','S4\n财务韧性','S5\n话语权','S6\n品牌独立'];
+  const labelR=R+28;
+  ctx.font='10px DM Sans, sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.45)';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  labs.forEach((lb,i)=>{
+    const x=cx+labelR*Math.cos(angles[i]),y=cy+labelR*Math.sin(angles[i]);
+    const parts=lb.split('\n');
+    ctx.fillText(parts[0],x,y-6);
+    ctx.fillText(parts[1],x,y+6);
+  });
+
+  // score dots
+  const dotColors=['#4a9eff','#2d7dd2','#5cb85c','#3a8a3a','#a78bfa','#7c5cdb'];
+  scores.forEach((s,i)=>{
+    const r=R*s/100;
+    const x=cx+r*Math.cos(angles[i]),y=cy+r*Math.sin(angles[i]);
+    ctx.font='bold 10px DM Sans, sans-serif';
+    ctx.fillStyle=dotColors[i];
+    ctx.textAlign='center';
+    const offset=r>15?-14:14;
+    ctx.fillText(s+'%',x,y+offset);
+  });
+}
+
+function dimCard(score,info){
+  const level=score>=67?'high':score>=34?'mid':'low';
+  const label=level==='high'?'HIGH':level==='mid'?'MID':'LOW';
+  const div=document.createElement('div');
+  div.className='dim-card';
+  div.innerHTML=`
+    <div class="dim-top">
+      <div><div class="dim-name">${info.name}</div><div class="dim-name-en">${info.en}</div></div>
+      <div class="dim-badge badge-${level}">${label}</div>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+      <div class="dim-score">${score}<span style="font-size:13px;color:#555;font-weight:400">%</span></div>
+    </div>
+    <div class="dim-bar-wrap"><div class="dim-bar" style="width:${score}%;background:${info.color}"></div></div>
+    <div class="dim-note">${info.note}</div>`;
+  return div;
+}
+
+function renderDims(scores){
+  const gs=document.getElementById('dims-s');
+  const gsu=document.getElementById('dims-su');
+  const gb=document.getElementById('dims-b');
+  gs.innerHTML='';gsu.innerHTML='';gb.innerHTML='';
+  gs.appendChild(dimCard(scores[0],DIM_INFO[0]));
+  gs.appendChild(dimCard(scores[1],DIM_INFO[1]));
+  gsu.appendChild(dimCard(scores[2],DIM_INFO[2]));
+  gsu.appendChild(dimCard(scores[3],DIM_INFO[3]));
+  gb.appendChild(dimCard(scores[4],DIM_INFO[4]));
+  gb.appendChild(dimCard(scores[5],DIM_INFO[5]));
+}
+
+function restartQuiz(){
+  cur=0;ans=[];userName='';
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-phone').value='';
+  showScreen('s-intro');
+}
+</script>
+</body>
+</html>
