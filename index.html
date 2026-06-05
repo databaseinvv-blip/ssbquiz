@@ -124,7 +124,28 @@
   }
 
   .btn.primary:hover { background: #e8b450; border-color: #e8b450; }
+  .btn.primary:disabled { opacity: .35; cursor: not-allowed; }
   .btn.ghost { color: var(--muted); font-size: 13px; padding: 10px 16px; }
+
+  /* ── INDUSTRY SELECT ── */
+  .ind-grid {
+    display: grid; grid-template-columns: repeat(2,1fr);
+    gap: 12px; margin: 28px 0;
+  }
+  .ind-card {
+    border: .5px solid var(--border);
+    border-radius: 12px; padding: 18px 16px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color .15s, background .15s, transform .1s;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .ind-card:hover { border-color: var(--border2); background: var(--surface2); }
+  .ind-card.selected { border-color: var(--gold); background: rgba(240,192,96,.06); }
+  .ind-icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
+  .ind-body {}
+  .ind-zh { font-size: 15px; font-weight: 500; color: var(--text); }
+  .ind-en { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
   /* ── QUIZ ── */
   .q-header {
@@ -307,13 +328,38 @@
     border-bottom: .5px solid var(--border);
   }
 
-  .dims-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .dims-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 
   .dim-card {
     border: .5px solid var(--border);
-    border-radius: 10px; padding: 14px;
+    border-radius: 10px; padding: 16px;
     background: var(--surface);
   }
+
+  .dim-note-inline { font-size: 11px; color: var(--muted2); line-height: 1.4; }
+
+  .dim-elab {
+    font-size: 13.5px; color: var(--text); line-height: 1.65;
+    margin-top: 10px;
+  }
+  .dim-elab-en {
+    font-size: 11.5px; color: var(--muted); line-height: 1.5;
+    margin-top: 5px;
+  }
+  .dim-gap {
+    margin-top: 12px; padding: 10px 12px;
+    border: .5px solid var(--border);
+    border-left: 2px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    background: rgba(245,166,35,.05);
+    font-size: 12.5px; color: var(--text); line-height: 1.55;
+  }
+  .dim-gap-label {
+    display: block; font-size: 9.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--amber); margin-bottom: 5px;
+  }
+  .dim-gap-better { color: var(--muted); font-size: 12px; }
 
   .dim-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 
@@ -371,11 +417,19 @@
     margin-bottom: 12px;
   }
 
+  .ind-tag {
+    display: inline-block; font-size: 12px; font-weight: 500;
+    padding: 4px 12px; border-radius: 20px;
+    background: var(--surface2); border: .5px solid var(--border);
+    color: var(--muted); margin-bottom: 12px; margin-left: 8px;
+  }
+
   canvas { display: block; }
 
   @media (max-width: 480px) {
     .pillars-row { grid-template-columns: 1fr; }
     .dims-grid { grid-template-columns: 1fr; }
+    .ind-grid { grid-template-columns: 1fr; }
     .hex-legend { gap: 12px; }
     body { padding: 24px 16px 60px; }
   }
@@ -392,8 +446,8 @@
       <span>How much is your business really worth?</span>
     </h1>
     <p class="intro-desc">
-      从100道题中随机抽取30题，六个维度，测出你生意在资本眼中的真实形状。<br>
-      30 questions drawn from a bank of 100. Every test is unique.
+      六个维度，30道题，测出你生意在资本眼中的真实形状。每个行业有专属题组。<br>
+      6 dimensions, 30 questions, tailored to your industry. See the true shape of your business in a capital buyer's eyes.
     </p>
     <div class="pillars-row">
       <div class="pillar-card">
@@ -413,9 +467,27 @@
       题目顺序随机，不显示维度标签。选最诚实反映你生意现状的答案，不是你希望它是什么样子。<br>
       <span style="font-size:12px;color:#555">Questions are randomised with no category labels. Choose what's true, not what sounds good.</span>
     </div>
-    <button class="btn primary" onclick="startQuiz()">
+    <button class="btn primary" onclick="showScreen('s-industry')">
       开始测试 &nbsp;→
     </button>
+  </div>
+
+  <!-- ══ INDUSTRY SELECT ══ -->
+  <div id="s-industry" class="screen">
+    <div class="intro-eyebrow">Step 1 / 选择行业</div>
+    <h1 class="intro-title" style="font-size:clamp(26px,5vw,38px)">
+      你的生意属于哪个行业？
+      <span>Which industry is your business in?</span>
+    </h1>
+    <p class="intro-desc">
+      不同行业有专属的题目和评分逻辑，确保每一题都与你的生意相关。<br>
+      Each industry has its own tailored questions, so every question is relevant to you.
+    </p>
+    <div class="ind-grid" id="ind-grid"></div>
+    <div class="nav-row">
+      <button class="btn ghost" onclick="showScreen('s-intro')">← 返回 Back</button>
+      <button class="btn primary" id="btn-ind-start" onclick="startQuiz()" disabled>开始测试 Start →</button>
+    </div>
   </div>
 
   <!-- ══ QUIZ ══ -->
@@ -469,7 +541,10 @@
   <div id="s-result" class="screen">
     <div class="greeting" id="r-greeting"></div>
     <div class="result-eyebrow">你的 SSB 档案 / Your SSB Profile</div>
-    <div class="pattern-badge" id="r-pattern"></div>
+    <div>
+      <span class="pattern-badge" id="r-pattern"></span>
+      <span class="ind-tag" id="r-ind"></span>
+    </div>
     <h2 class="result-arch" id="r-arch"></h2>
     <p class="result-desc" id="r-desc"></p>
 
@@ -505,74 +580,44 @@
     </div>
 
     <div class="action-row">
+      <button class="btn primary" id="btn-pdf" onclick="downloadPDF()">⬇ 下载 PDF Download Report</button>
       <button class="btn ghost" onclick="restartQuiz()">↺ 重新测试 Restart</button>
     </div>
   </div>
 
 </div><!-- /wrap -->
 
+<!-- PDF generation library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script>
-const BANK=[
-  {d:0,zh:"老板不在，日常运营怎样？",en:"Daily ops when you're away?",c:[{zh:"照常运行，员工知道该做什么",en:"Runs normally, staff know what to do",s:3},{zh:"能撑，但会有些混乱",en:"Survives but gets messy",s:2},{zh:"明显吃力",en:"Struggles noticeably",s:1},{zh:"很可能出问题",en:"Likely breaks down",s:0}]},
-  {d:0,zh:"你的岗位职责有书面文件吗？",en:"Are role responsibilities documented?",c:[{zh:"全部文件齐全，员工在执行",en:"Fully documented and followed",s:3},{zh:"部分有，核心岗位没有",en:"Partial — core roles missing",s:1},{zh:"基本没有",en:"Mostly no",s:0}]},
-  {d:0,zh:"新员工上手需要多久才能独立工作？",en:"How long for a new hire to work independently?",c:[{zh:"1-2周，有清晰的培训流程",en:"1–2 weeks with clear onboarding",s:3},{zh:"1-2个月，靠老员工带",en:"1–2 months via shadowing",s:2},{zh:"3个月以上，很多靠感觉",en:"3+ months, mostly by feel",s:0}]},
-  {d:0,zh:"你的业务如果系统崩溃一天，损失是？",en:"If your systems went down for a day, impact is?",c:[{zh:"有备份流程，能正常运作",en:"Backup processes exist, ops continue",s:3},{zh:"明显放缓但不停止",en:"Noticeably slower but doesn't stop",s:2},{zh:"基本瘫痪",en:"Basically paralysed",s:0}]},
-  {d:0,zh:"你的员工能在没有你的情况下处理客户投诉吗？",en:"Can staff handle complaints without you?",c:[{zh:"可以，有明确的处理流程",en:"Yes, there's a clear process",s:3},{zh:"简单的可以，复杂的要找我",en:"Simple ones yes, complex need me",s:2},{zh:"基本都要找我",en:"Almost everything comes to me",s:0}]},
-  {d:0,zh:"你上次更新内部操作手册是什么时候？",en:"When did you last update your operations manual?",c:[{zh:"3个月内",en:"Within 3 months",s:3},{zh:"半年到一年前",en:"6–12 months ago",s:2},{zh:"从来没有过",en:"Never had one",s:0}]},
-  {d:0,zh:"你的财务报表是每月自动生成的吗？",en:"Do financial reports generate automatically each month?",c:[{zh:"是，系统自动跑",en:"Yes, system generates them",s:3},{zh:"半自动，还需要人工整理",en:"Semi-auto, needs manual work",s:2},{zh:"全靠手工",en:"Fully manual",s:0}]},
-  {d:0,zh:"公司日常决策中，有多少比例需要你亲自拍板？",en:"What % of daily decisions require your personal approval?",c:[{zh:"不到20%，团队有授权",en:"Under 20%, team is empowered",s:3},{zh:"约50%",en:"Around 50%",s:2},{zh:"超过70%",en:"Over 70%",s:0}]},
-  {d:0,zh:"如果你生病住院一个月，谁来做你现在的工作？",en:"If hospitalised for a month, who does your job?",c:[{zh:"有明确的代理人，已经培训好",en:"Clear deputy exists, already trained",s:3},{zh:"团队会分担，但会很吃力",en:"Team would cover but struggle",s:2},{zh:"没有人，生意会严重受影响",en:"No one, business would be seriously hit",s:0}]},
-  {d:0,zh:"你的供应链如果一个关键供应商消失，应对方案是？",en:"If a key supplier disappeared, your response is?",c:[{zh:"有备用供应商和切换流程",en:"Backup suppliers and switch process exist",s:3},{zh:"会紧张但能找到替代",en:"Stressful but can find alternatives",s:2},{zh:"会非常被动，没有预案",en:"Reactive, no contingency plan",s:0}]},
-  {d:1,zh:"你有没有想过开第二家分店或拓展新渠道？",en:"Have you considered a second outlet or new channel?",c:[{zh:"有，模型已验证，随时可以复制",en:"Yes, model proven and ready to replicate",s:3},{zh:"想过，但还不确定是否可行",en:"Considered it but unsure if feasible",s:2},{zh:"没有，现在这家都顾不过来",en:"No, barely managing this one",s:0}]},
-  {d:1,zh:"你的产品或服务，核心价值在于？",en:"The core value of your product lies in?",c:[{zh:"可标准化的流程和体系",en:"Standardisable processes and systems",s:3},{zh:"独特体验，但可以部分标准化",en:"Unique experience, partially standardisable",s:2},{zh:"高度依赖个人手艺或判断",en:"Highly dependent on personal craft",s:0}]},
-  {d:1,zh:"如果给你足够的钱，你能在6个月内复制现在的生意吗？",en:"With enough capital, replicate this business in 6 months?",c:[{zh:"可以，流程和模型都清晰",en:"Yes, processes and model are clear",s:3},{zh:"也许，但会花很多时间磨合",en:"Maybe, but lots of calibration needed",s:2},{zh:"很难，太多依赖我个人",en:"Hard — too much relies on me personally",s:0}]},
-  {d:1,zh:"你的单位经济模型清楚吗？",en:"Is your unit economics model clear?",c:[{zh:"非常清楚，可以用数字说话",en:"Very clear, I can explain with numbers",s:3},{zh:"大概知道，但没有精确计算",en:"Roughly know but not calculated precisely",s:2},{zh:"不清楚",en:"Not clear",s:0}]},
-  {d:1,zh:"你的定价结构是固定的还是每次都要重新谈？",en:"Is your pricing structure fixed or renegotiated each time?",c:[{zh:"固定，有价格表",en:"Fixed, we have a price list",s:3},{zh:"半固定，小幅调整",en:"Semi-fixed with minor adjustments",s:2},{zh:"每次都重新谈",en:"Negotiated each time",s:0}]},
-  {d:1,zh:"你目前的获客方式，能在10倍规模时还有效吗？",en:"Would your customer acquisition work at 10x scale?",c:[{zh:"可以，是系统化的渠道",en:"Yes, it's a systematic channel",s:3},{zh:"部分可以，需要改造",en:"Partially, needs restructuring",s:2},{zh:"不行，现在靠人脉和口碑",en:"No, relies on relationships and referrals",s:0}]},
-  {d:1,zh:"你的培训体系能让新员工达到老员工的标准吗？",en:"Can training bring new hires to veteran standard?",c:[{zh:"可以，有标准化培训流程",en:"Yes, standardised training exists",s:3},{zh:"大概可以，但不稳定",en:"Roughly, but inconsistently",s:2},{zh:"不行，太多靠经验积累",en:"No, too much relies on experience",s:0}]},
-  {d:1,zh:"你的业务模型是否在不同城市都能成立？",en:"Can your business model work in different cities?",c:[{zh:"可以，已经验证或有信心",en:"Yes, validated or confident it can",s:3},{zh:"也许，但需要本地化改造",en:"Maybe, needs localisation",s:2},{zh:"不行，太多本地因素",en:"No, too many local dependencies",s:0}]},
-  {d:1,zh:"你最赚钱的产品，利润来自哪里？",en:"Where does profit come from in your best product?",c:[{zh:"来自可扩展的规模效应",en:"From scalable volume effects",s:3},{zh:"来自我的个人议价能力",en:"From my personal negotiation ability",s:2},{zh:"来自我直接参与的高附加值服务",en:"From my direct high-value involvement",s:0}]},
-  {d:1,zh:"你的商业模式是否曾经被别人成功复制过？",en:"Has anyone successfully copied your business model?",c:[{zh:"有，说明模型是可行的",en:"Yes — proves the model works",s:3},{zh:"有人尝试但没成功",en:"Someone tried but failed",s:2},{zh:"没有，因为太难复制了",en:"No, because it's too hard to replicate",s:0}]},
-  {d:2,zh:"客户为什么选你而不是竞争对手？",en:"Why do customers choose you over competitors?",c:[{zh:"有竞争对手难以复制的核心优势",en:"We have advantages competitors can't easily replicate",s:3},{zh:"价格更好或服务更好，但可以被复制",en:"Better price or service, but replicable",s:2},{zh:"方便或习惯，没有特别的壁垒",en:"Convenience or habit, no strong barrier",s:0}]},
-  {d:2,zh:"你的老客户复购率大概是多少？",en:"What is your approximate repeat customer rate?",c:[{zh:"超过60%",en:"Over 60%",s:3},{zh:"30-60%",en:"30–60%",s:2},{zh:"低于30%",en:"Under 30%",s:0}]},
-  {d:2,zh:"你花了多少年才建立现在的竞争优势？",en:"How many years to build your current advantage?",c:[{zh:"超过3年，而且还在加深",en:"Over 3 years and still deepening",s:3},{zh:"1-3年",en:"1–3 years",s:2},{zh:"不到1年，或者还没有明显优势",en:"Under 1 year or no clear advantage yet",s:0}]},
-  {d:2,zh:"你的核心客户如果要换掉你，转换成本高吗？",en:"How high is the switching cost for your core customers?",c:[{zh:"很高，换掉会痛",en:"High — switching would be painful",s:3},{zh:"中等",en:"Medium",s:2},{zh:"很低，随时可以换",en:"Low — they can switch anytime",s:0}]},
-  {d:2,zh:"你最近一年有没有因为竞争而被迫降价？",en:"Have you been forced to cut prices due to competition?",c:[{zh:"没有，定价能力稳定",en:"No, pricing power is stable",s:3},{zh:"小幅调整",en:"Small adjustments",s:2},{zh:"是的，竞争压力很大",en:"Yes, significant competitive pressure",s:0}]},
-  {d:2,zh:"你的竞争对手在过去两年里增加了还是减少了？",en:"Has the number of competitors increased or decreased?",c:[{zh:"减少了，行业在整合",en:"Decreased — industry consolidating",s:3},{zh:"差不多",en:"About the same",s:2},{zh:"增加了很多",en:"Increased significantly",s:0}]},
-  {d:2,zh:"在你的行业里，你有没有某些话语权（定标准、领趋势）？",en:"In your industry, do you set standards or lead trends?",c:[{zh:"有，我们经常被同行参考",en:"Yes, peers often reference us",s:3},{zh:"偶尔",en:"Occasionally",s:2},{zh:"没有，我们跟随市场",en:"No, we follow the market",s:0}]},
-  {d:2,zh:"你有没有任何知识产权、专利或受保护的方法论？",en:"Do you have any IP, patents, or protected methodologies?",c:[{zh:"有正式的IP保护",en:"Yes, formal IP protection exists",s:3},{zh:"有内部独特方法但没有保护",en:"Unique methods exist but unprotected",s:2},{zh:"没有",en:"No",s:0}]},
-  {d:2,zh:"客户愿意为你溢价多少？",en:"How much premium would customers pay for you vs competitors?",c:[{zh:"超过20%的溢价",en:"Over 20% premium",s:3},{zh:"5-20%",en:"5–20%",s:2},{zh:"基本没有溢价空间",en:"Minimal to no premium",s:0}]},
-  {d:2,zh:"你的供应链或原材料有没有专属优势？",en:"Do you have exclusive supply chain advantages?",c:[{zh:"有，独家或长期锁定的供应关系",en:"Yes, exclusive or long-term locked supply",s:3},{zh:"有一些优惠但不独家",en:"Some advantages but not exclusive",s:2},{zh:"没有，跟市场价格一样",en:"No, same as market pricing",s:0}]},
-  {d:3,zh:"你的毛利率大概是多少？",en:"What is your approximate gross margin?",c:[{zh:"超过50%",en:"Over 50%",s:3},{zh:"30-50%",en:"30–50%",s:2},{zh:"低于30%",en:"Under 30%",s:0}]},
-  {d:3,zh:"最大单一客户占总营收的比例？",en:"What % of revenue from your single largest customer?",c:[{zh:"低于15%",en:"Under 15%",s:3},{zh:"15-40%",en:"15–40%",s:2},{zh:"超过40%",en:"Over 40%",s:0}]},
-  {d:3,zh:"你的现金流能支撑多少个月的零收入？",en:"How many months of zero revenue can cash flow support?",c:[{zh:"超过6个月",en:"Over 6 months",s:3},{zh:"3-6个月",en:"3–6 months",s:2},{zh:"不到3个月",en:"Under 3 months",s:0}]},
-  {d:3,zh:"你的净利率大概是多少？",en:"What is your approximate net profit margin?",c:[{zh:"超过15%",en:"Over 15%",s:3},{zh:"5-15%",en:"5–15%",s:2},{zh:"低于5%或亏损",en:"Under 5% or at a loss",s:0}]},
-  {d:3,zh:"你有没有分散收入来源？",en:"Do you have diversified revenue streams?",c:[{zh:"有，多个渠道都健康",en:"Yes, multiple healthy channels",s:3},{zh:"有一些分散，但主要还是一个来源",en:"Some diversification but one dominant source",s:2},{zh:"基本靠一个",en:"Mostly one source",s:0}]},
-  {d:3,zh:"你上个财年有没有做过财务审计？",en:"Did you have a financial audit last fiscal year?",c:[{zh:"有正式审计",en:"Yes, formal audit",s:3},{zh:"内部审阅，没有外部审计",en:"Internal review, no external audit",s:2},{zh:"没有",en:"No",s:0}]},
-  {d:3,zh:"过去3年，你的营收趋势是？",en:"Over the past 3 years, your revenue trend?",c:[{zh:"持续增长",en:"Consistently growing",s:3},{zh:"平稳",en:"Flat",s:2},{zh:"波动或下降",en:"Volatile or declining",s:0}]},
-  {d:3,zh:"你的固定成本占总成本的比例高吗？",en:"Is the ratio of fixed to variable costs high?",c:[{zh:"偏变动成本，收缩时成本也会降",en:"Mostly variable — costs shrink with revenue",s:3},{zh:"混合",en:"Mixed",s:2},{zh:"高固定成本，收入下降时风险大",en:"High fixed costs — risky when revenue drops",s:0}]},
-  {d:3,zh:"你有没有银行授信或融资能力？",en:"Do you have banking credit lines or financing capacity?",c:[{zh:"有，银行有授信额度",en:"Yes, established credit lines",s:3},{zh:"有一点，但额度小",en:"Some but limited",s:2},{zh:"没有或被拒过",en:"None or been rejected",s:0}]},
-  {d:3,zh:"你的应收账款平均回款周期？",en:"Average accounts receivable collection period?",c:[{zh:"30天以内",en:"Under 30 days",s:3},{zh:"30-60天",en:"30–60 days",s:2},{zh:"超过60天或经常坏账",en:"Over 60 days or frequent bad debt",s:0}]},
-  {d:4,zh:"如果目标客户要找你这类服务，你是第一个想到的吗？",en:"Are you the first thought for your target customers?",c:[{zh:"大多数情况下是",en:"In most cases yes",s:3},{zh:"有时候是",en:"Sometimes",s:2},{zh:"基本不是",en:"Rarely",s:0}]},
-  {d:4,zh:"你在行业里有没有被媒体或行业平台报道过？",en:"Have you been covered by media or industry platforms?",c:[{zh:"多次，有主动来找我们的报道",en:"Multiple times, media approaches us",s:3},{zh:"偶尔，主要靠我们主动",en:"Occasionally, mostly we initiate",s:2},{zh:"从来没有",en:"Never",s:0}]},
-  {d:4,zh:"你的品牌在目标市场里代表什么？",en:"What does your brand represent in the target market?",c:[{zh:"有清晰的品类定位，客户知道我们代表什么",en:"Clear category positioning customers recognise",s:3},{zh:"知道我们好，但说不清我们最擅长什么",en:"Know we're good but can't articulate our specialty",s:2},{zh:"基本没有清晰定位",en:"No clear positioning",s:0}]},
-  {d:4,zh:"你的社交媒体或内容平台，自然流量怎么样？",en:"How is your organic traffic on content platforms?",c:[{zh:"稳定增长，内容有影响力",en:"Steadily growing, content has influence",s:3},{zh:"有一些，但不稳定",en:"Some but inconsistent",s:2},{zh:"基本靠付费",en:"Mostly paid",s:0}]},
-  {d:4,zh:"你的竞争对手有没有主动模仿过你的营销或定位？",en:"Have competitors actively copied your marketing?",c:[{zh:"有，说明我们在领跑",en:"Yes — we're setting the pace",s:3},{zh:"有一点",en:"A little",s:2},{zh:"没有",en:"No",s:0}]},
-  {d:4,zh:"你的品牌名字，客户能直接记住并搜索吗？",en:"Can customers remember and search for your brand directly?",c:[{zh:"可以，有直接搜索流量",en:"Yes, direct search traffic exists",s:3},{zh:"有时候，但经常搜类别不搜品牌",en:"Sometimes, often search category not brand",s:2},{zh:"基本搜不到我们",en:"Rarely searched directly",s:0}]},
-  {d:4,zh:"你的定价，相比竞争对手处于什么区间？",en:"Your pricing vs similar competitors — where do you sit?",c:[{zh:"溢价区间，客户接受并认可",en:"Premium tier, customers accept and recognise it",s:3},{zh:"中间区间",en:"Mid tier",s:2},{zh:"低价或价格战区间",en:"Low or price-war tier",s:0}]},
-  {d:4,zh:"客户会不会主动在社交媒体上提到你？",en:"Do customers proactively mention you on social media?",c:[{zh:"经常有，不用我们引导",en:"Often, without prompting",s:3},{zh:"偶尔，需要引导",en:"Occasionally, needs prompting",s:2},{zh:"基本没有",en:"Rarely",s:0}]},
-  {d:4,zh:"你有没有建立过自己的社群或粉丝群体？",en:"Have you built your own community or fan base?",c:[{zh:"有，活跃的社群",en:"Yes, active community",s:3},{zh:"有开始，但不活跃",en:"Started one but not active",s:2},{zh:"没有",en:"No",s:0}]},
-  {d:4,zh:"你有没有在行业论坛、峰会或媒体上发言被引用？",en:"Spoken at or quoted in industry forums or media?",c:[{zh:"多次",en:"Multiple times",s:3},{zh:"一两次",en:"Once or twice",s:2},{zh:"从来没有",en:"Never",s:0}]},
-  {d:5,zh:"你的生意品牌和你个人品牌是分开的吗？",en:"Is your business brand separate from your personal brand?",c:[{zh:"完全分开，客户认品牌不认人",en:"Fully separate — customers follow the brand",s:3},{zh:"部分分开，品牌有一定独立性",en:"Partially separate, some independence",s:2},{zh:"基本是一体的，我就是品牌",en:"Basically the same — I am the brand",s:0}]},
-  {d:5,zh:"如果你的脸从所有营销材料上消失，销售会怎样？",en:"If your face disappeared from all marketing, sales would?",c:[{zh:"基本不受影响",en:"Basically unaffected",s:3},{zh:"有些影响，但品牌能撑住",en:"Some impact, but brand holds",s:2},{zh:"会明显下降",en:"Would drop significantly",s:0}]},
-  {d:5,zh:"你的品牌有独立的视觉体系（logo、色彩、设计语言）吗？",en:"Does your brand have an independent visual system?",c:[{zh:"有，完整一致的视觉体系",en:"Yes, complete and consistent",s:3},{zh:"有基础的，但不完整",en:"Basic elements exist but incomplete",s:2},{zh:"基本没有",en:"Minimal",s:0}]},
-  {d:5,zh:"你的客户忠诚度，主要是对品牌还是对你个人？",en:"Customer loyalty is primarily to the brand or to you?",c:[{zh:"主要对品牌",en:"Primarily to the brand",s:3},{zh:"混合，两者都有",en:"Mixed, both",s:2},{zh:"主要对我个人",en:"Primarily to me personally",s:0}]},
-  {d:5,zh:"有没有人可以代表你的品牌发声？",en:"Is there anyone who can speak for your brand in your absence?",c:[{zh:"有，培训好了的团队或代言人",en:"Yes, trained team or spokesperson",s:3},{zh:"有一两个，但能力有限",en:"One or two but limited capability",s:2},{zh:"没有，只有我能代表品牌",en:"No, only I can represent the brand",s:0}]},
-  {d:5,zh:"你的员工都能清楚说出品牌故事或价值主张吗？",en:"Can all staff articulate your brand story and value proposition?",c:[{zh:"有，员工能清楚表达",en:"Yes, staff can articulate it clearly",s:3},{zh:"有但不一致，说法各有不同",en:"Exists but inconsistent across staff",s:2},{zh:"基本没有，或只有我知道",en:"Mostly absent or only I know it",s:0}]},
-  {d:5,zh:"如果你明天把生意卖掉，新老板能继续用你的品牌吗？",en:"Could a new owner operate under your brand if you sold tomorrow?",c:[{zh:"可以，品牌是独立资产",en:"Yes, brand is a standalone asset",s:3},{zh:"可以，但需要你配合一段时间",en:"Yes but would need your involvement",s:2},{zh:"很难，品牌太依赖我本人",en:"Hard — brand relies too much on me",s:0}]},
-  {d:5,zh:"你的品牌名字、商标有没有正式注册保护？",en:"Is your brand name and trademark formally registered?",c:[{zh:"有，已注册",en:"Yes, registered",s:3},{zh:"在进行中",en:"In progress",s:2},{zh:"没有",en:"No",s:0}]},
-  {d:5,zh:"你的品牌资产（网站、社媒、内容库）在你不在时还能运转吗？",en:"Can your brand assets operate without you?",c:[{zh:"可以，有团队管理",en:"Yes, team manages them",s:3},{zh:"部分可以",en:"Partially",s:2},{zh:"基本不行，全靠我",en:"No, mostly dependent on me",s:0}]},
-  {d:5,zh:"你的品牌有没有超越产品本身的文化认同感？",en:"Does your brand create cultural identity beyond the product?",c:[{zh:"有，客户认同我们代表的价值观",en:"Yes, customers identify with our values",s:3},{zh:"有一点苗头",en:"Emerging",s:2},{zh:"没有，我们只是卖产品",en:"No, we just sell products",s:0}]}
+/* ════════════════════════════════════════════════════════
+   ►►► OWNER CONFIG — set these once after deploying your Google Apps Script ◄◄◄
+   Leave LEAD_ENDPOINT empty ('') to run in local-only mode:
+   submissions are still saved in the browser and exportable as CSV
+   (open the page with #leads in the URL to get the export button).
+   ════════════════════════════════════════════════════════ */
+const CONFIG = {
+  LEAD_ENDPOINT: 'https://script.google.com/macros/s/AKfycbz3TAUIuWNaNUIaIZNPqrm9m-bo77txmPNkyDAOfpYqh-SruC9Tby1PszQTY-tA0v1e/exec',          // paste your Apps Script Web App URL here, e.g. 'https://script.google.com/macros/s/AKfy.../exec'
+  SAVE_PDF_TO_DRIVE: true     // if true, the result PDF is also uploaded to your Drive folder via the same script
+};
+
+/* ════════════════════════════════════════════════════════
+   SSB Capital Readiness Test — Industry-adaptive data
+   d: dimension index 0..5  →  S1 系统化, S2 复制性, S3 护城河,
+                                S4 财务韧性, S5 话语权, S6 品牌独立
+   c: choices, each with score s (0..3). max per dimension = 5 questions.
+   ════════════════════════════════════════════════════════ */
+
+const INDUSTRIES = [
+  {id:'fnb',         icon:'🍜', zh:'餐饮 F&B',            en:'Restaurants, cafes, food chains'},
+  {id:'services',    icon:'💼', zh:'服务业 Services',      en:'Consulting, education, clinics, agencies'},
+  {id:'retail',      icon:'🛍️', zh:'零售 / 电商 Retail',   en:'Physical retail, e-commerce, wholesale-to-consumer'},
+  {id:'manufacturing',icon:'🏭', zh:'制造业 Manufacturing', en:'Factory, production, OEM/ODM'},
+  {id:'tech',        icon:'💻', zh:'科技 / SaaS Tech',     en:'Software, platform, digital products'},
+  {id:'trading',     icon:'📦', zh:'贸易 Trading',         en:'Import/export, distribution, agency'},
+  {id:'construction',icon:'🏗️', zh:'建筑 / 工程 Construction', en:'Contractors, engineering, fit-out'},
+  {id:'logistics',   icon:'🚚', zh:'物流 / 运输 Logistics', en:'Transport, warehousing, delivery'}
 ];
 
 const ARCHETYPES=[
@@ -595,13 +640,398 @@ const DIM_INFO=[
   {name:'S6 品牌独立性',en:'Brand Independence',color:'#7c5cdb',note:'品牌是否能脱离创始人独立存在'}
 ];
 
-let pool=[],cur=0,ans=[],userName='';
+/* Per-dimension elaboration, keyed by score band: high (≥67) / mid (34-66) / low (<34).
+   Written in the SSB capital lens. {gap} placeholder is filled with the user's weakest answer. */
+const ELAB={
+  0:{ // S1 系统化
+    high:["系统化是你的强项。运营已经能在你不在场时正常运转，这意味着你从『经营者』走向了『拥有者』——资本最看重的正是这种『无我也能跑』的能力。","Systems are your strength. The business runs without you in the room — the 'owner not operator' shift capital pays for."],
+    mid:["系统初具雏形，但还没真正脱离你。一旦你抽身，质量和效率会打折。这是从『值钱』迈进的关键卡口，先把核心岗位的流程沉淀成文件。","Systems are forming but still lean on you. Document the core roles before you scale."],
+    low:["这是你最危险的一环。生意高度依赖你个人，等于把价值锁死在你身上——PE投资人看不到退出路径，估值会被直接打折。系统化应是你的第一优先。","Your most dangerous gap. The business is locked to you personally, so buyers see no exit. Systemise first."]
+  },
+  1:{ // S2 复制性
+    high:["你的模型可复制。给足资源就能在新地点或新渠道跑出同样结果，这正是资本估值里『规模化想象空间』的来源。","Your model replicates. With resources it clones to new sites/channels — the scale story capital buys."],
+    mid:["有一定复制潜力，但每次扩张都还要你亲自磨合。把单位经济和交付流程算清、写清，复制成本才会真正下降。","Some replicability, but each expansion still needs you. Nail unit economics and a documented playbook."],
+    low:["你的生意目前几乎无法复制——价值高度绑在你个人的判断或手艺上。在解决这一点之前，扩张只会放大对你的依赖，而不是放大价值。","Hard to replicate today; value is tied to your personal craft. Scaling now multiplies dependence, not value."]
+  },
+  2:{ // S3 护城河
+    high:["你有真正的护城河。客户转换成本高、竞争对手难以复制，这让你的定价权和利润可以持续复利——可持续性的根基稳固。","A real moat: high switching costs, hard to copy. Pricing power compounds — sustainability is solid."],
+    mid:["护城河存在但不深。你有优势，但还能被价格或服务追上。把局部优势做成结构性壁垒（IP、锁定供应、转换成本），否则容易陷入价格战。","A shallow moat — catchable on price/service. Turn your edge into structural barriers before a price war."],
+    low:["你几乎没有护城河。客户留下来更多是出于方便或习惯，而非无法替代。一旦有人用更低价或更好服务切入，你会很被动。这是估值倍数最大的拖累项。","Little defensibility — customers stay on convenience, not lock-in. The biggest drag on your multiple."]
+  },
+  3:{ // S4 财务韧性
+    high:["财务底盘扎实。利润健康、客户分散、现金流能扛住波动——资本买的不只是增长，更是这种『扛得住』的韧性。","Strong financial base: healthy margins, diversified clients, resilient cash flow. Buyers pay for durability."],
+    mid:["财务尚可但有隐忧——可能是利润偏薄、客户集中，或现金流偏紧。先堵住最脆弱的那个口子，韧性比增长更能稳住估值。","Decent but exposed — thin margin, concentration, or tight cash. Plug the weakest hole first."],
+    low:["财务韧性偏弱，是高风险信号。利润、客户集中度或现金流中至少一项让生意经不起风浪。资本看到的是风险溢价，会直接压低出价。","Weak resilience is a red flag. Margin, concentration, or cash can't weather a storm — buyers price in the risk."]
+  },
+  4:{ // S5 话语权
+    high:["你在客户潜意识里占据了位置。被主动想起、被报道、能收溢价——这是品牌影响力里最值钱的『话语权』，直接抬升你的议价能力。","You own mind-space: top-of-mind, covered, premium-priced. The most valuable form of brand influence."],
+    mid:["有一些知名度，但还没真正占领品类。客户认得你，却说不清你最擅长什么。把定位收窄、把话语权做实，溢价空间才会打开。","Some awareness but no category ownership. Sharpen positioning to unlock premium."],
+    low:["市场基本不认识你。你可能建了真东西，却没人知道——这正是『隐形冠军』的陷阱，护城河的价值无法兑现成估值。需要投资品牌话语权。","The market barely knows you — the 'hidden champion' trap. Your moat can't convert to valuation. Invest in voice."]
+  },
+  5:{ // S6 品牌独立性
+    high:["品牌已经能脱离你独立存在。客户认的是品牌而非你本人，这意味着品牌是一项可交易的独立资产——卖掉生意时，新东家能直接接手。","The brand stands without you — a transferable asset. A buyer can take over and keep running it."],
+    mid:["品牌有一定独立性，但还和你绑着。你一旦淡出，会有动摇。培养能代表品牌发声的人，把品牌资产从你身上转移出去。","Partly independent but still tied to you. Develop others who can speak for the brand."],
+    low:["品牌几乎就是你本人。你就是招牌——这在做生意时是优势，在卖生意时是致命伤，因为品牌无法和你分离交易。这是『网红老板』最常见的天花板。","The brand is you. Great for running it, fatal for selling it — it can't be separated and sold. The 'celebrity boss' ceiling."]
+  }
+};
 
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+/* shorthand builders */
+const C3=(a,b,c)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:2},{zh:c[0],en:c[1],s:0}];
+const C4=(a,b,c,d)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:2},{zh:c[0],en:c[1],s:1},{zh:d[0],en:d[1],s:0}];
 
-function buildPool(){
+const BANKS = {};
+
+/* ══════════════ 1. 餐饮 F&B ══════════════ */
+BANKS.fnb=[
+  // S1 系统化
+  {d:0,zh:"你不在店里时，出品质量稳定吗？",en:"When you're not at the outlet, is food quality consistent?",c:C4(["稳定，有标准食谱和出品流程","Consistent — standard recipes and SOP"],["大致稳定，偶尔走样","Mostly, occasionally off"],["看是哪个师傅","Depends which cook is on"],["明显下滑","Noticeably drops"])},
+  {d:0,zh:"厨房和前厅有书面SOP吗？",en:"Do kitchen and front-of-house have written SOPs?",c:C3(["有完整SOP，员工照做","Full SOPs, staff follow them"],["部分有，靠老员工带","Partial, veterans train others"],["基本靠口头和经验","Mostly verbal and by feel"])},
+  {d:0,zh:"新厨工/服务员多久能独立上岗？",en:"How fast can a new cook/server work independently?",c:C3(["1-2周，有培训表","1–2 weeks, training checklist"],["1个月，靠跟班","1 month, by shadowing"],["很久，全靠悟性","Long, all by intuition"])},
+  {d:0,zh:"采购、排班、盘点是系统化的吗？",en:"Are purchasing, rostering, stock-take systematised?",c:C3(["有系统/表格固定流程","Systems/templates in place"],["半系统，仍需我盯","Semi-system, I still oversee"],["全靠我亲自处理","I do it all personally"])},
+  {d:0,zh:"客诉（上错菜、味道）员工能自己处理吗？",en:"Can staff handle complaints (wrong dish, taste) alone?",c:C3(["可以，有处理权限和流程","Yes, clear authority and process"],["小事可以，大事找我","Small yes, big ones come to me"],["几乎都要找我","Almost all come to me"])},
+  // S2 复制性
+  {d:1,zh:"再开一家分店，出品能一样吗？",en:"Open a second outlet — would the food be identical?",c:C3(["能，配方和流程已标准化","Yes, recipes & process standardised"],["大概，但要我亲自盯一段时间","Roughly, needs my supervision"],["很难，太依赖现在的厨师","Hard, relies on current chef"])},
+  {d:1,zh:"你的招牌菜依赖某位师傅的手艺吗？",en:"Does your signature dish depend on one chef's skill?",c:C3(["不依赖，已配方化/中央厨房","No, recipe-fied / central kitchen"],["部分依赖","Partly"],["高度依赖一个人","Heavily on one person"])},
+  {d:1,zh:"你的单店模型算得清吗（坪效、翻台、食材成本）？",en:"Is your single-outlet unit economics clear?",c:C3(["很清楚，数字说话","Very clear, by the numbers"],["大概知道","Roughly"],["没细算过","Never calculated"])},
+  {d:1,zh:"中央厨房或预制能力到位了吗？",en:"Do you have central-kitchen or prep capability?",c:C3(["有，可支撑多店","Yes, supports multiple outlets"],["在建/部分","Building / partial"],["没有，每店现做","None, each outlet from scratch"])},
+  {d:1,zh:"换个商场/城市，你的模型还成立吗？",en:"In another mall/city, does your model still hold?",c:C3(["成立，已验证或有信心","Holds, validated or confident"],["要本地化调整","Needs localisation"],["不确定，太多本地因素","Unsure, many local factors"])},
+  // S3 护城河
+  {d:2,zh:"客人为什么选你而不是隔壁？",en:"Why do diners choose you over the shop next door?",c:C3(["有难以复制的招牌/体验","Hard-to-copy signature/experience"],["位置好或价格好，可被复制","Location/price, replicable"],["方便顺路，没特别理由","Convenience, no real reason"])},
+  {d:2,zh:"熟客回头率大概多少？",en:"Roughly what's your repeat-customer rate?",c:C3(["很高，靠回头客撑场","High, regulars carry us"],["一般","Average"],["低，多是路过客","Low, mostly walk-ins"])},
+  {d:2,zh:"竞争对手能轻易抄走你的菜单和定位吗？",en:"Can rivals easily copy your menu and positioning?",c:C3(["很难，有独门配方/品类","Hard, unique recipe/category"],["能抄表面，抄不到全部","Surface yes, not fully"],["很容易","Very easily"])},
+  {d:2,zh:"最近一年被迫打折/价格战了吗？",en:"Forced into discounting/price war this year?",c:C3(["没有，定价稳得住","No, pricing holds"],["小幅","Minor"],["是，压力很大","Yes, heavy pressure"])},
+  {d:2,zh:"你有外卖平台之外的自有客源吗？",en:"Do you own customer access beyond delivery apps?",c:C3(["有，自有会员/社群","Yes, own members/community"],["有一点","A little"],["几乎全靠平台","Almost all via platforms"])},
+  // S4 财务韧性
+  {d:3,zh:"你的食材成本占营收比清楚且受控吗？",en:"Is your food-cost ratio clear and controlled?",c:C3(["清楚，30%上下受控","Clear, ~30% controlled"],["大概知道","Roughly"],["不清楚，常超","Unclear, often over"])},
+  {d:3,zh:"淡季现金流能撑多久？",en:"How long can cash flow last in a slow season?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"净利率大概是？",en:"Approximate net margin?",c:C3(["15%以上","Over 15%"],["5-15%","5–15%"],["低于5%或亏","Under 5% or loss"])},
+  {d:3,zh:"收入靠单店还是多点/多渠道？",en:"Revenue from one outlet or multiple points/channels?",c:C3(["多点或多渠道健康","Multiple, healthy"],["一主一辅","One main, one minor"],["全靠一家店","All on one outlet"])},
+  {d:3,zh:"有正规账目和审计吗？",en:"Proper books and audit?",c:C3(["有正式审计","Formal audit"],["内部记账","Internal bookkeeping"],["基本没有","Barely any"])},
+  // S5 话语权
+  {d:4,zh:"想吃这个品类，客人第一个想到你吗？",en:"For this cuisine, are you top-of-mind?",c:C3(["多数时候是","Mostly yes"],["有时候","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"被美食媒体/博主主动报道过吗？",en:"Covered by food media/bloggers unprompted?",c:C3(["多次，主动来","Often, they come to us"],["偶尔，靠我们邀","Occasionally, we invite"],["没有","No"])},
+  {d:4,zh:"你的店在社媒上有人自发打卡吗？",en:"Do people post about you on social unprompted?",c:C3(["经常，不用引导","Often, unprompted"],["偶尔","Occasionally"],["几乎没有","Rarely"])},
+  {d:4,zh:"你在同价位里能收溢价吗？",en:"Can you charge a premium at your price tier?",c:C3(["可以，客人认","Yes, accepted"],["小幅","Slight"],["没有空间","No room"])},
+  {d:4,zh:"你的品牌在客人心里代表某种明确定位吗？",en:"Does your brand own a clear position in diners' minds?",c:C3(["有，品类联想清晰","Yes, clear category link"],["模糊","Vague"],["没有","None"])},
+  // S6 品牌独立性
+  {d:5,zh:"你的店招和你本人绑定吗？",en:"Is the outlet tied to you personally?",c:C3(["不绑，客人认品牌","No, they follow the brand"],["部分","Partly"],["很绑，我就是招牌","Very, I am the draw"])},
+  {d:5,zh:"如果你不再露面，生意会受影响吗？",en:"If you stopped appearing, would sales be hit?",c:C3(["基本不受影响","Largely unaffected"],["有影响但撑得住","Some, but holds"],["明显下滑","Drops clearly"])},
+  {d:5,zh:"品牌有完整视觉体系（logo、装修、包装）吗？",en:"Complete visual identity (logo, decor, packaging)?",c:C3(["有，一致","Yes, consistent"],["基础","Basic"],["几乎没有","Minimal"])},
+  {d:5,zh:"商标注册了吗？",en:"Trademark registered?",c:C3(["已注册","Registered"],["在办","In progress"],["没有","No"])},
+  {d:5,zh:"卖掉这家店，新老板能直接用你的品牌经营吗？",en:"Could a buyer run it under your brand without you?",c:C3(["可以，品牌是独立资产","Yes, brand is standalone"],["需要我过渡一阵","Needs my transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 2. 服务业 Services ══════════════ */
+BANKS.services=[
+  // S1 系统化
+  {d:0,zh:"你不在时，团队能照常交付服务吗？",en:"When you're away, can the team still deliver?",c:C4(["可以，有交付流程","Yes, delivery process exists"],["能撑，质量略降","Holds, quality dips slightly"],["勉强，要我远程救火","Barely, I firefight remotely"],["基本停摆","Mostly stalls"])},
+  {d:0,zh:"你的服务交付有标准化方法论/SOP吗？",en:"Is delivery backed by a standard methodology/SOP?",c:C3(["有成文方法论，可被执行","Documented methodology, executable"],["部分，核心还在我脑里","Partial, core in my head"],["基本靠个人经验","Mostly personal experience"])},
+  {d:0,zh:"新顾问/员工多久能独立服务客户？",en:"How fast can a new hire serve clients independently?",c:C3(["1-2个月，有培训体系","1–2 months, training system"],["3-6个月，靠带","3–6 months, mentoring"],["半年以上或带不出来","6+ months or can't"])},
+  {d:0,zh:"项目/客户管理是系统化的吗？",en:"Is project/client management systematised?",c:C3(["有CRM/系统跑流程","CRM/system runs it"],["半系统，仍靠我盯","Semi, I still oversee"],["全在我脑里","All in my head"])},
+  {d:0,zh:"客户的关键决策都要经过你吗？",en:"Do key client decisions all route through you?",c:C3(["不到30%要我","Under 30% need me"],["约一半","About half"],["几乎全部","Almost all"])},
+  // S2 复制性
+  {d:1,zh:"再招一个像你一样的顾问，能复制你的成果吗？",en:"Hire another consultant like you — can they replicate results?",c:C3(["能，方法论可传承","Yes, methodology transfers"],["部分，要长时间磨","Partly, long ramp"],["很难，靠我个人判断","Hard, relies on my judgment"])},
+  {d:1,zh:"你的服务价值靠流程还是靠你个人？",en:"Does service value come from process or from you?",c:C3(["靠可标准化的流程","From standardisable process"],["体验独特但可部分标准化","Unique but partly standardisable"],["高度靠个人能力","Highly personal"])},
+  {d:1,zh:"你的服务能打包成产品/套餐吗？",en:"Can your service be packaged into products/tiers?",c:C3(["已产品化，有套餐","Productised, clear tiers"],["在尝试","Trying"],["每单都定制","Every job bespoke"])},
+  {d:1,zh:"获客方式在10倍规模时还有效吗？",en:"Would acquisition work at 10x scale?",c:C3(["可以，系统化渠道","Yes, systematic channel"],["部分，要改造","Partly, needs rework"],["不行，靠我个人人脉","No, my personal network"])},
+  {d:1,zh:"在另一个城市开分支，模型成立吗？",en:"In another city, does the model hold?",c:C3(["成立或有信心","Holds or confident"],["要本地化","Needs localisation"],["太依赖本地关系","Too reliant on local ties"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么选你而不是别家服务商？",en:"Why pick you over another provider?",c:C3(["有难复制的专长/成果","Hard-to-copy expertise/results"],["关系或价格，可被替代","Relationship/price, replaceable"],["方便或习惯","Convenience/habit"])},
+  {d:2,zh:"客户续约/复购率大概多少？",en:"Roughly your renewal/repeat rate?",c:C3(["60%以上","Over 60%"],["30-60%","30–60%"],["低于30%","Under 30%"])},
+  {d:2,zh:"客户换掉你的转换成本高吗？",en:"How high is the switching cost to drop you?",c:C3(["高，换很痛","High, painful"],["中等","Medium"],["低，随时可换","Low, anytime"])},
+  {d:2,zh:"你有受保护的方法论、IP或资质门槛吗？",en:"Protected methodology, IP, or licensing barrier?",c:C3(["有正式保护或牌照壁垒","Formal IP or licence barrier"],["有独门方法但没保护","Unique method, unprotected"],["没有","None"])},
+  {d:2,zh:"最大单一客户占营收比例？",en:"Largest single client's share of revenue?",c:C3(["低于15%","Under 15%"],["15-40%","15–40%"],["超过40%","Over 40%"])},
+  // S4 财务韧性
+  {d:3,zh:"你的毛利率大概是？",en:"Approximate gross margin?",c:C3(["50%以上","Over 50%"],["30-50%","30–50%"],["低于30%","Under 30%"])},
+  {d:3,zh:"应收账款回款周期？",en:"Accounts receivable collection period?",c:C3(["30天内","Under 30 days"],["30-60天","30–60 days"],["60天以上或常拖","60+ days or often late"])},
+  {d:3,zh:"零新单情况下现金流撑多久？",en:"With zero new deals, cash runway?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"收入是项目制（一次性）还是经常性？",en:"Is revenue one-off projects or recurring?",c:C3(["有稳定经常性收入","Stable recurring revenue"],["混合","Mixed"],["几乎全是一次性","Almost all one-off"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有正式审计","Formal audit"],["内部记账","Internal bookkeeping"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"目标客户要找这类服务，先想到你吗？",en:"For this service, are you their first thought?",c:C3(["多数时候是","Mostly yes"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"被行业媒体/平台报道或引用过吗？",en:"Covered or quoted by industry media?",c:C3(["多次，主动来找","Often, they approach"],["偶尔，靠我主动","Occasionally, I initiate"],["没有","No"])},
+  {d:4,zh:"你在行业论坛/峰会发言被引用过吗？",en:"Spoken at / quoted in industry forums?",c:C3(["多次","Multiple times"],["一两次","Once or twice"],["没有","Never"])},
+  {d:4,zh:"客户会主动转介绍你吗？",en:"Do clients refer you unprompted?",c:C3(["经常，口碑驱动","Often, word-of-mouth"],["偶尔","Occasionally"],["很少","Rarely"])},
+  {d:4,zh:"你能在同行里收溢价吗？",en:"Can you charge a premium vs peers?",c:C3(["可以，20%以上","Yes, 20%+"],["5-20%","5–20%"],["没有空间","No room"])},
+  // S6 品牌独立性
+  {d:5,zh:"公司品牌和你个人品牌分开吗？",en:"Is the firm's brand separate from yours?",c:C3(["完全分开，客户认公司","Fully, clients follow the firm"],["部分","Partly"],["我就是品牌","I am the brand"])},
+  {d:5,zh:"如果你退到幕后，客户会流失吗？",en:"If you stepped back, would clients leave?",c:C3(["基本不会","Largely no"],["有些会","Some would"],["大量会","Many would"])},
+  {d:5,zh:"有人能代表公司对外发声吗？",en:"Can anyone else represent the firm publicly?",c:C3(["有，已培养","Yes, developed"],["一两个，能力有限","One or two, limited"],["只有我","Only me"])},
+  {d:5,zh:"员工都能讲清公司的价值主张吗？",en:"Can staff articulate the firm's value prop?",c:C3(["能，一致","Yes, consistently"],["不一致","Inconsistent"],["只有我清楚","Only I know"])},
+  {d:5,zh:"卖掉公司，新东家能用你的品牌继续经营吗？",en:"Could a buyer run the firm under your brand without you?",c:C3(["可以，品牌是独立资产","Yes, standalone asset"],["要我过渡","Needs my transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 3. 零售/电商 Retail ══════════════ */
+BANKS.retail=[
+  // S1 系统化
+  {d:0,zh:"你不在时，门店/网店能正常运营吗？",en:"When away, do store/online ops run normally?",c:C4(["正常，员工知道流程","Normal, staff know the flow"],["能撑，略乱","Holds, a bit messy"],["吃力","Struggles"],["容易出问题","Breaks easily"])},
+  {d:0,zh:"进货、上架、库存、退换有SOP吗？",en:"SOPs for purchasing, listing, stock, returns?",c:C3(["有完整流程","Full process"],["部分","Partial"],["靠人记","By memory"])},
+  {d:0,zh:"新店员/客服多久能独立?",en:"How fast can a new sales/CS staff work solo?",c:C3(["1-2周","1–2 weeks"],["1个月","1 month"],["很久","Long"])},
+  {d:0,zh:"库存和销售数据是系统自动的吗？",en:"Are stock & sales data system-automated?",c:C3(["是，POS/系统自动","Yes, POS/system auto"],["半自动","Semi-auto"],["手工","Manual"])},
+  {d:0,zh:"客诉/退换货员工能自己处理吗？",en:"Can staff handle complaints/returns alone?",c:C3(["可以，有权限","Yes, with authority"],["小事可以","Small ones yes"],["都找我","All to me"])},
+  // S2 复制性
+  {d:1,zh:"再开一家店/上一个新平台，复制得了吗？",en:"Open another store / new platform — replicable?",c:C3(["能，模型已验证","Yes, model proven"],["要我盯一阵","Needs my oversight"],["很难","Hard"])},
+  {d:1,zh:"你的选品靠系统还是靠你的眼光?",en:"Is product selection systematic or your instinct?",c:C3(["有数据化选品逻辑","Data-driven logic"],["半经验半数据","Half data half gut"],["全靠我眼光","All my instinct"])},
+  {d:1,zh:"单位经济（客单、毛利、获客成本）清楚吗？",en:"Unit economics (AOV, margin, CAC) clear?",c:C3(["很清楚","Very clear"],["大概","Roughly"],["没算过","Never calculated"])},
+  {d:1,zh:"获客渠道在10倍规模时还有效吗？",en:"Would acquisition channels hold at 10x?",c:C3(["可以，系统化","Yes, systematic"],["要改造","Needs rework"],["靠老客和人脉","Relies on regulars/network"])},
+  {d:1,zh:"换城市/换平台，模型还成立吗？",en:"Different city/platform — still works?",c:C3(["成立","Holds"],["要本地化","Needs localisation"],["不确定","Unsure"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么买你而不是别家?",en:"Why buy from you over others?",c:C3(["有独家产品/体验","Exclusive product/experience"],["价格或便利，可复制","Price/convenience, replicable"],["没特别理由","No real reason"])},
+  {d:2,zh:"复购率大概多少？",en:"Approximate repeat-purchase rate?",c:C3(["60%以上","Over 60%"],["30-60%","30–60%"],["低于30%","Under 30%"])},
+  {d:2,zh:"你的供货/品牌代理有独家优势吗？",en:"Exclusive supply or brand-agency advantage?",c:C3(["有独家/锁定货源","Exclusive/locked supply"],["有些优惠不独家","Some perks, not exclusive"],["跟市场一样","Same as market"])},
+  {d:2,zh:"最近被迫价格战了吗？",en:"Forced into price war recently?",c:C3(["没有","No"],["小幅","Minor"],["是，很激烈","Yes, intense"])},
+  {d:2,zh:"你有自有客户数据库吗（非平台）？",en:"Own customer database (off-platform)?",c:C3(["有，可直接触达","Yes, direct reach"],["有一点","A little"],["全靠平台","All on platforms"])},
+  // S4 财务韧性
+  {d:3,zh:"毛利率大概是？",en:"Approximate gross margin?",c:C3(["50%以上","Over 50%"],["30-50%","30–50%"],["低于30%","Under 30%"])},
+  {d:3,zh:"滞销库存占比高吗？",en:"High share of dead stock?",c:C3(["低，周转健康","Low, healthy turnover"],["中等","Medium"],["高，压货严重","High, heavy overstock"])},
+  {d:3,zh:"零新订单现金流撑多久？",en:"Cash runway with zero new orders?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"收入靠单一平台还是多渠道？",en:"Revenue from one platform or many?",c:C3(["多渠道健康","Multi-channel, healthy"],["一主一辅","One main one minor"],["全靠一个","All on one"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有审计","Audited"],["内部记账","Bookkeeping only"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"想买这个品类，客户先想到你吗？",en:"For this category, top-of-mind?",c:C3(["多数是","Mostly"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"自然流量（非付费）健康吗？",en:"Organic (non-paid) traffic healthy?",c:C3(["稳定增长","Steadily growing"],["有但不稳","Some, unstable"],["全靠付费","All paid"])},
+  {d:4,zh:"客户会自发晒单/带话题吗？",en:"Customers post/tag you unprompted?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Rarely"])},
+  {d:4,zh:"客户能记住并直接搜你品牌吗？",en:"Can customers recall & search your brand?",c:C3(["有直接搜索流量","Direct search traffic"],["搜品类多","Search category more"],["搜不到","Rarely searched"])},
+  {d:4,zh:"你能在同类里收溢价吗？",en:"Can you charge a premium vs similar?",c:C3(["可以","Yes"],["小幅","Slight"],["没空间","No room"])},
+  // S6 品牌独立性
+  {d:5,zh:"品牌和你个人绑定吗？",en:"Is the brand tied to you personally?",c:C3(["不绑，认品牌","No, follow brand"],["部分","Partly"],["很绑","Heavily"])},
+  {d:5,zh:"你从营销中消失，销售会怎样？",en:"If you vanished from marketing, sales?",c:C3(["基本不受影响","Largely unaffected"],["有影响能撑","Some, holds"],["明显下滑","Drops"])},
+  {d:5,zh:"有完整视觉与包装体系吗？",en:"Complete visual & packaging identity?",c:C3(["有，一致","Yes, consistent"],["基础","Basic"],["几乎没有","Minimal"])},
+  {d:5,zh:"商标注册了吗？",en:"Trademark registered?",c:C3(["已注册","Registered"],["在办","In progress"],["没有","No"])},
+  {d:5,zh:"卖掉生意，新东家能直接用你的品牌吗？",en:"Could a buyer use your brand without you?",c:C3(["可以，独立资产","Yes, standalone"],["要过渡","Needs transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 4. 制造业 Manufacturing ══════════════ */
+BANKS.manufacturing=[
+  // S1 系统化
+  {d:0,zh:"你不在厂里时，生产线能正常运转吗？",en:"When you're away, does the line run normally?",c:C4(["正常，有生产排程和标准","Normal, scheduling & standards"],["能撑，需主管盯","Holds, supervisors watch"],["吃力","Struggles"],["容易乱","Goes off easily"])},
+  {d:0,zh:"工艺、质检、设备维护有书面SOP吗？",en:"Written SOPs for process, QC, maintenance?",c:C3(["有完整SOP","Full SOPs"],["部分","Partial"],["靠老师傅经验","Veterans' experience"])},
+  {d:0,zh:"新工人多久能达标上岗？",en:"How fast can a new worker hit standard?",c:C3(["1-2周，有培训","1–2 weeks, trained"],["1-2个月","1–2 months"],["很久，靠悟性","Long, by feel"])},
+  {d:0,zh:"生产、库存、订单数据系统化吗？",en:"Are production/stock/order data systematised?",c:C3(["有ERP/MES系统","ERP/MES in place"],["半系统","Semi"],["手工Excel","Manual Excel"])},
+  {d:0,zh:"质量问题主管能自己决策处理吗？",en:"Can supervisors resolve quality issues alone?",c:C3(["可以，有标准","Yes, by standard"],["小事可以","Small ones"],["都找我","All to me"])},
+  // S2 复制性
+  {d:1,zh:"再开一条产线/一个厂，能复制产能与质量吗？",en:"New line/plant — can you replicate output & quality?",c:C3(["能，工艺已标准化","Yes, process standardised"],["要我盯一阵","Needs my oversight"],["很难","Hard"])},
+  {d:1,zh:"产品质量靠系统还是靠某几位老师傅？",en:"Is quality from systems or a few masters?",c:C3(["靠系统和标准","From systems & standards"],["半靠人","Part on people"],["高度靠几个老师傅","Highly on key masters"])},
+  {d:1,zh:"单位成本（料工费）算得清吗？",en:"Are unit costs (material/labour/overhead) clear?",c:C3(["很清楚","Very clear"],["大概","Roughly"],["没细算","Not detailed"])},
+  {d:1,zh:"产能扩张靠加设备就行，还是处处卡人？",en:"Does scaling need just machines, or people bottlenecks?",c:C3(["加设备即可扩","Add machines to scale"],["部分卡人","Some people bottlenecks"],["处处靠人","People everywhere"])},
+  {d:1,zh:"换地点设厂，模型还成立吗？",en:"Set up elsewhere — model still holds?",c:C3(["成立","Holds"],["要调整","Needs adjustment"],["太多本地依赖","Too many local ties"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么找你代工/采购而不是别家？",en:"Why source/OEM from you not others?",c:C3(["有难复制的工艺/认证","Hard-to-copy process/cert"],["价格或交期，可被替代","Price/lead-time, replaceable"],["没特别理由","No real reason"])},
+  {d:2,zh:"客户换供应商的转换成本高吗？",en:"How high is client switching cost?",c:C3(["高（模具/认证/磨合）","High (tooling/cert/ramp)"],["中等","Medium"],["低","Low"])},
+  {d:2,zh:"你有专利、认证或专属工艺吗？",en:"Patents, certifications, proprietary process?",c:C3(["有正式保护/认证壁垒","Formal protection/cert barrier"],["有独门但没保护","Unique, unprotected"],["没有","None"])},
+  {d:2,zh:"最大客户占营收比例？",en:"Largest client's revenue share?",c:C3(["低于15%","Under 15%"],["15-40%","15–40%"],["超过40%","Over 40%"])},
+  {d:2,zh:"原材料/供应链有专属优势吗？",en:"Exclusive raw-material/supply advantage?",c:C3(["有锁定/独家供应","Locked/exclusive supply"],["有些优惠","Some perks"],["跟市场一样","Same as market"])},
+  // S4 财务韧性
+  {d:3,zh:"毛利率大概是？",en:"Approximate gross margin?",c:C3(["30%以上","Over 30%"],["15-30%","15–30%"],["低于15%","Under 15%"])},
+  {d:3,zh:"应收账款回款周期？",en:"AR collection period?",c:C3(["60天内","Under 60 days"],["60-90天","60–90 days"],["90天以上或常坏账","90+ days or bad debt"])},
+  {d:3,zh:"订单断档时现金流撑多久？",en:"Cash runway if orders dry up?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"固定成本（设备、厂房）占比高吗？",en:"High fixed-cost ratio (plant/equipment)?",c:C3(["可控，订单降成本也降","Controlled, flexes down"],["混合","Mixed"],["很高，停产风险大","High, shutdown risk"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有审计","Audited"],["内部记账","Bookkeeping"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"在你的产品领域，客户/同行先想到你吗？",en:"In your product niche, are you top-of-mind?",c:C3(["多数是","Mostly"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"你被行业媒体/展会报道或邀展过吗？",en:"Covered by trade media / invited to expos?",c:C3(["多次","Often"],["偶尔","Occasionally"],["没有","No"])},
+  {d:4,zh:"你能参与定行业标准或被同行参考吗？",en:"Do you set standards / get referenced by peers?",c:C3(["有，常被参考","Yes, often referenced"],["偶尔","Occasionally"],["我们跟随","We follow"])},
+  {d:4,zh:"客户愿为你的产品付溢价吗？",en:"Will clients pay a premium for your product?",c:C3(["20%以上溢价","20%+ premium"],["5-20%","5–20%"],["几乎没有","Almost none"])},
+  {d:4,zh:"你的厂牌/品牌在B端有知名度吗？",en:"Brand recognition among B2B buyers?",c:C3(["有清晰定位","Clear positioning"],["模糊","Vague"],["没有","None"])},
+  // S6 品牌独立性
+  {d:5,zh:"客户关系靠公司还是靠你个人？",en:"Are client relationships on the firm or on you?",c:C3(["靠公司/团队","On firm/team"],["混合","Mixed"],["靠我个人","On me"])},
+  {d:5,zh:"你退到幕后，订单会受影响吗？",en:"If you stepped back, would orders suffer?",c:C3(["基本不会","Largely no"],["有些","Some"],["明显","Clearly"])},
+  {d:5,zh:"有人能代表公司谈大客户吗？",en:"Can others negotiate with key accounts?",c:C3(["有，已培养","Yes, developed"],["一两个","One or two"],["只有我","Only me"])},
+  {d:5,zh:"公司有完整品牌与产品体系文档吗？",en:"Complete brand & product documentation?",c:C3(["有，规范","Yes, formalised"],["基础","Basic"],["几乎没有","Minimal"])},
+  {d:5,zh:"卖掉工厂，新东家能延续品牌与客户吗？",en:"Could a buyer keep the brand & clients without you?",c:C3(["可以，独立资产","Yes, standalone"],["要过渡","Needs transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 5. 科技/SaaS Tech ══════════════ */
+BANKS.tech=[
+  // S1 系统化
+  {d:0,zh:"你不在时，产品和运营能正常跑吗？",en:"When you're away, do product & ops keep running?",c:C4(["正常，流程与监控到位","Normal, processes & monitoring"],["能撑，偶尔要我","Holds, occasionally need me"],["吃力","Struggles"],["容易出问题","Breaks easily"])},
+  {d:0,zh:"开发、部署、客服有文档化流程吗？",en:"Documented dev/deploy/support processes?",c:C3(["有完整文档与CI/CD","Full docs & CI/CD"],["部分","Partial"],["靠核心几人脑里","In a few heads"])},
+  {d:0,zh:"新工程师多久能独立交付？",en:"How fast can a new engineer ship solo?",c:C3(["2-4周，有onboarding","2–4 weeks, onboarding"],["1-2个月","1–2 months"],["很久或靠口传","Long or tribal"])},
+  {d:0,zh:"关键知识有沉淀，还是在个别人脑里？",en:"Is key knowledge documented or in few heads?",c:C3(["已沉淀文档化","Documented"],["部分","Partial"],["高度依赖个人","Highly individual"])},
+  {d:0,zh:"产品/技术决策都要你拍板吗？",en:"Do product/tech decisions all need you?",c:C3(["不到30%","Under 30%"],["约一半","About half"],["几乎全部","Almost all"])},
+  // S2 复制性
+  {d:1,zh:"获取一个新客户的边际成本接近零吗？",en:"Is marginal cost per new customer near zero?",c:C3(["是，典型SaaS规模效应","Yes, true SaaS scale"],["部分，有人工交付","Partly, some manual"],["每客户都要重投入","Heavy per-customer cost"])},
+  {d:1,zh:"产品能自助上手，还是要你手把手？",en:"Self-serve onboarding or high-touch?",c:C3(["自助为主","Mostly self-serve"],["半自助","Semi"],["全程高接触","Fully high-touch"])},
+  {d:1,zh:"单位经济（CAC、LTV、回收期）清楚吗？",en:"Unit economics (CAC, LTV, payback) clear?",c:C3(["很清楚","Very clear"],["大概","Roughly"],["没算过","Never calculated"])},
+  {d:1,zh:"获客渠道在10倍规模时还成立吗？",en:"Do channels hold at 10x scale?",c:C3(["可以，可规模化","Yes, scalable"],["要改造","Needs rework"],["靠创始人销售","Founder-led sales"])},
+  {d:1,zh:"产品能跨市场/语言扩展吗？",en:"Can the product expand across markets/languages?",c:C3(["架构支持，已或易扩","Architected for it"],["要不少改造","Needs work"],["强绑本地","Locked local"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么用你而不是竞品？",en:"Why use you over competitors?",c:C3(["有难复制的技术/数据/网络效应","Hard-to-copy tech/data/network"],["功能或价格，可被追上","Features/price, catchable"],["没特别理由","No real reason"])},
+  {d:2,zh:"净留存（NRR）/续费情况如何？",en:"Net revenue retention / renewal health?",c:C3(["NRR>100%或续费高","NRR>100% or high renewal"],["一般","Average"],["流失明显","High churn"])},
+  {d:2,zh:"客户迁走的转换成本高吗？",en:"How high is switching cost to leave?",c:C3(["高（数据/集成/习惯）","High (data/integration/habit)"],["中等","Medium"],["低","Low"])},
+  {d:2,zh:"你有专利、专有数据或受保护IP吗？",en:"Patents, proprietary data, protected IP?",c:C3(["有","Yes"],["有但没保护","Yes but unprotected"],["没有","None"])},
+  {d:2,zh:"最大客户占营收比例？",en:"Largest customer's revenue share?",c:C3(["低于15%","Under 15%"],["15-40%","15–40%"],["超过40%","Over 40%"])},
+  // S4 财务韧性
+  {d:3,zh:"毛利率大概是？",en:"Approximate gross margin?",c:C3(["70%以上","Over 70%"],["40-70%","40–70%"],["低于40%","Under 40%"])},
+  {d:3,zh:"经常性收入（MRR/ARR）占比高吗？",en:"High recurring revenue (MRR/ARR) share?",c:C3(["高，可预测","High, predictable"],["混合","Mixed"],["多是一次性","Mostly one-off"])},
+  {d:3,zh:"现金流（含烧钱速度）能撑多久？",en:"Cash runway given burn rate?",c:C3(["12个月以上","12+ months"],["6-12个月","6–12 months"],["不到6个月","Under 6 months"])},
+  {d:3,zh:"收入来源分散吗？",en:"Diversified revenue sources?",c:C3(["多客户/多产品健康","Many customers/products"],["有些集中","Somewhat concentrated"],["靠少数大客户","Few big accounts"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有审计","Audited"],["内部记账","Bookkeeping"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"在你的品类，客户先想到你吗？",en:"In your category, are you top-of-mind?",c:C3(["多数是","Mostly"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"有自然增长（口碑、自传播）吗？",en:"Organic growth (word-of-mouth, virality)?",c:C3(["有，自传播健康","Yes, healthy"],["少量","Some"],["全靠付费/销售","All paid/sales"])},
+  {d:4,zh:"被科技媒体/社区报道或讨论过吗？",en:"Covered/discussed in tech media or communities?",c:C3(["多次，主动来","Often, they come"],["偶尔","Occasionally"],["没有","No"])},
+  {d:4,zh:"你建立了用户社群或开发者生态吗？",en:"Built a user community or dev ecosystem?",c:C3(["有，活跃","Yes, active"],["起步","Starting"],["没有","No"])},
+  {d:4,zh:"客户能直接记住并搜你的品牌吗？",en:"Can users recall & search your brand directly?",c:C3(["有直接搜索流量","Direct search traffic"],["搜品类多","Search category more"],["搜不到","Rarely"])},
+  // S6 品牌独立性
+  {d:5,zh:"产品品牌和你个人绑定吗？",en:"Is the product brand tied to you personally?",c:C3(["不绑，认产品","No, follow product"],["部分","Partly"],["很绑（创始人IP）","Heavily (founder IP)"])},
+  {d:5,zh:"你退出公关/营销，增长会受影响吗？",en:"If you exit PR/marketing, growth hit?",c:C3(["基本不会","Largely no"],["有些","Some"],["明显","Clearly"])},
+  {d:5,zh:"有人能代表公司对外（销售/媒体）吗？",en:"Can others represent the company externally?",c:C3(["有，已培养","Yes, developed"],["一两个","One or two"],["只有我","Only me"])},
+  {d:5,zh:"品牌资产（域名、社媒、内容）有团队管理吗？",en:"Are brand assets team-managed?",c:C3(["有团队管","Team-managed"],["部分","Partial"],["全靠我","All on me"])},
+  {d:5,zh:"被收购时，品牌与产品能脱离你独立运营吗？",en:"On acquisition, can brand+product run without you?",c:C3(["可以，独立资产","Yes, standalone"],["要过渡期","Needs transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 6. 贸易 Trading ══════════════ */
+BANKS.trading=[
+  // S1 系统化
+  {d:0,zh:"你不在时，下单、清关、交货能正常进行吗？",en:"When away, do ordering/customs/delivery run?",c:C4(["正常，流程清晰","Normal, clear process"],["能撑，偶尔要我","Holds, sometimes need me"],["吃力","Struggles"],["容易卡住","Stalls easily"])},
+  {d:0,zh:"采购、报关、物流、收付款有SOP吗？",en:"SOPs for sourcing, customs, logistics, payment?",c:C3(["有完整流程","Full process"],["部分","Partial"],["靠我经验","My experience"])},
+  {d:0,zh:"新业务员多久能独立跑单？",en:"How fast can a new trader run deals solo?",c:C3(["1-2个月","1–2 months"],["3-6个月","3–6 months"],["很久或带不出","Long or can't"])},
+  {d:0,zh:"订单、库存、对账数据系统化吗？",en:"Are order/stock/reconciliation data systematised?",c:C3(["有系统","System in place"],["半系统","Semi"],["手工","Manual"])},
+  {d:0,zh:"价格谈判和异常都要你出面吗？",en:"Do price talks & exceptions all need you?",c:C3(["不到30%","Under 30%"],["约一半","About half"],["几乎全部","Almost all"])},
+  // S2 复制性
+  {d:1,zh:"再招一个业务员，能复制你的成交吗？",en:"Hire another trader — can they replicate deals?",c:C3(["能，有方法和供应","Yes, method & supply"],["部分，要长时间","Partly, long ramp"],["很难，靠我关系","Hard, my relationships"])},
+  {d:1,zh:"你的生意靠系统还是靠你个人的人脉？",en:"Does the business run on systems or your network?",c:C3(["靠系统和合约","Systems & contracts"],["半靠人脉","Part network"],["高度靠我个人关系","Highly my relationships"])},
+  {d:1,zh:"每单利润算得清吗（汇率、关税、物流）？",en:"Is per-deal margin clear (FX, duty, freight)?",c:C3(["很清楚","Very clear"],["大概","Roughly"],["凭感觉","By feel"])},
+  {d:1,zh:"开拓新品类/新市场，模型能复制吗？",en:"New category/market — replicable model?",c:C3(["能，方法可迁移","Yes, transferable"],["要重新建关系","Rebuild relationships"],["几乎从零","Almost from zero"])},
+  {d:1,zh:"定价是固定结构还是每次都重谈？",en:"Fixed pricing or renegotiated each time?",c:C3(["有结构/价目","Structured"],["半固定","Semi"],["每次重谈","Each time"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么向你采购而不是直接找源头？",en:"Why buy from you instead of going to source?",c:C3(["有独家代理/不可替代价值","Exclusive agency/irreplaceable value"],["价格或账期，可被替代","Price/terms, replaceable"],["没特别理由","No real reason"])},
+  {d:2,zh:"你有独家代理权或锁定供应吗？",en:"Exclusive agency rights or locked supply?",c:C3(["有独家/长约","Exclusive/long contract"],["有些优势","Some advantage"],["跟市场一样","Same as market"])},
+  {d:2,zh:"客户换掉你的转换成本高吗？",en:"How high is client switching cost?",c:C3(["高","High"],["中等","Medium"],["低，随时可换","Low, anytime"])},
+  {d:2,zh:"最大客户/最大供应商占比？",en:"Largest customer/supplier concentration?",c:C3(["都低于20%","Both under 20%"],["一边15-40%","One side 15–40%"],["高度集中","Highly concentrated"])},
+  {d:2,zh:"最近被迫压价/拼账期了吗？",en:"Forced to cut price / extend terms recently?",c:C3(["没有","No"],["小幅","Minor"],["是，竞争激烈","Yes, fierce"])},
+  // S4 财务韧性
+  {d:3,zh:"毛利率大概是？",en:"Approximate gross margin?",c:C3(["20%以上","Over 20%"],["8-20%","8–20%"],["低于8%","Under 8%"])},
+  {d:3,zh:"应收账款回款周期？",en:"AR collection period?",c:C3(["30天内","Under 30 days"],["30-90天","30–90 days"],["90天以上或常坏账","90+ days or bad debt"])},
+  {d:3,zh:"汇率/价格波动对你冲击大吗？",en:"How exposed are you to FX/price swings?",c:C3(["有对冲/转嫁机制","Hedged/passes through"],["部分","Partial"],["全暴露","Fully exposed"])},
+  {d:3,zh:"零新单时现金流撑多久？",en:"Cash runway with no new deals?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有审计","Audited"],["内部记账","Bookkeeping"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"在你经营的品类，客户先想到你吗？",en:"In your category, top-of-mind for buyers?",c:C3(["多数是","Mostly"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"上游品牌会主动找你做代理吗？",en:"Do brands approach you for distribution?",c:C3(["会，主动来","Yes, they come"],["偶尔","Occasionally"],["都要我去争取","I chase them"])},
+  {d:4,zh:"你在行业里有被引用的话语权吗？",en:"Do you carry referenced authority in the trade?",c:C3(["有","Yes"],["偶尔","Occasionally"],["没有","None"])},
+  {d:4,zh:"你能凭信誉收溢价或拿更好账期吗？",en:"Can reputation win premium or better terms?",c:C3(["可以","Yes"],["小幅","Slight"],["没有","None"])},
+  {d:4,zh:"你的公司在B端有清晰品牌定位吗？",en:"Clear B2B brand positioning?",c:C3(["有","Yes"],["模糊","Vague"],["没有","None"])},
+  // S6 品牌独立性
+  {d:5,zh:"供应商和客户关系靠公司还是靠你？",en:"Are supplier/client ties on the firm or on you?",c:C3(["靠公司/合约","On firm/contracts"],["混合","Mixed"],["靠我个人","On me"])},
+  {d:5,zh:"你退到幕后，生意会受影响吗？",en:"If you stepped back, business hit?",c:C3(["基本不会","Largely no"],["有些","Some"],["明显","Clearly"])},
+  {d:5,zh:"有人能代表公司谈代理权/大单吗？",en:"Can others negotiate agencies/big deals?",c:C3(["有，已培养","Yes, developed"],["一两个","One or two"],["只有我","Only me"])},
+  {d:5,zh:"公司名号/商标注册并独立运作吗？",en:"Is the company name/trademark registered & independent?",c:C3(["已注册，独立","Registered, independent"],["在办","In progress"],["没有","No"])},
+  {d:5,zh:"卖掉生意，新东家能延续代理与客户吗？",en:"Could a buyer keep agencies & clients without you?",c:C3(["可以，独立资产","Yes, standalone"],["要过渡","Needs transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 7. 建筑/工程 Construction ══════════════ */
+BANKS.construction=[
+  // S1 系统化
+  {d:0,zh:"你不在工地时，项目能照常推进吗？",en:"When you're off-site, do projects progress?",c:C4(["正常，PM和流程到位","Normal, PMs & process"],["能撑，需我远程决策","Holds, I decide remotely"],["吃力","Struggles"],["容易停滞","Stalls easily"])},
+  {d:0,zh:"投标、施工、验收、安全有SOP吗？",en:"SOPs for tender, build, handover, safety?",c:C3(["有完整流程","Full process"],["部分","Partial"],["靠经验","By experience"])},
+  {d:0,zh:"新项目经理多久能独立带项目？",en:"How fast can a new PM run a project solo?",c:C3(["1-2个月","1–2 months"],["3-6个月","3–6 months"],["很久或带不出","Long or can't"])},
+  {d:0,zh:"成本、进度、采购数据系统化吗？",en:"Are cost/schedule/procurement data systematised?",c:C3(["有项目管理系统","Project system in place"],["半系统","Semi"],["手工/表格","Manual/sheets"])},
+  {d:0,zh:"现场变更/索赔都要你拍板吗？",en:"Do site changes/claims all need you?",c:C3(["不到30%","Under 30%"],["约一半","About half"],["几乎全部","Almost all"])},
+  // S2 复制性
+  {d:1,zh:"同时多接几个项目，团队复制得了交付吗？",en:"Take on more projects — can delivery scale?",c:C3(["能，流程可复制","Yes, replicable process"],["要我盯","Needs my oversight"],["很难，靠我个人","Hard, on me"])},
+  {d:1,zh:"项目质量靠系统还是靠某几位老师傅/PM？",en:"Quality from systems or a few key people?",c:C3(["靠系统标准","From systems"],["半靠人","Part on people"],["高度靠几人","Highly on few"])},
+  {d:1,zh:"项目成本估算准吗（料、工、机）？",en:"Are cost estimates accurate (material/labour/plant)?",c:C3(["很准，有历史数据库","Accurate, cost database"],["大概","Roughly"],["常超支","Often overruns"])},
+  {d:1,zh:"换地区接项目，模型还成立吗？",en:"In another region, model still holds?",c:C3(["成立","Holds"],["要本地化（分包、批文）","Needs localisation"],["太多本地依赖","Too many local ties"])},
+  {d:1,zh:"分包和供应链是稳定可调度的吗？",en:"Are subcontractors & supply stable/schedulable?",c:C3(["稳定，有备选","Stable, alternatives"],["够用","Adequate"],["常缺人缺料","Often short"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么选你而不是别的承包商？",en:"Why pick you over other contractors?",c:C3(["有难复制的资质/口碑/专长","Hard-to-copy licence/reputation/niche"],["价格或关系，可被替代","Price/relationship, replaceable"],["没特别理由","No real reason"])},
+  {d:2,zh:"你有牌照等级、专业资质或专利工法吗？",en:"Grade licence, special accreditation, patented method?",c:C3(["有高等级/专属资质","High grade/exclusive cert"],["基本资质","Basic licence"],["没有壁垒","No barrier"])},
+  {d:2,zh:"老客户/转介绍带来的项目比例？",en:"Share of projects from repeat/referral?",c:C3(["高，靠口碑","High, reputation-driven"],["一般","Average"],["低，靠投标","Low, tender-driven"])},
+  {d:2,zh:"最大单一客户/项目占营收比例？",en:"Largest client/project revenue share?",c:C3(["低于25%","Under 25%"],["25-50%","25–50%"],["超过50%","Over 50%"])},
+  {d:2,zh:"最近被迫低价中标/压利润了吗？",en:"Forced into low-bid / margin squeeze recently?",c:C3(["没有","No"],["小幅","Minor"],["是，很激烈","Yes, fierce"])},
+  // S4 财务韧性
+  {d:3,zh:"项目毛利率大概是？",en:"Approximate project gross margin?",c:C3(["20%以上","Over 20%"],["10-20%","10–20%"],["低于10%","Under 10%"])},
+  {d:3,zh:"进度款/尾款回款情况如何？",en:"How is progress/retention payment collection?",c:C3(["按期，回款健康","On time, healthy"],["偶有拖延","Some delays"],["常拖欠/坏账","Often late/bad debt"])},
+  {d:3,zh:"项目断档时现金流撑多久？",en:"Cash runway between projects?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"你有银行授信/保函额度吗？",en:"Bank credit / bond facility?",c:C3(["有充足额度","Ample facility"],["有限","Limited"],["没有或被拒","None/rejected"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有审计","Audited"],["内部记账","Bookkeeping"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"这类工程，业主/发展商先想到你吗？",en:"For this work, are you top-of-mind for owners?",c:C3(["多数是","Mostly"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"你有标志性项目/作品集被引用吗？",en:"Landmark projects/portfolio that get cited?",c:C3(["有，常被参考","Yes, often referenced"],["一些","Some"],["没有","None"])},
+  {d:4,zh:"被行业媒体/协会报道或获奖过吗？",en:"Covered by trade media / won awards?",c:C3(["多次","Often"],["偶尔","Occasionally"],["没有","No"])},
+  {d:4,zh:"你能凭口碑拿议价权或邀标吗？",en:"Does reputation win pricing power / invited tenders?",c:C3(["可以","Yes"],["小幅","Slight"],["没有","None"])},
+  {d:4,zh:"公司在业内有清晰定位（专做某类）吗？",en:"Clear positioning (specialist in a type)?",c:C3(["有","Yes"],["模糊","Vague"],["什么都接","Take everything"])},
+  // S6 品牌独立性
+  {d:5,zh:"客户关系靠公司还是靠你个人？",en:"Are client relationships on the firm or on you?",c:C3(["靠公司","On firm"],["混合","Mixed"],["靠我","On me"])},
+  {d:5,zh:"你退到幕后，接单会受影响吗？",en:"If you stepped back, would deal flow suffer?",c:C3(["基本不会","Largely no"],["有些","Some"],["明显","Clearly"])},
+  {d:5,zh:"有人能代表公司投标/谈业主吗？",en:"Can others tender / negotiate with owners?",c:C3(["有，已培养","Yes, developed"],["一两个","One or two"],["只有我","Only me"])},
+  {d:5,zh:"公司资质和品牌是独立资产吗？",en:"Are licences & brand standalone assets?",c:C3(["是，独立","Yes, independent"],["部分绑我","Partly tied to me"],["高度绑我","Heavily tied to me"])},
+  {d:5,zh:"卖掉公司，新东家能延续资质与客户吗？",en:"Could a buyer keep licences & clients without you?",c:C3(["可以","Yes"],["要过渡","Needs transition"],["很难","Hard"])}
+];
+
+/* ══════════════ 8. 物流/运输 Logistics ══════════════ */
+BANKS.logistics=[
+  // S1 系统化
+  {d:0,zh:"你不在时，调度和派送能正常运转吗？",en:"When away, do dispatch & delivery run normally?",c:C4(["正常，有调度系统","Normal, dispatch system"],["能撑，偶尔要我","Holds, sometimes need me"],["吃力","Struggles"],["容易乱","Goes off easily"])},
+  {d:0,zh:"调度、仓储、配送、异常处理有SOP吗？",en:"SOPs for dispatch, warehouse, delivery, exceptions?",c:C3(["有完整流程","Full process"],["部分","Partial"],["靠经验","By experience"])},
+  {d:0,zh:"新司机/操作员多久能独立上岗？",en:"How fast can new drivers/ops work solo?",c:C3(["1-2周","1–2 weeks"],["1个月","1 month"],["很久","Long"])},
+  {d:0,zh:"订单、车辆、轨迹数据系统化吗？",en:"Are order/fleet/tracking data systematised?",c:C3(["有TMS/WMS系统","TMS/WMS in place"],["半系统","Semi"],["手工","Manual"])},
+  {d:0,zh:"延误、破损、客诉员工能自己处理吗？",en:"Can staff handle delays/damage/complaints alone?",c:C3(["可以，有流程","Yes, process"],["小事可以","Small ones"],["都找我","All to me"])},
+  // S2 复制性
+  {d:1,zh:"再开一条线路/一个仓，能复制运营吗？",en:"New route/warehouse — replicable ops?",c:C3(["能，模型清晰","Yes, clear model"],["要我盯","Needs oversight"],["很难","Hard"])},
+  {d:1,zh:"服务质量靠系统还是靠几个老师傅/老司机？",en:"Quality from systems or a few key staff?",c:C3(["靠系统标准","From systems"],["半靠人","Part on people"],["高度靠几人","Highly on few"])},
+  {d:1,zh:"单位经济（每单/每公里成本）清楚吗？",en:"Unit economics (per-order/per-km cost) clear?",c:C3(["很清楚","Very clear"],["大概","Roughly"],["没算过","Never calculated"])},
+  {d:1,zh:"扩张靠加车加人即可，还是处处卡你？",en:"Does scaling just need more trucks/staff, or you?",c:C3(["加资源即可扩","Add resources to scale"],["部分卡我","Partly on me"],["处处靠我","All on me"])},
+  {d:1,zh:"换区域运营，模型还成立吗？",en:"In another region, does the model hold?",c:C3(["成立","Holds"],["要本地化","Needs localisation"],["太多本地依赖","Too many local ties"])},
+  // S3 护城河
+  {d:2,zh:"客户为什么用你而不是别家物流？",en:"Why use you over other logistics firms?",c:C3(["有难复制的网络/时效/可靠性","Hard-to-copy network/speed/reliability"],["价格，可被替代","Price, replaceable"],["没特别理由","No real reason"])},
+  {d:2,zh:"客户换掉你的转换成本高吗？",en:"How high is client switching cost?",c:C3(["高（集成/SLA/磨合）","High (integration/SLA/ramp)"],["中等","Medium"],["低","Low"])},
+  {d:2,zh:"你有自有车队/仓网/牌照等资产壁垒吗？",en:"Asset barriers (own fleet/network/licences)?",c:C3(["有显著资产/牌照壁垒","Significant asset/licence moat"],["部分","Partial"],["全靠外包","All outsourced"])},
+  {d:2,zh:"最大客户占营收比例？",en:"Largest client's revenue share?",c:C3(["低于20%","Under 20%"],["20-45%","20–45%"],["超过45%","Over 45%"])},
+  {d:2,zh:"最近被迫降价/价格战了吗？",en:"Forced into price war recently?",c:C3(["没有","No"],["小幅","Minor"],["是，很激烈","Yes, fierce"])},
+  // S4 财务韧性
+  {d:3,zh:"毛利率大概是？",en:"Approximate gross margin?",c:C3(["20%以上","Over 20%"],["10-20%","10–20%"],["低于10%","Under 10%"])},
+  {d:3,zh:"应收账款回款周期？",en:"AR collection period?",c:C3(["30天内","Under 30 days"],["30-60天","30–60 days"],["60天以上或常坏账","60+ days or bad debt"])},
+  {d:3,zh:"油价/车辆/人力成本波动冲击大吗？",en:"Exposure to fuel/fleet/labour cost swings?",c:C3(["可转嫁/对冲","Pass-through/hedged"],["部分","Partial"],["全暴露","Fully exposed"])},
+  {d:3,zh:"业务下滑时现金流撑多久？",en:"Cash runway if volume drops?",c:C3(["6个月以上","6+ months"],["3-6个月","3–6 months"],["不到3个月","Under 3 months"])},
+  {d:3,zh:"有正规账目/审计吗？",en:"Proper books/audit?",c:C3(["有审计","Audited"],["内部记账","Bookkeeping"],["基本没有","Barely"])},
+  // S5 话语权
+  {d:4,zh:"这类物流需求，客户先想到你吗？",en:"For this logistics need, are you top-of-mind?",c:C3(["多数是","Mostly"],["有时","Sometimes"],["基本不是","Rarely"])},
+  {d:4,zh:"大客户/电商平台会主动找你合作吗？",en:"Do big shippers/platforms approach you?",c:C3(["会，主动来","Yes, they come"],["偶尔","Occasionally"],["都要我去争取","I chase them"])},
+  {d:4,zh:"你在行业里有口碑/被引用吗？",en:"Reputation / referenced authority in the trade?",c:C3(["有","Yes"],["偶尔","Occasionally"],["没有","None"])},
+  {d:4,zh:"你能凭可靠性收溢价吗？",en:"Can reliability command a premium?",c:C3(["可以","Yes"],["小幅","Slight"],["没有","None"])},
+  {d:4,zh:"公司在B端有清晰定位（专做某类货/线）吗？",en:"Clear B2B positioning (specialist lane/cargo)?",c:C3(["有","Yes"],["模糊","Vague"],["什么都接","Take everything"])},
+  // S6 品牌独立性
+  {d:5,zh:"客户关系靠公司还是靠你个人？",en:"Are client relationships on the firm or on you?",c:C3(["靠公司/合约","On firm/contracts"],["混合","Mixed"],["靠我个人","On me"])},
+  {d:5,zh:"你退到幕后，业务会受影响吗？",en:"If you stepped back, business hit?",c:C3(["基本不会","Largely no"],["有些","Some"],["明显","Clearly"])},
+  {d:5,zh:"有人能代表公司谈大客户/合约吗？",en:"Can others negotiate key accounts/contracts?",c:C3(["有，已培养","Yes, developed"],["一两个","One or two"],["只有我","Only me"])},
+  {d:5,zh:"公司名号/商标注册并独立运作吗？",en:"Company name/trademark registered & independent?",c:C3(["已注册，独立","Registered, independent"],["在办","In progress"],["没有","No"])},
+  {d:5,zh:"卖掉公司，新东家能延续网络与客户吗？",en:"Could a buyer keep network & clients without you?",c:C3(["可以，独立资产","Yes, standalone"],["要过渡","Needs transition"],["很难","Hard"])}
+];
+
+/* ════════════════════════════════════════════════════════
+   SSB Capital Readiness Test — engine
+   ════════════════════════════════════════════════════════ */
+
+let pool=[], cur=0, ans=[], userName='', userPhone='', selectedIndustry=null, lastResult=null;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ── industry select screen ── */
+function renderIndustries(){
+  const grid=document.getElementById('ind-grid');
+  grid.innerHTML='';
+  INDUSTRIES.forEach(ind=>{
+    const div=document.createElement('div');
+    div.className='ind-card'+(selectedIndustry===ind.id?' selected':'');
+    div.innerHTML=`<div class="ind-icon">${ind.icon}</div>
+      <div class="ind-body"><div class="ind-zh">${ind.zh}</div><div class="ind-en">${ind.en}</div></div>`;
+    div.onclick=()=>{
+      selectedIndustry=ind.id;
+      document.querySelectorAll('.ind-card').forEach((el,i)=>el.classList.toggle('selected',INDUSTRIES[i].id===ind.id));
+      document.getElementById('btn-ind-start').disabled=false;
+    };
+    grid.appendChild(div);
+  });
+}
+
+/* draws 5 per dimension (the full tailored set) and shuffles order */
+function buildPool(industryId){
+  const bank=BANKS[industryId]||[];
   const byDim=[[],[],[],[],[],[]];
-  BANK.forEach(q=>byDim[q.d].push(q));
+  bank.forEach(q=>byDim[q.d].push(q));
   byDim.forEach(d=>shuffle(d));
   const sel=[];
   for(let d=0;d<6;d++) for(let i=0;i<Math.min(5,byDim[d].length);i++) sel.push(byDim[d][i]);
@@ -609,7 +1039,8 @@ function buildPool(){
 }
 
 function startQuiz(){
-  pool=buildPool();
+  if(!selectedIndustry) return;
+  pool=buildPool(selectedIndustry);
   cur=0;
   ans=new Array(pool.length).fill(null);
   document.getElementById('qtotal').textContent=pool.length;
@@ -620,6 +1051,7 @@ function startQuiz(){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if(id==='s-industry') renderIndustries();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -667,6 +1099,7 @@ function unlockResult(){
   if(!phone||phone.replace(/[\s\-\+\(\)]/g,'').length<8){document.getElementById('err-phone').style.display='block';ok=false;}
   if(!ok)return;
   userName=name;
+  userPhone=phone;
   showResults();
 }
 
@@ -686,9 +1119,11 @@ function showResults(){
   const bH=(scores[4]+scores[5])/2>=50;
   const pat=(sH?'H':'L')+(suH?'H':'L')+(bH?'H':'L');
   const arch=ARCHETYPES.find(a=>a.p===pat)||ARCHETYPES[7];
+  const ind=INDUSTRIES.find(i=>i.id===selectedIndustry);
 
   document.getElementById('r-greeting').textContent=userName+'，这是你的 SSB 资本准备度报告 / '+userName+', here is your SSB Capital Readiness Report';
   document.getElementById('r-pattern').textContent='SSB Pattern: '+pat;
+  document.getElementById('r-ind').textContent=ind?(ind.icon+' '+ind.zh):'';
   document.getElementById('r-arch').innerHTML=arch.name+' <span class="result-arch-en">· '+arch.en+'</span>';
   document.getElementById('r-desc').textContent=arch.desc;
   document.getElementById('r-move').textContent=arch.move;
@@ -696,6 +1131,24 @@ function showResults(){
   showScreen('s-result');
   setTimeout(()=>renderHex(scores),80);
   renderDims(scores);
+
+  // assemble the full record (your "database" row) and save it
+  lastResult={
+    timestamp: new Date().toISOString(),
+    name: userName,
+    phone: userPhone,
+    industry: ind?ind.id:selectedIndustry,
+    industryLabel: ind?ind.zh:'',
+    pattern: pat,
+    archetype: arch.name+' / '+arch.en,
+    S1_系统化: scores[0],
+    S2_复制性: scores[1],
+    S3_护城河: scores[2],
+    S4_财务韧性: scores[3],
+    S5_话语权: scores[4],
+    S6_品牌独立: scores[5]
+  };
+  saveLead(lastResult);
 }
 
 function renderHex(scores){
@@ -707,7 +1160,6 @@ function renderHex(scores){
 
   ctx.clearRect(0,0,340,340);
 
-  // grid
   const gridC='rgba(255,255,255,0.06)';
   for(let r=1;r<=4;r++){
     const rr=R*r/4;
@@ -738,7 +1190,6 @@ function renderHex(scores){
     ctx.strokeStyle=color;
     ctx.lineWidth=2;
     ctx.stroke();
-    // dots
     [[d0,r0],[d1,r1]].forEach(([d,r])=>{
       const x=cx+r*Math.cos(angles[d]),y=cy+r*Math.sin(angles[d]);
       ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);
@@ -750,7 +1201,6 @@ function renderHex(scores){
   drawPillar(2,3,'rgb(92,184,92)',0.18);
   drawPillar(4,5,'rgb(167,139,250)',0.18);
 
-  // labels
   const labs=['S1\n系统化','S2\n复制性','S3\n护城河','S4\n财务韧性','S5\n话语权','S6\n品牌独立'];
   const labelR=R+28;
   ctx.font='10px DM Sans, sans-serif';
@@ -764,7 +1214,6 @@ function renderHex(scores){
     ctx.fillText(parts[1],x,y+6);
   });
 
-  // score dots
   const dotColors=['#4a9eff','#2d7dd2','#5cb85c','#3a8a3a','#a78bfa','#7c5cdb'];
   scores.forEach((s,i)=>{
     const r=R*s/100;
@@ -777,9 +1226,34 @@ function renderHex(scores){
   });
 }
 
-function dimCard(score,info){
+/* find the user's weakest answered question in a dimension, for a concrete gap callout */
+function getDimGap(d){
+  let weakest=null;
+  pool.forEach((q,i)=>{
+    if(q.d!==d||ans[i]===null)return;
+    const picked=q.c[ans[i]].s;
+    if(weakest===null||picked<weakest.picked){
+      const best=q.c.reduce((m,c)=>c.s>m.s?c:m,q.c[0]);
+      weakest={picked,qzh:q.zh,bestZh:best.zh};
+    }
+  });
+  if(!weakest||weakest.picked>=2)return null; // only flag genuine weak spots
+  return weakest;
+}
+
+function dimCard(score,info,dimIndex){
   const level=score>=67?'high':score>=34?'mid':'low';
   const label=level==='high'?'HIGH':level==='mid'?'MID':'LOW';
+  const elab=(ELAB[dimIndex]&&ELAB[dimIndex][level])||['',''];
+  const gap=getDimGap(dimIndex);
+  let gapHtml='';
+  if(gap){
+    gapHtml=`<div class="dim-gap">
+      <span class="dim-gap-label">待补强 / Your gap</span>
+      ${gap.qzh}<br>
+      <span class="dim-gap-better">→ 更强的状态：${gap.bestZh}</span>
+    </div>`;
+  }
   const div=document.createElement('div');
   div.className='dim-card';
   div.innerHTML=`
@@ -789,9 +1263,12 @@ function dimCard(score,info){
     </div>
     <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
       <div class="dim-score">${score}<span style="font-size:13px;color:#555;font-weight:400">%</span></div>
+      <span class="dim-note-inline">${info.note}</span>
     </div>
     <div class="dim-bar-wrap"><div class="dim-bar" style="width:${score}%;background:${info.color}"></div></div>
-    <div class="dim-note">${info.note}</div>`;
+    <div class="dim-elab">${elab[0]}</div>
+    <div class="dim-elab-en">${elab[1]}</div>
+    ${gapHtml}`;
   return div;
 }
 
@@ -800,20 +1277,131 @@ function renderDims(scores){
   const gsu=document.getElementById('dims-su');
   const gb=document.getElementById('dims-b');
   gs.innerHTML='';gsu.innerHTML='';gb.innerHTML='';
-  gs.appendChild(dimCard(scores[0],DIM_INFO[0]));
-  gs.appendChild(dimCard(scores[1],DIM_INFO[1]));
-  gsu.appendChild(dimCard(scores[2],DIM_INFO[2]));
-  gsu.appendChild(dimCard(scores[3],DIM_INFO[3]));
-  gb.appendChild(dimCard(scores[4],DIM_INFO[4]));
-  gb.appendChild(dimCard(scores[5],DIM_INFO[5]));
+  gs.appendChild(dimCard(scores[0],DIM_INFO[0],0));
+  gs.appendChild(dimCard(scores[1],DIM_INFO[1],1));
+  gsu.appendChild(dimCard(scores[2],DIM_INFO[2],2));
+  gsu.appendChild(dimCard(scores[3],DIM_INFO[3],3));
+  gb.appendChild(dimCard(scores[4],DIM_INFO[4],4));
+  gb.appendChild(dimCard(scores[5],DIM_INFO[5],5));
+}
+
+/* ════════════════ PERSISTENCE & PDF ════════════════ */
+
+/* local backup store (survives on your deployed site; may not persist in the in-chat preview) */
+function readLocalLeads(){
+  try{ return JSON.parse(localStorage.getItem('ssb_leads')||'[]'); }catch(e){ return []; }
+}
+function writeLocalLeads(arr){
+  try{ localStorage.setItem('ssb_leads', JSON.stringify(arr)); }catch(e){}
+}
+
+/* save one submission: POST to your Google Sheet endpoint (if set) + always keep a local backup */
+function saveLead(record){
+  // 1) local backup
+  const all=readLocalLeads();
+  all.push(record);
+  writeLocalLeads(all);
+
+  // 2) send to your Google Apps Script "database" if configured
+  if(CONFIG.LEAD_ENDPOINT){
+    try{
+      fetch(CONFIG.LEAD_ENDPOINT,{
+        method:'POST',
+        mode:'no-cors',                              // required for Apps Script from a static page
+        headers:{'Content-Type':'text/plain;charset=utf-8'}, // keeps it a "simple" request (no CORS preflight)
+        body:JSON.stringify({action:'lead', data:record})
+      }).catch(()=>{});
+    }catch(e){}
+  }
+}
+
+/* generate the report as a PDF, download it, and (optionally) upload it to your Drive folder */
+async function downloadPDF(){
+  const btn=document.getElementById('btn-pdf');
+  const actions=document.querySelector('#s-result .action-row');
+  const target=document.getElementById('s-result');
+  if(btn){ btn.disabled=true; btn.textContent='生成中… Generating…'; }
+  if(actions) actions.style.visibility='hidden';   // keep buttons out of the PDF
+
+  const safeName=(userName||'report').replace(/[^\w\u4e00-\u9fa5]+/g,'_');
+  const fname=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const opt={
+    margin:[8,8,8,8],
+    filename:fname,
+    image:{type:'jpeg',quality:0.95},
+    html2canvas:{scale:2,backgroundColor:'#0d0d0d',useCORS:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['css','legacy']}
+  };
+
+  try{
+    const worker=html2pdf().set(opt).from(target);
+    // optional: upload a copy to your Drive folder via the same endpoint
+    if(CONFIG.LEAD_ENDPOINT && CONFIG.SAVE_PDF_TO_DRIVE){
+      const dataUri=await worker.outputPdf('datauristring');
+      const base64=dataUri.split(',')[1];
+      try{
+        fetch(CONFIG.LEAD_ENDPOINT,{
+          method:'POST', mode:'no-cors',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({action:'pdf', filename:fname, pdfBase64:base64,
+            name:userName, phone:userPhone, pattern:lastResult?lastResult.pattern:''})
+        }).catch(()=>{});
+      }catch(e){}
+    }
+    await worker.save();
+  }catch(e){
+    alert('PDF 生成失败，请重试 / PDF generation failed, please try again.');
+  }finally{
+    if(actions) actions.style.visibility='';
+    if(btn){ btn.disabled=false; btn.textContent='⬇ 下载 PDF Download Report'; }
+  }
+}
+
+/* OWNER TOOL: export all locally-stored submissions as CSV.
+   Open the page with #leads at the end of the URL to reveal the export button. */
+function exportLeadsCSV(){
+  const leads=readLocalLeads();
+  if(!leads.length){ alert('No submissions stored locally yet.'); return; }
+  const cols=['timestamp','name','phone','industry','industryLabel','pattern','archetype',
+              'S1_系统化','S2_复制性','S3_护城河','S4_财务韧性','S5_话语权','S6_品牌独立'];
+  const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[cols.join(',')].concat(leads.map(l=>cols.map(c=>esc(l[c])).join(',')));
+  const blob=new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ssb_leads_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+/* reveal the owner export button on the intro screen when URL ends with #leads */
+function maybeShowAdmin(){
+  if(location.hash.toLowerCase()!=='#leads')return;
+  if(document.getElementById('admin-export'))return;
+  const intro=document.getElementById('s-intro');
+  const n=readLocalLeads().length;
+  const box=document.createElement('div');
+  box.id='admin-export';
+  box.style.cssText='margin-top:20px;padding:14px 16px;border:.5px solid var(--border2);border-radius:8px;background:var(--surface)';
+  box.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Owner tools · '+n+' submissions stored in this browser</div>';
+  const b=document.createElement('button');
+  b.className='btn'; b.textContent='⬇ Export all leads (CSV)';
+  b.onclick=exportLeadsCSV;
+  box.appendChild(b);
+  intro.appendChild(box);
 }
 
 function restartQuiz(){
-  cur=0;ans=[];userName='';
+  cur=0;ans=[];userName='';userPhone='';selectedIndustry=null;lastResult=null;
   document.getElementById('inp-name').value='';
   document.getElementById('inp-phone').value='';
+  document.getElementById('btn-ind-start').disabled=true;
   showScreen('s-intro');
 }
+
+window.addEventListener('load', maybeShowAdmin);
+window.addEventListener('hashchange', maybeShowAdmin);
+
 </script>
 </body>
 </html>
