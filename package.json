@@ -1,0 +1,19 @@
+{
+  "name": "ssb-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SSB Capital Readiness Test — Cloud Run backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.12.0",
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "resend": "^4.0.0"
+  }
+}

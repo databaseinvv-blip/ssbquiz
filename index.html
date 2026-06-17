@@ -5,433 +5,471 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SSB Capital Readiness Test</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Inter+Tight:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg: #0d0d0d;
-    --surface: #161616;
-    --surface2: #1e1e1e;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0ede8;
-    --muted: #888;
-    --muted2: #555;
-    --blue: #4a9eff;
-    --green: #5cb85c;
-    --purple: #a78bfa;
-    --gold: #f0c060;
-    --red: #ff6b6b;
-    --amber: #f5a623;
+    /* Invictus core */
+    --navy-900:#14152E; --navy-800:#1A1B3A; --navy-700:#21234A;
+    --navy-600:#2D2F5C; --navy-500:#3D406E;
+    --gold-700:#C77F0E; --gold-600:#E89412; --gold-500:#F5A623;
+    --gold-400:#FFB942; --gold-100:#FFF1D6;
+    --paper:#FAF8F4; --ivory:#F2EFE8; --line:#E4DFD4;
+    --mute:#8A8576; --ink:#14152E;
+    --success:#2E7D5B; --danger:#B0383D;
+
+    /* Pillar colors — navy / gold / a calm slate-teal middle (no purple, per brand) */
+    --p-scale:#1A1B3A;   /* Scalability → navy */
+    --p-sustain:#2E7D5B; /* Sustainability → deep green (moat) */
+    --p-brand:#C77F0E;   /* Brand → gold */
+
+    --font-display:'Montserrat',system-ui,sans-serif;
+    --font-body:'Inter Tight',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+
+    --radius-sm:4px; --radius-md:8px; --radius-lg:16px; --radius-pill:999px;
+    --shadow-card:0 1px 2px rgba(20,21,46,.04),0 8px 24px rgba(20,21,46,.06);
+    --shadow-hover:0 4px 12px rgba(20,21,46,.08),0 24px 48px rgba(20,21,46,.12);
+    --shadow-gold:0 8px 24px rgba(245,166,35,.25);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+
+    /* legacy aliases still referenced by canvas/JS */
+    --gold:var(--gold-500);
+    --red:var(--danger);
+    --amber:var(--gold-600);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 40px 20px 80px;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    min-height:100vh;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:48px 20px 96px;
   }
 
-  .wrap { width: 100%; max-width: 680px; }
+  .wrap { width:100%; max-width:720px; }
+  .screen { display:none; }
+  .screen.active { display:block; animation:fade .4s var(--ease-out); }
+  @keyframes fade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
-  .screen { display: none; }
-  .screen.active { display: block; }
-
-  /* ── INTRO ── */
-  .intro-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 24px;
+  /* ── shared eyebrow ── */
+  .intro-eyebrow,.result-eyebrow {
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--font-mono);
+    font-size:12px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold-600); margin-bottom:24px;
   }
-  .intro-eyebrow::before {
-    content: ''; width: 24px; height: 1px; background: var(--gold);
+  .intro-eyebrow::before,.result-eyebrow::before {
+    content:''; width:28px; height:1.5px; background:var(--gold-500);
   }
 
+  /* ── titles ── */
   .intro-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(32px, 6vw, 52px);
-    line-height: 1.1;
-    color: var(--text);
-    margin-bottom: 8px;
+    font-family:var(--font-display);
+    font-weight:900;
+    font-size:clamp(36px,7vw,64px);
+    line-height:1.02; letter-spacing:-.03em;
+    color:var(--navy-900); margin-bottom:14px;
   }
-
   .intro-title span {
-    display: block; color: var(--muted); font-size: .55em;
-    font-family: 'DM Sans', sans-serif; font-weight: 300;
-    margin-top: 8px; letter-spacing: .01em;
+    display:block;
+    font-family:var(--font-display);
+    font-style:normal; font-weight:300;
+    color:var(--mute);
+    font-size:.42em; letter-spacing:-.01em; margin-top:12px;
   }
 
   .intro-desc {
-    font-size: 15px; color: var(--muted); line-height: 1.7;
-    margin: 24px 0; max-width: 520px;
+    font-size:18px; color:var(--navy-700); line-height:1.5;
+    margin:22px 0; max-width:560px;
+  }
+  .intro-desc br + * , .intro-desc { }
+  .intro-desc .en, .intro-desc-en {
+    display:block; font-size:14px; color:var(--mute); margin-top:6px;
+    font-style:normal; font-family:var(--font-display); font-weight:300;
   }
 
+  /* ── HERO band (intro backdrop card) ── */
+  .hero-band {
+    position:relative; overflow:hidden; isolation:isolate;
+    background:var(--navy-900); color:#fff;
+    border-radius:var(--radius-lg);
+    padding:48px 40px 48px 44px;
+    margin-bottom:32px;
+    border-left:4px solid var(--gold-500);
+  }
+  .hero-band > * { position:relative; z-index:2; }
+  .hero-band .intro-eyebrow { color:var(--gold-400); }
+  .hero-band .intro-title { color:#fff; }
+  .hero-band .intro-title span { color:rgba(255,255,255,.7); }
+  .hero-band .intro-desc { color:rgba(255,255,255,.82); }
+  .hero-band .intro-desc-en { color:rgba(255,255,255,.5); }
+
+  /* ── pillars row ── */
+  .pillars-intro {
+    font-family:var(--font-display);
+    font-size:18px; font-weight:600; color:var(--navy-900);
+    line-height:1.45; margin:4px 0 16px;
+  }
   .pillars-row {
-    display: grid; grid-template-columns: repeat(3,1fr);
-    gap: 10px; margin: 28px 0;
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:14px; margin:0 0 28px;
   }
-
   .pillar-card {
-    border: .5px solid var(--border);
-    border-radius: 12px; padding: 14px;
-    background: var(--surface);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:20px 18px;
+    transition:all .32s var(--ease-out);
+    position:relative;
   }
-
-  .pillar-label {
-    font-size: 10px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .1em; margin-bottom: 8px;
+  .pillar-card:hover {
+    border-color:var(--gold-500);
+    box-shadow:var(--shadow-hover);
+    transform:translateY(-3px);
   }
-
+  .pillar-num {
+    font-family:var(--font-mono);
+    font-size:13px; font-weight:500; letter-spacing:.1em;
+    color:var(--gold-600); margin-bottom:12px;
+  }
+  .pillar-name {
+    font-family:var(--font-display);
+    font-size:21px; font-weight:800; letter-spacing:-.01em;
+    color:var(--navy-900); line-height:1.1;
+  }
+  .pillar-en {
+    font-family:var(--font-mono);
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--mute); margin:4px 0 14px;
+  }
   .pillar-dims {
-    font-size: 12px; color: var(--muted); line-height: 1.8;
+    font-size:13.5px; color:var(--navy-700); line-height:1.5;
+    padding-top:12px; border-top:1px solid var(--line);
   }
 
+  /* ── note ── */
   .note-box {
-    border: .5px solid var(--border);
-    border-left: 2px solid var(--gold);
-    border-radius: 0 8px 8px 0;
-    padding: 12px 16px;
-    background: rgba(240,192,96,.04);
-    font-size: 13px; color: var(--muted); line-height: 1.6;
-    margin-bottom: 28px;
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold-500);
+    border-radius:0 var(--radius-md) var(--radius-md) 0;
+    padding:14px 18px;
+    background:var(--gold-100);
+    font-size:14px; color:var(--navy-700); line-height:1.55;
+    margin-bottom:32px;
   }
+  .note-box span { color:var(--mute) !important; font-family:var(--font-mono); letter-spacing:.04em; }
 
+  /* ── buttons ── */
   .btn {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 14px 28px;
-    border: .5px solid var(--border2);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 500;
-    cursor: pointer;
-    transition: background .2s, border-color .2s;
+    display:inline-flex; align-items:center; gap:10px;
+    padding:15px 30px;
+    font-family:var(--font-body);
+    font-size:14px; font-weight:600;
+    letter-spacing:.05em; text-transform:uppercase;
+    border:none; border-radius:var(--radius-sm);
+    cursor:pointer; text-decoration:none;
+    transition:all .32s var(--ease-out);
   }
-
-  .btn:hover { background: var(--surface2); border-color: rgba(255,255,255,.3); }
-
   .btn.primary {
-    background: var(--gold);
-    color: #111;
-    border-color: var(--gold);
-    font-weight: 600;
+    background:var(--gold-500); color:var(--navy-900);
   }
+  .btn.primary:hover {
+    background:var(--gold-600); transform:translateY(-2px);
+    box-shadow:var(--shadow-gold);
+  }
+  .btn.primary:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn.ghost {
+    background:transparent; color:var(--navy-900);
+    border:1.5px solid var(--navy-900);
+    text-transform:none; letter-spacing:.02em; font-weight:500;
+    padding:12px 22px;
+  }
+  .btn.ghost:hover { background:var(--navy-900); color:#fff; }
 
-  .btn.primary:hover { background: #e8b450; border-color: #e8b450; }
-  .btn.primary:disabled { opacity: .35; cursor: not-allowed; }
-  .btn.ghost { color: var(--muted); font-size: 13px; padding: 10px 16px; }
-
-  /* ── INDUSTRY SELECT ── */
+  /* ── industry select ── */
   .ind-grid {
-    display: grid; grid-template-columns: repeat(2,1fr);
-    gap: 12px; margin: 28px 0;
+    display:grid; grid-template-columns:repeat(2,1fr);
+    gap:14px; margin:28px 0;
   }
   .ind-card {
-    border: .5px solid var(--border);
-    border-radius: 12px; padding: 18px 16px;
-    background: var(--surface);
-    cursor: pointer;
-    transition: border-color .15s, background .15s, transform .1s;
-    display: flex; gap: 14px; align-items: center;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:18px 18px;
+    cursor:pointer;
+    transition:all .32s var(--ease-out);
+    display:flex; gap:14px; align-items:center;
   }
-  .ind-card:hover { border-color: var(--border2); background: var(--surface2); }
-  .ind-card.selected { border-color: var(--gold); background: rgba(240,192,96,.06); }
-  .ind-icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
-  .ind-body {}
-  .ind-zh { font-size: 15px; font-weight: 500; color: var(--text); }
-  .ind-en { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .ind-card:hover { border-color:var(--gold-500); box-shadow:var(--shadow-hover); transform:translateY(-2px); }
+  .ind-card.selected { border-color:var(--gold-500); border-width:1.5px; background:var(--gold-100); }
+  .ind-icon { font-size:28px; line-height:1; flex-shrink:0; }
+  .ind-zh { font-size:16px; font-weight:600; color:var(--navy-900); font-family:var(--font-display); }
+  .ind-en { font-size:12px; color:var(--mute); margin-top:3px; }
 
-  /* ── QUIZ ── */
+  /* ── quiz ── */
   .q-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 16px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px;
   }
-
-  .q-counter {
-    font-size: 12px; color: var(--muted);
-    font-variant-numeric: tabular-nums;
+  .q-counter,.pct-label {
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.08em;
+    color:var(--mute); font-variant-numeric:tabular-nums;
   }
-
-  .pct-label { font-size: 12px; color: var(--muted); }
-
+  .pct-label { color:var(--gold-600); }
   .progress-track {
-    height: 2px; background: var(--surface2);
-    border-radius: 2px; margin-bottom: 36px;
-    overflow: hidden;
+    height:3px; background:var(--ivory);
+    border-radius:var(--radius-pill); margin-bottom:40px; overflow:hidden;
   }
-
   .progress-bar {
-    height: 2px; background: var(--gold);
-    border-radius: 2px;
-    transition: width .5s cubic-bezier(.4,0,.2,1);
+    height:3px; background:var(--gold-500);
+    border-radius:var(--radius-pill);
+    transition:width .5s var(--ease-out);
   }
-
   .q-text {
-    font-size: 20px; font-weight: 500; line-height: 1.5;
-    color: var(--text); margin-bottom: 6px;
+    font-family:var(--font-display);
+    font-size:clamp(22px,4vw,30px); font-weight:600; line-height:1.25;
+    letter-spacing:-.01em;
+    color:var(--navy-900); margin-bottom:8px;
   }
-
   .q-sub {
-    font-size: 13px; color: var(--muted); line-height: 1.5;
-    margin-bottom: 28px; min-height: 20px;
+    font-size:14px; color:var(--mute); line-height:1.5;
+    margin-bottom:30px; min-height:20px; font-style:normal;
+    font-family:var(--font-display); font-weight:300;
   }
-
-  .choices { display: flex; flex-direction: column; gap: 10px; }
-
+  .choices { display:flex; flex-direction:column; gap:12px; }
   .choice {
-    border: .5px solid var(--border);
-    border-radius: 10px; padding: 16px 18px;
-    cursor: pointer;
-    transition: border-color .15s, background .15s, transform .1s;
-    display: flex; gap: 14px; align-items: flex-start;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md); padding:18px 20px;
+    cursor:pointer;
+    transition:all .2s var(--ease-out);
+    display:flex; gap:16px; align-items:flex-start;
   }
-
-  .choice:hover {
-    border-color: var(--border2);
-    background: var(--surface);
-  }
-
-  .choice.selected {
-    border-color: var(--gold);
-    background: rgba(240,192,96,.06);
-  }
-
+  .choice:hover { border-color:var(--navy-500); transform:translateX(3px); }
+  .choice.selected { border-color:var(--gold-500); border-width:1.5px; background:var(--gold-100); }
   .choice-letter {
-    width: 22px; height: 22px; border-radius: 50%;
-    border: .5px solid var(--border2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 600; color: var(--muted);
-    flex-shrink: 0; margin-top: 1px;
-    transition: background .15s, border-color .15s, color .15s;
+    width:26px; height:26px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--mute);
+    flex-shrink:0; margin-top:1px;
+    transition:all .2s var(--ease-out);
   }
-
-  .choice.selected .choice-letter {
-    background: var(--gold); border-color: var(--gold); color: #111;
-  }
-
-  .choice-body {}
-  .choice-zh { font-size: 15px; color: var(--text); line-height: 1.5; }
-  .choice-en { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .choice.selected .choice-letter { background:var(--navy-900); border-color:var(--navy-900); color:var(--gold-400); }
+  .choice-zh { font-size:16px; color:var(--navy-900); line-height:1.45; font-weight:500; }
+  .choice-en { font-size:12px; color:var(--mute); margin-top:3px; }
 
   .nav-row {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 28px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:32px;
   }
 
-  .shake { animation: shake .35s ease; }
-  @keyframes shake {
-    0%,100%{transform:translateX(0)}
-    20%{transform:translateX(-6px)}
-    60%{transform:translateX(6px)}
-  }
+  .shake { animation:shake .35s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} }
 
-  /* ── GATE ── */
-  .gate-wrap {
-    max-width: 480px; margin: 0 auto; padding-top: 20px;
-  }
-
+  /* ── gate ── */
+  .gate-wrap { max-width:480px; margin:0 auto; padding-top:8px; }
   .gate-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 28px; color: var(--text); margin-bottom: 8px;
+    font-family:var(--font-display); font-weight:800;
+    font-size:32px; letter-spacing:-.02em;
+    color:var(--navy-900); margin-bottom:10px;
   }
-
-  .gate-sub {
-    font-size: 14px; color: var(--muted); line-height: 1.6;
-    margin-bottom: 32px;
-  }
-
-  .form-group { margin-bottom: 18px; }
-
+  .gate-sub { font-size:15px; color:var(--mute); line-height:1.6; margin-bottom:32px; }
+  .form-group { margin-bottom:18px; }
   .form-label {
-    display: block; font-size: 12px; font-weight: 500;
-    text-transform: uppercase; letter-spacing: .08em;
-    color: var(--muted); margin-bottom: 8px;
+    display:block; font-family:var(--font-mono);
+    font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--mute); margin-bottom:8px;
   }
-
   .form-input {
-    width: 100%; padding: 13px 16px;
-    background: var(--surface);
-    border: .5px solid var(--border2);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    outline: none;
-    transition: border-color .2s;
+    width:100%; padding:14px 16px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    color:var(--ink); font-family:var(--font-body); font-size:16px;
+    outline:none; transition:border-color .2s;
   }
-
-  .form-input:focus { border-color: var(--gold); }
-  .form-input::placeholder { color: var(--muted2); }
-
-  .form-note {
-    font-size: 12px; color: var(--muted2); margin-top: 20px;
-    line-height: 1.6;
+  .form-input:focus { border-color:var(--gold-500); box-shadow:0 0 0 3px var(--gold-100); }
+  .form-input::placeholder { color:#bbb4a4; }
+  .input-prefix { display:flex; align-items:stretch; }
+  .input-prefix .prefix-tag {
+    display:flex; align-items:center; padding:0 14px;
+    background:var(--ivory); border:1px solid var(--line); border-right:none;
+    border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+    font-family:var(--font-mono); font-size:14px; font-weight:500; color:var(--navy-700);
   }
+  .input-prefix .form-input { border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
+  .form-hint { font-size:12px; color:var(--mute); margin-top:8px; line-height:1.55; }
+  .form-note { font-size:12px; color:var(--mute); margin-top:20px; line-height:1.6; }
+  .error-msg { font-size:12px; color:var(--danger); margin-top:6px; display:none; }
 
-  .error-msg {
-    font-size: 12px; color: var(--red); margin-top: 6px;
-    display: none;
-  }
-
-  /* ── RESULT ── */
-  .result-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 20px;
-  }
-  .result-eyebrow::before {
-    content: ''; width: 24px; height: 1px; background: var(--gold);
-  }
-
+  /* ── result ── */
+  .greeting { font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; color:var(--mute); margin-bottom:10px; }
   .result-arch {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(26px, 5vw, 40px); line-height: 1.2;
-    color: var(--text); margin-bottom: 6px;
+    font-family:var(--font-display); font-weight:900;
+    font-size:clamp(30px,6vw,48px); line-height:1.05; letter-spacing:-.03em;
+    color:var(--navy-900); margin-bottom:10px;
+  }
+  .result-arch-en { color:var(--gold-600); font-weight:300; font-style:normal; }
+  .result-desc { font-size:17px; color:var(--navy-700); line-height:1.6; margin-bottom:36px; max-width:600px; }
+
+  .pattern-badge {
+    display:inline-block; font-family:var(--font-mono);
+    font-size:12px; font-weight:500; letter-spacing:.12em;
+    padding:5px 14px; border-radius:var(--radius-pill);
+    background:var(--navy-900); color:var(--gold-400);
+    margin-bottom:14px;
+  }
+  .ind-tag {
+    display:inline-block; font-size:13px; font-weight:500;
+    padding:5px 14px; border-radius:var(--radius-pill);
+    background:var(--ivory); border:1px solid var(--line);
+    color:var(--navy-700); margin-bottom:14px; margin-left:8px;
   }
 
-  .result-arch-en { color: var(--gold); }
+  .hex-section { margin-bottom:40px; }
+  .hex-center { display:flex; flex-direction:column; align-items:center;
+    background:var(--navy-900); border-radius:var(--radius-lg); padding:32px 20px 28px; position:relative; overflow:hidden; }
+  .hex-center canvas { position:relative; z-index:1; }
+  .hex-legend { display:flex; gap:22px; flex-wrap:wrap; justify-content:center; margin-top:18px; position:relative; z-index:1; }
+  .leg-item { display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,.7); font-family:var(--font-mono); letter-spacing:.03em; }
+  .leg-swatch { width:28px; height:3px; border-radius:2px; }
 
-  .result-desc {
-    font-size: 15px; color: var(--muted); line-height: 1.7;
-    margin-bottom: 32px; max-width: 560px;
-  }
-
-  .hex-section { margin-bottom: 36px; }
-  .hex-center { display: flex; flex-direction: column; align-items: center; }
-
-  .hex-legend {
-    display: flex; gap: 20px; flex-wrap: wrap;
-    justify-content: center; margin-top: 16px;
-  }
-
-  .leg-item {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 12px; color: var(--muted);
-  }
-
-  .leg-swatch { width: 28px; height: 2.5px; border-radius: 2px; }
-
-  .pillar-sections { margin-bottom: 28px; }
-
-  .pillar-section { margin-bottom: 20px; }
-
+  .pillar-sections { margin-bottom:28px; }
+  .pillar-section { margin-bottom:28px; }
   .pillar-header {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .1em; margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: .5px solid var(--border);
+    font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-.01em;
+    margin-bottom:14px; padding-bottom:10px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:10px;
+  }
+  .pillar-header::before {
+    content:''; width:10px; height:10px; border-radius:2px;
+    background:var(--ph-color,var(--gold-500));
   }
 
-  .dims-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-
+  .dims-grid { display:grid; grid-template-columns:1fr; gap:14px; }
   .dim-card {
-    border: .5px solid var(--border);
-    border-radius: 10px; padding: 16px;
-    background: var(--surface);
+    background:#fff; border:1px solid var(--line);
+    border-left:3px solid var(--pc,var(--gold-500));
+    border-radius:var(--radius-md); padding:20px;
+    box-shadow:var(--shadow-card);
   }
-
-  .dim-note-inline { font-size: 11px; color: var(--muted2); line-height: 1.4; }
-
-  .dim-elab {
-    font-size: 13.5px; color: var(--text); line-height: 1.65;
-    margin-top: 10px;
+  .dim-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; gap:12px; }
+  .dim-name { font-family:var(--font-display); font-size:18px; font-weight:800; color:var(--navy-900); letter-spacing:-.01em; }
+  .dim-weight {
+    font-family:var(--font-mono); font-size:10px; font-weight:500;
+    color:var(--gold-700); background:var(--gold-100);
+    padding:2px 7px; border-radius:var(--radius-pill); margin-left:6px; letter-spacing:.04em;
+    vertical-align:middle;
   }
-  .dim-elab-en {
-    font-size: 11.5px; color: var(--muted); line-height: 1.5;
-    margin-top: 5px;
+  .dim-name-en { font-size:11px; color:var(--mute); margin-top:4px; font-family:var(--font-mono); letter-spacing:.03em; }
+  .dim-badge {
+    font-family:var(--font-mono); font-size:10px; font-weight:600; padding:5px 11px;
+    border-radius:var(--radius-pill); letter-spacing:.06em; white-space:nowrap;
   }
+  .badge-high { background:rgba(46,125,91,.12); color:var(--success); }
+  .badge-mid { background:var(--gold-100); color:var(--gold-700); }
+  .badge-low { background:rgba(176,56,61,.1); color:var(--danger); }
+  .dim-score-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .dim-score { font-family:var(--font-display); font-size:32px; font-weight:900; color:var(--navy-900); line-height:1; flex-shrink:0; }
+  .dim-score-pct { font-size:16px; color:var(--mute); font-weight:600; }
+  .dim-bar-wrap { flex:1; height:6px; background:var(--ivory); border-radius:var(--radius-pill); }
+  .dim-bar { height:6px; border-radius:var(--radius-pill); transition:width 1s var(--ease-out); }
+  .dim-block {
+    font-size:13.5px; line-height:1.6; color:var(--navy-700);
+    padding:11px 13px; border-radius:var(--radius-sm); margin-bottom:8px;
+  }
+  .dim-good { background:rgba(46,125,91,.06); }
+  .dim-risk { background:rgba(176,56,61,.05); }
+  .dim-block-label {
+    display:block; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    letter-spacing:.08em; margin-bottom:5px; text-transform:uppercase;
+  }
+  .dim-block-label.good { color:var(--success); }
+  .dim-block-label.risk { color:var(--danger); }
+  .dim-elab-en { font-size:11.5px; color:var(--mute); line-height:1.5; margin-top:8px; }
   .dim-gap {
-    margin-top: 12px; padding: 10px 12px;
-    border: .5px solid var(--border);
-    border-left: 2px solid var(--amber);
-    border-radius: 0 8px 8px 0;
-    background: rgba(245,166,35,.05);
-    font-size: 12.5px; color: var(--text); line-height: 1.55;
+    margin-top:10px; padding:11px 14px;
+    border:1px solid var(--line); border-left:3px solid var(--gold-500);
+    border-radius:0 var(--radius-md) var(--radius-md) 0;
+    background:var(--gold-100);
+    font-size:13px; color:var(--navy-800); line-height:1.55;
   }
   .dim-gap-label {
-    display: block; font-size: 9.5px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .1em;
-    color: var(--amber); margin-bottom: 5px;
+    display:block; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    text-transform:uppercase; letter-spacing:.1em; color:var(--gold-700); margin-bottom:5px;
   }
-  .dim-gap-better { color: var(--muted); font-size: 12px; }
+  .dim-gap-better { color:var(--mute); font-size:12.5px; }
 
-  .dim-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-
-  .dim-name { font-size: 13px; font-weight: 500; color: var(--text); }
-  .dim-name-en { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  .dim-badge {
-    font-size: 10px; font-weight: 700; padding: 3px 8px;
-    border-radius: 20px; letter-spacing: .06em; white-space: nowrap;
+  /* ── valuation card (part 1) ── */
+  .val-card {
+    position:relative; overflow:hidden; isolation:isolate;
+    background:var(--navy-900); color:#fff;
+    border-radius:var(--radius-lg);
+    border-left:4px solid var(--gold-500);
+    padding:30px 32px; margin-bottom:44px;
+    text-align:center;
   }
+  .val-label {
+    font-family:var(--font-mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:.16em; color:var(--gold-400); margin-bottom:14px;
+  }
+  .val-amount {
+    font-family:var(--font-display); font-weight:900;
+    font-size:clamp(38px,8vw,60px); line-height:1; letter-spacing:-.03em;
+    color:#fff; margin-bottom:14px;
+  }
+  .val-note { font-size:12.5px; color:rgba(255,255,255,.65); line-height:1.55; max-width:460px; margin:0 auto; }
+  .val-note span { display:block; font-size:11px; color:rgba(255,255,255,.4); margin-top:6px; }
 
-  .badge-high { background: rgba(92,184,92,.15); color: #7de07d; }
-  .badge-mid { background: rgba(245,166,35,.15); color: var(--amber); }
-  .badge-low { background: rgba(255,107,107,.15); color: var(--red); }
-
-  .dim-bar-wrap { height: 3px; background: var(--surface2); border-radius: 2px; margin: 8px 0 6px; }
-  .dim-bar { height: 3px; border-radius: 2px; transition: width 1s ease; }
-  .dim-score { font-size: 20px; font-weight: 600; color: var(--text); }
-  .dim-note { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+  /* ── section heads (parts 2 & 3) ── */
+  .section-head { margin:0 0 18px; }
+  .section-kicker {
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--gold-600); margin-bottom:8px;
+  }
+  .section-h {
+    font-family:var(--font-display); font-weight:800; font-size:24px;
+    letter-spacing:-.02em; color:var(--navy-900);
+  }
 
   .move-box {
-    border: .5px solid rgba(240,192,96,.3);
-    border-left: 2px solid var(--gold);
-    border-radius: 0 10px 10px 0;
-    padding: 18px 20px;
-    background: rgba(240,192,96,.04);
-    margin-bottom: 24px;
+    position:relative; overflow:hidden; isolation:isolate;
+    background:var(--navy-900); color:#fff;
+    border-radius:var(--radius-lg);
+    padding:28px 30px 28px 34px; margin-bottom:28px;
+    border-left:4px solid var(--gold-500);
   }
-
+  .move-box > * { position:relative; z-index:2; }
   .move-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
-    color: var(--gold); font-weight: 600; margin-bottom: 8px;
+    font-family:var(--font-mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:.15em; color:var(--gold-400); font-weight:500; margin-bottom:10px;
+  }
+  .move-text { font-family:var(--font-display); font-size:19px; color:#fff; line-height:1.55; font-weight:400; }
+
+  .action-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+
+  canvas { display:block; }
+
+  @media (max-width:560px) {
+    .pillars-row { grid-template-columns:1fr; }
+    .dims-grid { grid-template-columns:1fr; }
+    .ind-grid { grid-template-columns:1fr; }
+    .hex-legend { gap:14px; }
+    .hero-band { padding:36px 24px; }
+    body { padding:28px 16px 64px; }
   }
 
-  .move-text { font-size: 15px; color: var(--text); line-height: 1.7; }
-
-  .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-
-  .divider {
-    height: .5px; background: var(--border);
-    margin: 32px 0;
-  }
-
-  /* greeting */
-  .greeting { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-
-  /* pattern badge */
-  .pattern-badge {
-    display: inline-block;
-    font-size: 12px; font-weight: 700; letter-spacing: .15em;
-    padding: 4px 12px; border-radius: 20px;
-    background: rgba(240,192,96,.12);
-    border: .5px solid rgba(240,192,96,.3);
-    color: var(--gold);
-    margin-bottom: 12px;
-  }
-
-  .ind-tag {
-    display: inline-block; font-size: 12px; font-weight: 500;
-    padding: 4px 12px; border-radius: 20px;
-    background: var(--surface2); border: .5px solid var(--border);
-    color: var(--muted); margin-bottom: 12px; margin-left: 8px;
-  }
-
-  canvas { display: block; }
-
-  @media (max-width: 480px) {
-    .pillars-row { grid-template-columns: 1fr; }
-    .dims-grid { grid-template-columns: 1fr; }
-    .ind-grid { grid-template-columns: 1fr; }
-    .hex-legend { gap: 12px; }
-    body { padding: 24px 16px 60px; }
+  @media (prefers-reduced-motion:reduce) {
+    *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; }
   }
 </style>
 </head>
@@ -440,35 +478,44 @@
 
   <!-- ══ INTRO ══ -->
   <div id="s-intro" class="screen active">
-    <div class="intro-eyebrow">SSB Capital Readiness Test</div>
-    <h1 class="intro-title">
-      你的生意，值多少钱？
-      <span>How much is your business really worth?</span>
-    </h1>
-    <p class="intro-desc">
-      六个维度，30道题，测出你生意在资本眼中的真实形状。每个行业有专属题组。<br>
-      6 dimensions, 30 questions, tailored to your industry. See the true shape of your business in a capital buyer's eyes.
-    </p>
+    <div class="hero-band">
+      <div class="intro-eyebrow">SSB Capital Readiness Test</div>
+      <h1 class="intro-title">
+        你的生意，值多少钱？
+        <span>How much is your business really worth?</span>
+      </h1>
+      <p class="intro-desc">
+        5分钟，测出你的生意值多少钱。从资本的3个维度，分析你的企业。
+        <span class="intro-desc-en">5 minutes to find out what your business is really worth — through the 3 dimensions capital cares about.</span>
+      </p>
+    </div>
+    <div class="pillars-intro">资本只看三件事，这30道题就在帮你打分：</div>
     <div class="pillars-row">
       <div class="pillar-card">
-        <div class="pillar-label" style="color:#4a9eff">Scalability 可复制</div>
-        <div class="pillar-dims"><div>S1 系统化</div><div>S2 复制性</div></div>
+        <div class="pillar-num">01</div>
+        <div class="pillar-name">复制能力</div>
+        <div class="pillar-en">Scalability</div>
+        <div class="pillar-dims">生意能不能离开你、放大10倍？</div>
       </div>
       <div class="pillar-card">
-        <div class="pillar-label" style="color:#5cb85c">Sustainability 可持续</div>
-        <div class="pillar-dims"><div>S3 护城河</div><div>S4 财务韧性</div></div>
+        <div class="pillar-num">02</div>
+        <div class="pillar-name">护城河</div>
+        <div class="pillar-en">Sustainability</div>
+        <div class="pillar-dims">壁垒够深，对手抄不走、扛得住吗？</div>
       </div>
       <div class="pillar-card">
-        <div class="pillar-label" style="color:#a78bfa">Brand Influence 品牌</div>
-        <div class="pillar-dims"><div>S5 话语权</div><div>S6 品牌独立</div></div>
+        <div class="pillar-num">03</div>
+        <div class="pillar-name">话语权</div>
+        <div class="pillar-en">Brand Influence</div>
+        <div class="pillar-dims">客户要买，第一个想到的是你吗？</div>
       </div>
     </div>
     <div class="note-box">
-      题目顺序随机，不显示维度标签。选最诚实反映你生意现状的答案，不是你希望它是什么样子。<br>
-      <span style="font-size:12px;color:#555">Questions are randomised with no category labels. Choose what's true, not what sounds good.</span>
+      30道题，凭直觉选最像你生意现状的答案就好。<br>
+      <span>30 questions · answer honestly, not aspirationally.</span>
     </div>
     <button class="btn primary" onclick="showScreen('s-industry')">
-      开始测试 &nbsp;→
+      测测我的生意值多少 &nbsp;→
     </button>
   </div>
 
@@ -514,8 +561,8 @@
       <div class="intro-eyebrow" style="margin-bottom:20px">测试完成 Test Complete</div>
       <h2 class="gate-title">查看你的结果</h2>
       <p class="gate-sub">
-        你的 SSB 六边形档案已经生成。填写以下资料即可查看完整分析报告。<br>
-        <span style="font-size:12px;color:#444">Your SSB hexagon profile is ready. Enter your details to unlock the full report.</span>
+        你的 SSB 资本档案已经生成。填写以下资料即可查看完整分析报告。<br>
+        <span style="font-size:12px;color:#444">Your SSB profile is ready. Enter your details to unlock the full report.</span>
       </p>
       <div class="form-group">
         <label class="form-label">姓名 / Name</label>
@@ -526,6 +573,23 @@
         <label class="form-label">联系电话 / Contact Number</label>
         <input type="tel" id="inp-phone" class="form-input" placeholder="+60 12-345 6789">
         <div class="error-msg" id="err-phone">请输入有效电话号码 / Please enter a valid number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">电子邮箱 / Email</label>
+        <input type="email" id="inp-email" class="form-input" placeholder="you@example.com">
+        <div class="form-hint">报告将发送到这个邮箱。<br>
+          <span style="color:#bbb4a4">Your report will be sent to this email.</span></div>
+        <div class="error-msg" id="err-email">请输入有效邮箱 / Please enter a valid email</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">下个财年预计净利 PAT / Next FY Projected PAT</label>
+        <div class="input-prefix">
+          <span class="prefix-tag">RM</span>
+          <input type="text" inputmode="numeric" id="inp-pat" class="form-input" placeholder="例如 500000">
+        </div>
+        <div class="form-hint">下一个财政年度预计的税后净利（Profit After Tax），用来估算你的生意估值。<br>
+          <span style="color:#bbb4a4">Your projected profit after tax for next financial year — used to estimate your valuation.</span></div>
+        <div class="error-msg" id="err-pat">请输入有效金额 / Please enter a valid amount</div>
       </div>
       <button class="btn primary" style="width:100%;justify-content:center;margin-top:8px" onclick="unlockResult()">
         查看我的结果 View My Results &nbsp;→
@@ -548,32 +612,35 @@
     <h2 class="result-arch" id="r-arch"></h2>
     <p class="result-desc" id="r-desc"></p>
 
+    <!-- ── PART 1: VALUATION ── -->
+    <div class="val-card">
+      <div class="val-label">资本估值 / Estimated Business Valuation</div>
+      <div class="val-amount" id="r-valuation">RM —</div>
+      <div class="val-note" id="r-val-note"></div>
+    </div>
+
+    <!-- ── PART 2: SPIDER + DETAIL ── -->
+    <div class="section-head">
+      <div class="section-kicker">02 — 三个维度 / Three Dimensions</div>
+      <h3 class="section-h">你的生意，资本怎么看</h3>
+    </div>
     <div class="hex-section">
       <div class="hex-center">
-        <canvas id="hexC" width="340" height="340" role="img" aria-label="Three-layer SSB hexagon radar chart"></canvas>
+        <canvas id="hexC" width="360" height="320" role="img" aria-label="三个维度 spider chart"></canvas>
         <div class="hex-legend">
-          <div class="leg-item"><div class="leg-swatch" style="background:#4a9eff"></div>Scalability (S1+S2)</div>
-          <div class="leg-item"><div class="leg-swatch" style="background:#5cb85c"></div>Sustainability (S3+S4)</div>
-          <div class="leg-item"><div class="leg-swatch" style="background:#a78bfa"></div>Brand Influence (S5+S6)</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#5b6cb8"></div>复制能力</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#4fb085"></div>护城河</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#F5A623"></div>话语权</div>
         </div>
       </div>
     </div>
+    <div class="dims-grid" id="dims-3"></div>
 
-    <div class="pillar-sections">
-      <div class="pillar-section">
-        <div class="pillar-header" style="color:#4a9eff">Scalability 可复制性</div>
-        <div class="dims-grid" id="dims-s"></div>
-      </div>
-      <div class="pillar-section">
-        <div class="pillar-header" style="color:#5cb85c">Sustainability 可持续性</div>
-        <div class="dims-grid" id="dims-su"></div>
-      </div>
-      <div class="pillar-section">
-        <div class="pillar-header" style="color:#a78bfa">Brand Influence 品牌影响力</div>
-        <div class="dims-grid" id="dims-b"></div>
-      </div>
+    <!-- ── PART 3: NEXT FOCUS ── -->
+    <div class="section-head">
+      <div class="section-kicker">03 — 下一步 / Next Move</div>
+      <h3 class="section-h">接下来，先 focus 这件事</h3>
     </div>
-
     <div class="move-box">
       <div class="move-label">最关键的一步 / The One Next Move</div>
       <div class="move-text" id="r-move"></div>
@@ -592,14 +659,13 @@
 
 <script>
 /* ════════════════════════════════════════════════════════
-   ►►► OWNER CONFIG — set these once after deploying your Google Apps Script ◄◄◄
-   Leave LEAD_ENDPOINT empty ('') to run in local-only mode:
-   submissions are still saved in the browser and exportable as CSV
-   (open the page with #leads in the URL to get the export button).
+   ►►► CONFIG ◄◄◄
+   API_ENDPOINT is your Cloud Run service URL + /submit.
+   You'll get this URL after the first `gcloud run deploy`.
+   Paste it here, then redeploy the frontend.
    ════════════════════════════════════════════════════════ */
 const CONFIG = {
-  LEAD_ENDPOINT: 'https://script.google.com/macros/s/AKfycbz3TAUIuWNaNUIaIZNPqrm9m-bo77txmPNkyDAOfpYqh-SruC9Tby1PszQTY-tA0v1e/exec',          // paste your Apps Script Web App URL here, e.g. 'https://script.google.com/macros/s/AKfy.../exec'
-  SAVE_PDF_TO_DRIVE: true     // if true, the result PDF is also uploaded to your Drive folder via the same script
+  API_ENDPOINT: 'https://REPLACE_WITH_CLOUD_RUN_URL.run.app/submit'
 };
 
 /* ════════════════════════════════════════════════════════
@@ -620,24 +686,64 @@ const INDUSTRIES = [
   {id:'logistics',   icon:'🚚', zh:'物流 / 运输 Logistics', en:'Transport, warehousing, delivery'}
 ];
 
-const ARCHETYPES=[
-  {p:'HHH',name:'资本宠儿',en:'Capital Darling',desc:'六维均衡强劲，PE倍数最高。系统、护城河、品牌三位一体，这是资本最想买的生意形态。',move:'你已具备资本准备度。现在的任务不是继续优化内部，而是找到对的买家或战略投资人，把价值变现。'},
-  {p:'HHL',name:'隐形冠军',en:'Hidden Champion',desc:'系统和护城河都强，但品牌影响力极低。你建了真正的价值，却没人知道——PE倍数因此被大幅压低。',move:'立刻投资品牌话语权建设。先解决潜意识占领问题，让市场知道你的护城河价值。'},
-  {p:'HLH',name:'网红老板',en:'Celebrity Boss',desc:'品牌强、系统可以，但没有真正的护城河。一旦风潮过去或个人品牌减弱，生意就脆弱了。',move:'把品牌流量转化为可防御的护城河资产。现在赚的是注意力，不是资本价值。'},
-  {p:'LHH',name:'困住的明星',en:'Trapped Star',desc:'护城河深、品牌强，但系统无法复制——你是最大的瓶颈，PE投资人看不到退出路径。',move:'下一个90天只做一件事：把你脑子里的东西系统化。你的天花板是你自己，不是市场。'},
-  {p:'HLL',name:'扩张型经营者',en:'Growth Operator',desc:'系统有了，但没有护城河也没有品牌话语权。正在扩张一个还没有差异化的模型，风险在放大。',move:'停止扩张，先找到你的局部优势。复制一个没有护城河的模型只是在放大风险。'},
-  {p:'LHL',name:'困住的乌龟',en:'Trapped Turtle',desc:'有一定护城河但无法复制，品牌也弱。生意稳定但没有增长引擎，资本看不到规模化的可能。',move:'二选一：系统化让自己可以退出，或建立品牌让人知道你的护城河价值。两者都不做就是原地踏步。'},
-  {p:'LLH',name:'空壳网红',en:'Shell Influencer',desc:'品牌有流量，但内部系统和护城河几乎为零。看起来大，实际上空心——流量进来也留不住。',move:'立即停止对外扩张，转向内部建设。品牌带来的流量正在流向一个漏水的桶。'},
-  {p:'LLL',name:'经营者',en:'Operator',desc:'三个维度都低。这是一门生意，不是一个资产。可以赚钱维生，但在资本眼里没有估值价值。',move:'先选择一个维度开始建设——建议从系统化开始，因为它是其他一切的基础。'}
-];
+/* 27 SSB patterns. Key = Scalability + Sustainability + Brand, each H/M/L.
+   desc = 诊断 (capital lens, 3-4 sentences). move = ONE next move. en = short English line. */
+const PATTERNS={
+/* ───── 三项皆强 ───── */
+"HHH":{desc:"复制能力、护城河、话语权三项全部过硬。系统能无我也能跑、护城河扛得住竞争、品牌能脱离你独立交易——这是资本眼里最完整的生意形态，PE 倍数也最高。你已经不只是在经营一门生意，而是握着一项随时可以变现的资产。",move:"停止继续优化内部，你的内功已经够了。现在唯一该做的，是找到对的买家或战略投资人，把这个估值变现——别让一项成熟的资产，继续被当成一份工作来做。",en:"All three strong — the most capital-ready shape, top PE. Stop optimising; find the right buyer and realise the value."},
+
+/* ───── 复制高、护城河高 ───── */
+"HHM":{desc:"系统能复制、护城河也够深，你已经建出了真正的价值，这是绝大多数老板做不到的。但话语权只到中等——市场认识你，却还没在客户潜意识里牢牢占住位置。结果就是：你的实力配得上更高的估值，市场却还没给到，差的就是那一层认知。",move:"把资源压在话语权上：收窄定位、持续做内容、抢占 top of mind。你不缺实力，缺的是让市场清楚记得『这件事就找你』——这一层补上，溢价空间立刻打开。",en:"Real value built, but you don't yet own mind-space. Push brand to top-of-mind to unlock the premium."},
+"HHL":{desc:"你建了真正有价值的东西——系统能复制、护城河也够深——但市场几乎不认识你。这是典型的『隐形冠军』：东西做得好，却没人知道。资本看不到你护城河的价值，PE 因此被大幅打折，你的估值远低于你的真实实力。",move:"把资源压在话语权上，先抢占客户潜意识里的位置（top of mind）。你的护城河已经在那里了，现在要做的是让市场看见它、说得出它——估值才追得上你的实力。",en:"A hidden champion — strong but unknown. Invest in brand voice so the moat converts to valuation."},
+
+/* ───── 复制高、护城河中 ───── */
+"HMH":{desc:"系统能复制、品牌也有话语权，这两项都很漂亮，但护城河只到中等——你的优势还能被对手用价格或更好的服务追上。问题在于：你正在快速放大一个壁垒还不够深的模型，规模越大，一旦护城河被攻破，崩塌的面积也越大。",move:"先把护城河从『中』做到『高』，再谈继续扩张。把现在的局部优势变成对手抄不走的结构性壁垒（独家供应、IP、转换成本）——先把地基夯实，规模才是资产而不是风险。",en:"Scalable and known, but the moat is shallow. Deepen the moat before scaling further."},
+"HMM":{desc:"复制能力很强，你有一台能跑的机器，但护城河和话语权都只到中等。这意味着你产出的东西既不够独特、也还没占住客户心智——机器转得越快，越容易把自己推进同质化的红海。效率是你的强项，差异化才是你缺的那块。",move:"先补护城河（权重仅次于复制能力）：把你的局部优势做成对手抄不走的结构性壁垒。否则你复制得越快，价格战来得也越猛——先有壁垒，再谈放大。",en:"A strong engine, but undifferentiated. Build a defensible moat before competition catches up."},
+"HML":{desc:"系统能复制、效率很高，但护城河中等、话语权很弱。你能高效产出，却既没把优势做深、市场也几乎不认识你。增长引擎转得很快，方向却还没立住——这种状态下扩张，只是在更快地放大『没壁垒、没人知道』这两个问题。",move:"先补话语权：市场连你是谁都说不清，再强的复制能力也只是在放大一个无人认识的品牌。先让客户记住你、想起你，曝光立住了，后面的优势才有人买单。",en:"Efficient but unknown and only mildly defensible. Fix brand first — scale amplifies an unknown name."},
+
+/* ───── 复制高、护城河低 ───── */
+"HLH":{desc:"你能复制、也有品牌话语权，这两项撑起了声势，但你没有真正的护城河。生意靠系统和流量在跑，看着热闹，底下却是空的——一旦对手用更低价或更好服务切进来，你几乎没有还手之力。这是最危险的『空中楼阁』：看起来大，实际上脆。",move:"立刻补护城河：把现在的流量和规模，转化成对手抄不走的结构性壁垒（独家供应、IP、高转换成本）。没有护城河，规模不是护城的城墙，只是放大脆弱的放大器。",en:"Scalable and known but undefended. Convert reach into a real moat before a price war hits."},
+"HLM":{desc:"系统能复制，话语权中等，但护城河很弱。你在快速复制一个没有壁垒的模型——每开一个新点、每上一个新渠道，都是在把『容易被替代』这件事复制一遍。规模在涨，但每一份规模底下都是同样脆弱的地基。",move:"先补护城河：在继续复制之前，找到并做深你的局部优势。复制一个没护城河的模型，本质上是在用更快的速度放大同一个风险——先把这块补上，复制才有意义。",en:"Replicating a model with no moat. Build defensibility before you scale the weakness."},
+"HLL":{desc:"你有系统、能复制，这是真本事，但既没有护城河、也没有话语权。这是典型的『扩张型经营者』：正在放大一个还没差异化、也没人认识的模型。规模越大，没壁垒和没认知这两个问题就被复利放大得越严重，风险其实在加速累积。",move:"停止扩张，先补护城河。在没有壁垒之前继续复制，只是在加速暴露问题——先找到你的局部优势并把它做深，立住一个对手抄不走的根基，再谈放大。",en:"Scaling an undifferentiated, unknown model. Stop expanding; build a moat first."},
+
+/* ───── 复制中、护城河高 ───── */
+"MHH":{desc:"护城河深、品牌也有话语权，你手上是真正的好资产，但复制能力只到中等——系统还没完全脱离你。这意味着你守得住、也叫得响，却还没法轻松放大。资本最看重的『规模化想象空间』被卡住了，好资产装在一个还放不大的容器里。",move:"先把复制能力（权重最高）从『中』推到『高』：把核心流程系统化到无我也能跑。你的护城河和品牌已经就位，只要复制能力跟上，这套资产立刻能装进更大的盘子。",en:"Strong moat and brand, but not yet scalable. Systemise to 'runs without you' to unlock scale."},
+"MHM":{desc:"护城河够深，这是你的根，但复制能力和话语权都只到中等。你的核心很稳，却既没完全系统化、也没完全占住客户心智。好底子已经有了，缺的是把它放大、把它说响——目前还停在『稳但小』的阶段。",move:"先补复制能力（权重最高）：把生意从『靠你』推向『靠系统』。复制能力是把护城河变现成规模的前提——根扎得再深，长不大也结不出资本愿意买的果。",en:"Solid core but only half-scaled and half-known. Systemise first — it carries the most weight."},
+"MHL":{desc:"护城河深，这是你最强的一环，但复制能力中等、话语权很弱。你守得住一块别人攻不进的地，却既难放大、外面也几乎没人知道你有多强。价值是真实的，曝光却接近于零——典型的『深藏功与名』，资本想买都找不到你。",move:"先补话语权：你有真东西却没人知道（隐形冠军的困局）。先让市场认识到你护城河的价值、说得出你强在哪，再回头去解决系统化放大的问题。",en:"Deep moat, but unscaled and invisible. Make the market see your moat's value first."},
+
+/* ───── 复制中、护城河中 ───── */
+"MMH":{desc:"话语权强、客户认你，品牌跑在最前面，但复制能力和护城河都只到中等。流量和注意力进来了，落点却是一个内功还没扎稳的底盘——你很会让人来，却还没准备好接得住、也守不住。品牌在前面拉，内功在后面拖。",move:"先补复制能力（权重最高）：把系统做到无我也能跑。否则品牌带来的增长，最终会卡在你个人的产能天花板上——人来了你接不住，反而砸了刚建起来的话语权。",en:"Brand leads, but systems and moat lag. Systemise so growth doesn't hit your personal ceiling."},
+"MMM":{desc:"三项都只到中等——复制能力、护城河、话语权，哪个都有基础，哪个都不够硬。生意能稳定运转，这说明你是个合格的经营者，但没有任何一项强到能撑起高估值。这是最常见、也最容易『一直忙、一直不值钱』的卡点：处处及格，处处不拔尖。",move:"千万别三件事一起抓，那只会让你哪个都做不深。先把复制能力（权重最高）从『中』推到『高』——把核心流程系统化到无我也能跑，这是其他一切的地基，也是最划算的第一步。",en:"All moderate, nothing strong. Pick one: push Scalability to high first — it's the foundation."},
+"MML":{desc:"复制能力和护城河都只到中等——有基础但不够硬，而话语权偏弱。三项都没真正站稳，生意能运转，却还撑不起高估值。尤其市场对你几乎没印象，连被资本看见的入口都还没打开——这是『样样有、样样不够』的状态。",move:"先补话语权（当前最弱的一环）：先让客户记住你、第一时间想起你。在内功还在补的阶段，被看见才有机会被买单——曝光立住了，才谈得上把中等的内功变现。",en:"Two moderate, brand weak. Make customers remember you first — visibility precedes value."},
+
+/* ───── 复制中、护城河低 ───── */
+"MLH":{desc:"品牌话语权强、客户认得你，复制能力也有中等水准，但护城河很弱。你很会让人记住你，手上却没有对手抄不走的东西。结果是：注意力在撑着这门生意，可一旦热度过去或对手切入，留不下真正的资本价值——你赚到的是流量，不是估值。",move:"先补护城河：把品牌带来的注意力，趁热转化成结构性壁垒（独家、IP、高转换成本）。现在你手上是一池会流走的流量，把它沉淀成抄不走的资产，估值才立得住。",en:"Strong brand, no moat. Turn attention into defensibility — you're earning reach, not capital value."},
+"MLM":{desc:"复制能力和话语权都只到中等，护城河很弱。你有一定的系统、也有一点知名度，但缺乏真正的壁垒——这意味着你现在的位置，随时可能被一个更狠、更便宜的对手整碗端走。中规中矩的外壳下，是一个守不住的核心。",move:"先补护城河（当前最弱）：找到并做深你的局部优势，把它变成对手抄不走的东西。没有护城河，再多的系统和曝光都只是在帮对手教育市场——先守得住，才轮得到放大和扬名。",en:"No real moat under moderate systems and awareness. Build defensibility before profit erodes."},
+"MLL":{desc:"复制能力中等，护城河和话语权都很弱。你有点系统，能让生意转起来，但既守不住、也没人知道你。生意是在运转，可几乎没有任何让资本看上眼的『值钱』要素——它更像一份你给自己安排的工作，而不是一项资产。",move:"先补护城河：在没有壁垒之前，曝光和扩张都是空中楼阁。先找到一个对手抄不走的局部优势，把根基立住——这是把『一门生意』变成『一项资产』的真正起点。",en:"Some systems, but undefended and unknown. Build one real moat before anything else."},
+
+/* ───── 复制低、护城河高 ───── */
+"LHH":{desc:"护城河深、品牌也强，这两项都很难得，但复制能力很弱——整门生意高度绑在你个人身上，离了你就转不动。你建出了真价值、也有名气，却把自己变成了最大的瓶颈。资本看到的不是机会，而是一个没有退出路径的『困住的明星』。",move:"接下来 90 天只做一件事：把你脑子里的东西系统化、写出来、交出去。你的护城河和品牌都够强了，唯一压住估值的就是你自己——天花板是你，不是市场。",en:"Deep moat and brand, but locked to you. Systemise relentlessly — you are the bottleneck."},
+"LHM":{desc:"护城河深、话语权也有中等水准，但复制能力很弱。你守得住、也小有名气，可整门生意离不开你——所有关键判断、关键关系都压在你一个人身上。好资产装在一个无法放大的容器里，再值钱也搬不动、卖不掉。",move:"先补复制能力：把核心从你个人身上转移到系统上、流程上、团队上。无我也能跑，你的护城河才有机会被放大、被资本定价——否则它永远只值『你在场』的那个价。",en:"Strong moat, but unscalable. Move the core off your shoulders onto systems."},
+"LHL":{desc:"护城河是你唯一的强项，但复制能力和话语权都很弱。你守得住一块地，却既无法复制、外面也没人知道你。生意很稳，但没有增长引擎、也没有规模化的可能——资本会把它看成一份很稳的工作，而不是一项能放大、能退出的资产。",move:"先补复制能力（权重最高）：把生意系统化到能完全脱离你。否则你拥有的不是一项资产，而是一份只要你一停下来就会停摆的高级工作——先让它能离开你，才谈得上值钱。",en:"A defended niche, but trapped and invisible. Systemise so the business can exist without you."},
+
+/* ───── 复制低、护城河中 ───── */
+"LMH":{desc:"你很会做品牌、客户认你，护城河也算过得去——但生意高度绑在你个人身上，无法复制。你是这门生意最大的瓶颈，资本看不到退出路径。这是『叫好不一定叫座』的资本困局：外面很热闹，里面却离不开你这个人。",move:"接下来 90 天只做一件事——把你脑子里的东西系统化、写出来、交出去。你的品牌和护城河已经够用，真正卡住估值的是复制能力——你的天花板是你自己，不是市场。",en:"Known and moderately defended, but locked to you. Systemise — your ceiling is you, not the market."},
+"LMM":{desc:"复制能力很弱，护城河和话语权都只到中等。你有点底子、也有点名气，但整门生意离不开你——它跟着你走，同时也被你死死困住。中等的护城河和品牌本来是好苗子，却因为无法复制，全被锁在你一个人的时间和精力里。",move:"先补复制能力（权重最高）：把流程沉淀成文件、把关键岗位真正交出去。生意能离开你，中等的护城河和品牌才有机会继续长大——否则它们永远受限于你一个人的产能。",en:"Moderate moat and brand, but unscalable. Document and delegate so it runs without you."},
+"LML":{desc:"护城河中等，但复制能力和话语权都很弱。你守住了一点东西，却既无法放大、外面也没人知道。说到底，这门生意几乎完全等于你这个人——你在它就在，你停它就停。中等的护城河是仅有的亮点，也被困在你一个人身上。",move:"先补复制能力（权重最高）：先把自己从日常运营里抽出来，把流程和岗位系统化。系统化是把『一份你亲力亲为的工作』变成『一项能独立运转的资产』的第一步，也是最关键的一步。",en:"A little moat, but trapped and unknown. Systemise first — turn a job into an asset."},
+
+/* ───── 复制低、护城河低 ───── */
+"LLH":{desc:"品牌有流量、客户认你，声势很大，但复制能力和护城河几乎为零。看起来风光，实际上是空心的——这是典型的『空壳网红』：流量不断进来，却既留不住、也守不住。热闹是真的，能沉淀成资本价值的东西却很少。",move:"立即停止对外扩张，把火力转向内部建设，先把复制能力（系统化）补起来。否则品牌带来的流量，正源源不断地流向一个漏水的桶——补好桶，再开水龙头。",en:"Loud but hollow — traffic with no systems or moat. Stop scaling out; build the inside first."},
+"LLM":{desc:"复制能力和护城河都很弱，话语权只到中等。你有点知名度，但内功几乎是空的——既没有能脱离你的系统，也没有守得住的壁垒。生意撑不起重量，也彻底离不开你。中等的曝光，反而可能把你接不住的短板暴露在更多人面前。",move:"先补复制能力（权重最高）：把最基本的系统和流程立起来，让生意能稳定交付。没有可复制的底盘，知名度越大越危险——人来了你接不住，名气反而成了反噬。",en:"Thin inside, mildly known. Build basic systems first — awareness without capacity backfires."},
+"LLL":{desc:"复制能力、护城河、话语权三个维度都很弱。坦白说，这目前是一门生意，还不是一项资产——它能让你赚钱维生，但在资本眼里几乎没有估值价值。这不是坏消息，而是起点清晰：你现在该想的不是怎么卖，而是怎么从零开始把它建成值钱的东西。",move:"先补复制能力（权重最高、也是地基）：从把核心流程系统化、让生意能脱离你开始。这是『值钱』的第一块砖——地基没立起来之前，护城河和品牌都无从谈起。",en:"A job, not an asset. Start with Scalability — systemise so the business can run without you."}
+};
 
 const DIM_INFO=[
-  {name:'S1 系统化',en:'System Readiness',color:'#4a9eff',note:'运营能否在没有老板时正常运转'},
-  {name:'S2 复制性',en:'Replication Potential',color:'#2d7dd2',note:'模型能否在新地点或渠道复制相同结果'},
-  {name:'S3 护城河',en:'Moat Depth',color:'#5cb85c',note:'竞争壁垒有多深，是否持续复利'},
-  {name:'S4 财务韧性',en:'Financial Resilience',color:'#3a8a3a',note:'GP/NP健康状况与客户集中度风险'},
-  {name:'S5 话语权',en:'Category Ownership',color:'#a78bfa',note:'你是否在客户潜意识中占据位置'},
-  {name:'S6 品牌独立性',en:'Brand Independence',color:'#7c5cdb',note:'品牌是否能脱离创始人独立存在'}
+  {name:'S1 系统化',en:'System Readiness',color:'#5b6cb8',note:'运营能否在没有老板时正常运转'},
+  {name:'S2 复制性',en:'Replication Potential',color:'#3D406E',note:'模型能否在新地点或渠道复制相同结果'},
+  {name:'S3 护城河',en:'Moat Depth',color:'#4fb085',note:'竞争壁垒有多深，是否持续复利'},
+  {name:'S4 财务韧性',en:'Financial Resilience',color:'#2E7D5B',note:'GP/NP健康状况与客户集中度风险'},
+  {name:'S5 话语权',en:'Category Ownership',color:'#F5A623',note:'你是否在客户潜意识中占据位置'},
+  {name:'S6 品牌独立性',en:'Brand Independence',color:'#C77F0E',note:'品牌是否能脱离创始人独立存在'}
 ];
 
 /* Per-dimension elaboration, keyed by score band: high (≥67) / mid (34-66) / low (<34).
@@ -675,8 +781,56 @@ const ELAB={
   }
 };
 
+/* ── 3 main pillars: weights, colors, and good/bad elaboration by band ── */
+const PILLAR_WEIGHTS=[0.45,0.35,0.20]; // Scalability / Sustainability / Brand
+const PILLARS=[
+  {key:'scale', zh:'复制能力', en:'Scalability', color:'#5b6cb8',
+   sub:'生意能不能离开你、系统化、可放大', dims:[0,1]},
+  {key:'sustain', zh:'护城河', en:'Sustainability', color:'#4fb085',
+   sub:'壁垒够不够深、财务扛不扛得住', dims:[2,3]},
+  {key:'brand', zh:'话语权', en:'Brand Influence', color:'#F5A623',
+   sub:'客户是否第一个想到你、品牌能否独立', dims:[4,5]}
+];
+
+/* good (≥67) / okay (34-66) / weak (<34) — written in the capital lens, what's GOOD and what's the RISK */
+const PILLAR_ELAB={
+  scale:{
+    high:{good:'生意已经能离开你运转，流程和复制路径清晰。资本最看重这种「无我也能跑」的能力，因为它意味着可以放大、可以退出。',
+          risk:'守住它。扩张时别让新点位重新依赖你个人，否则会打回原形。',
+          en:'The business runs without you and can be cloned — the scalable, exitable asset capital pays a premium for.'},
+    mid:{good:'系统已经成形，部分环节能脱离你。',
+         risk:'核心决策和质量仍然绑在你身上。一旦你抽身，复制就会走样——这是估值倍数上不去的主因之一。先把关键岗位的流程沉淀成文件。',
+         en:'Systems are forming but still lean on you; document core roles before scaling.'},
+    low:{good:'你对生意每个环节都了如指掌。',
+         risk:'整门生意锁死在你个人身上，无法复制、无法放大，PE 投资人看不到退出路径，估值会被直接打折。这是你最优先要解决的一环。',
+         en:'The business is locked to you — not replicable, no exit path. The biggest drag on your multiple.'}
+  },
+  sustain:{
+    high:{good:'你有真正的护城河：转换成本高、对手难复制，加上财务底盘扎实，利润和定价权能持续复利。',
+          risk:'护城河会被时间侵蚀。持续投入、把优势做成结构性壁垒（IP、锁定供应、长约），别吃老本。',
+          en:'A real moat plus a solid financial base — pricing power compounds and the business weathers storms.'},
+    mid:{good:'你有一定优势，财务也还过得去。',
+         risk:'壁垒不够深，仍可能被价格或服务追上；或利润偏薄、客户偏集中。先堵住最脆弱的那个口子，否则容易陷入价格战。',
+         en:'A shallow moat, catchable on price; plug the weakest financial or competitive hole first.'},
+    low:{good:'生意目前还在运转，有现金流进来。',
+         risk:'几乎没有护城河——客户留下来靠习惯而非无可替代；财务也经不起波动。一旦有人低价切入，你会很被动。资本会因此压低出价。',
+         en:'Little defensibility and fragile finances — customers stay on convenience, not lock-in.'}
+  },
+  brand:{
+    high:{good:'你在客户潜意识里占据了位置：被主动想起、能收溢价，而且品牌能脱离你独立存在——这是一项可交易的资产。',
+          risk:'把品牌资产从你个人身上彻底转移出去，培养能代表品牌发声的人，确保卖掉时新东家能直接接手。',
+          en:'You own mind-space and the brand stands without you — a transferable, premium-commanding asset.'},
+    mid:{good:'市场对你有一定认知。',
+         risk:'还没真正占领品类，客户说不清你最擅长什么；品牌也仍和你本人绑着。收窄定位、培养代言人，溢价空间才打得开。',
+         en:'Some awareness but no category ownership, and still tied to you personally.'},
+    low:{good:'你专注在把事情做好，没把精力花在外部曝光。',
+         risk:'市场基本不认识你，品牌几乎就是你本人。你可能建了真东西却没人知道（隐形冠军陷阱），而且品牌无法和你分离交易——卖生意时这是致命伤。',
+         en:'The market barely knows you and the brand is you — it can\'t be separated and sold.'}
+  }
+};
+
 /* shorthand builders */
-const C3=(a,b,c)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:2},{zh:c[0],en:c[1],s:0}];
+const C3=(a,b,c)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:1.5},{zh:c[0],en:c[1],s:0}];
 const C4=(a,b,c,d)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:2},{zh:c[0],en:c[1],s:1},{zh:d[0],en:d[1],s:0}];
 
 const BANKS = {};
@@ -1005,7 +1159,7 @@ BANKS.logistics=[
    SSB Capital Readiness Test — engine
    ════════════════════════════════════════════════════════ */
 
-let pool=[], cur=0, ans=[], userName='', userPhone='', selectedIndustry=null, lastResult=null;
+let pool=[], cur=0, ans=[], userName='', userPhone='', userEmail='', userPAT=null, selectedIndustry=null, lastResult=null, lastAnswers=[];
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -1030,6 +1184,16 @@ function renderIndustries(){
 /* draws 5 per dimension (the full tailored set) and shuffles order */
 function buildPool(industryId){
   const bank=BANKS[industryId]||[];
+  // assign a stable id to each question, matching the seeded questions table:
+  // industry_dDIM_INDEX, indexed within its dimension in original bank order.
+  const perDim={};
+  bank.forEach(q=>{
+    if(!q.qid){
+      perDim[q.d]=(perDim[q.d]||0);
+      q.qid=industryId+'_d'+q.d+'_'+perDim[q.d];
+      perDim[q.d]++;
+    }
+  });
   const byDim=[[],[],[],[],[],[]];
   bank.forEach(q=>byDim[q.d].push(q));
   byDim.forEach(d=>shuffle(d));
@@ -1092,14 +1256,22 @@ function prevQ(){if(cur>0){cur--;renderQ();}}
 function unlockResult(){
   const name=document.getElementById('inp-name').value.trim();
   const phone=document.getElementById('inp-phone').value.trim();
+  const email=document.getElementById('inp-email').value.trim();
+  const patRaw=document.getElementById('inp-pat').value.replace(/[,\s]/g,'');
   let ok=true;
   document.getElementById('err-name').style.display='none';
   document.getElementById('err-phone').style.display='none';
+  document.getElementById('err-email').style.display='none';
+  document.getElementById('err-pat').style.display='none';
   if(!name){document.getElementById('err-name').style.display='block';ok=false;}
   if(!phone||phone.replace(/[\s\-\+\(\)]/g,'').length<8){document.getElementById('err-phone').style.display='block';ok=false;}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){document.getElementById('err-email').style.display='block';ok=false;}
+  if(!patRaw||isNaN(Number(patRaw))||Number(patRaw)<=0){document.getElementById('err-pat').style.display='block';ok=false;}
   if(!ok)return;
   userName=name;
   userPhone=phone;
+  userEmail=email;
+  userPAT=Number(patRaw);
   showResults();
 }
 
@@ -1113,34 +1285,57 @@ function getDimScores(){
 }
 
 function showResults(){
-  const scores=getDimScores();
-  const sH=(scores[0]+scores[1])/2>=50;
-  const suH=(scores[2]+scores[3])/2>=50;
-  const bH=(scores[4]+scores[5])/2>=50;
-  const pat=(sH?'H':'L')+(suH?'H':'L')+(bH?'H':'L');
-  const arch=ARCHETYPES.find(a=>a.p===pat)||ARCHETYPES[7];
+  const scores=getDimScores();  // 6 sub-scores S1..S6 (0-100)
+
+  // ── 3 main pillar scores (average of their two sub-dimensions) ──
+  const pScores=PILLARS.map(p=>Math.round((scores[p.dims[0]]+scores[p.dims[1]])/2));
+  const [sScale,sSustain,sBrand]=pScores;
+
+  // ── three-band pattern (H ≥75 / M ≥40 / L <40) → 27 patterns ──
+  const band=v=>v>=75?'H':v>=40?'M':'L';
+  const pat=band(sScale)+band(sSustain)+band(sBrand);
+  const info=PATTERNS[pat]||PATTERNS['LLL'];
   const ind=INDUSTRIES.find(i=>i.id===selectedIndustry);
+
+  // ── weighted total → PE (1..15) → valuation ──
+  const weighted=pScores[0]*PILLAR_WEIGHTS[0]+pScores[1]*PILLAR_WEIGHTS[1]+pScores[2]*PILLAR_WEIGHTS[2]; // 0..100
+  const PE=1+(weighted/100)*14;            // 1..15
+  const valuation=Math.round(userPAT*PE);
 
   document.getElementById('r-greeting').textContent=userName+'，这是你的 SSB 资本准备度报告 / '+userName+', here is your SSB Capital Readiness Report';
   document.getElementById('r-pattern').textContent='SSB Pattern: '+pat;
   document.getElementById('r-ind').textContent=ind?(ind.icon+' '+ind.zh):'';
-  document.getElementById('r-arch').innerHTML=arch.name+' <span class="result-arch-en">· '+arch.en+'</span>';
-  document.getElementById('r-desc').textContent=arch.desc;
-  document.getElementById('r-move').textContent=arch.move;
+  const bandZh=v=>v>=75?'强':v>=40?'中':'弱';
+  document.getElementById('r-arch').innerHTML='复制能力 <b>'+bandZh(sScale)+'</b> · 护城河 <b>'+bandZh(sSustain)+'</b> · 话语权 <b>'+bandZh(sBrand)+'</b>';
+  document.getElementById('r-desc').textContent=info.desc;
+  document.getElementById('r-move').textContent=info.move;
+
+  // valuation display (RM only)
+  document.getElementById('r-valuation').textContent='RM '+valuation.toLocaleString('en-US');
+  document.getElementById('r-val-note').innerHTML='以你提供的下一财年预计净利估算。<br><span>Based on your projected next-FY profit after tax. Indicative only — actual transaction value depends on industry, deal structure, audited financials, and buyer type.</span>';
 
   showScreen('s-result');
-  setTimeout(()=>renderHex(scores),80);
-  renderDims(scores);
+  setTimeout(()=>renderTriangle(pScores),80);
+  renderDims3(pScores);
 
-  // assemble the full record (your "database" row) and save it
+  // assemble the full record and save it
   lastResult={
     timestamp: new Date().toISOString(),
     name: userName,
+    email: userEmail,
     phone: userPhone,
+    projectedPAT: userPAT,
+    estimatedPE: Math.round(PE*100)/100,
+    estimatedValuation: valuation,
     industry: ind?ind.id:selectedIndustry,
     industryLabel: ind?ind.zh:'',
     pattern: pat,
-    archetype: arch.name+' / '+arch.en,
+    summary: info.en,
+    Scalability: sScale,
+    Sustainability: sSustain,
+    BrandInfluence: sBrand,
+    S1: scores[0], S2: scores[1], S3: scores[2],
+    S4: scores[3], S5: scores[4], S6: scores[5],
     S1_系统化: scores[0],
     S2_复制性: scores[1],
     S3_护城河: scores[2],
@@ -1148,141 +1343,141 @@ function showResults(){
     S5_话语权: scores[4],
     S6_品牌独立: scores[5]
   };
+
+  lastAnswers=[];
+  pool.forEach((q,i)=>{
+    if(ans[i]===null)return;
+    const choice=q.c[ans[i]];
+    lastAnswers.push({
+      questionId:q.qid||null,
+      dimension:q.d,
+      questionZh:q.zh,
+      chosenZh:choice.zh,
+      chosenEn:choice.en,
+      score:choice.s
+    });
+  });
+
   saveLead(lastResult);
 }
 
-function renderHex(scores){
+/* ── PART 2a: triangle spider chart (3 pillars) ── */
+function renderTriangle(p){ // p = [scale, sustain, brand]
   const canvas=document.getElementById('hexC');
   const ctx=canvas.getContext('2d');
-  const cx=170,cy=170,R=120;
-  const n=6;
-  const angles=Array.from({length:n},(_,i)=>-Math.PI/2+(2*Math.PI*i/n));
+  const W=360,H=320, cx=180, cy=158, R=110;
+  const n=3;
+  // top, lower-right, lower-left
+  const angles=[-Math.PI/2, -Math.PI/2+2*Math.PI/3, -Math.PI/2+4*Math.PI/3];
+  ctx.clearRect(0,0,W,H);
 
-  ctx.clearRect(0,0,340,340);
-
-  const gridC='rgba(255,255,255,0.06)';
+  const gridC='rgba(255,255,255,0.10)';
+  // rings
   for(let r=1;r<=4;r++){
     const rr=R*r/4;
     ctx.beginPath();
     for(let i=0;i<n;i++){const x=cx+rr*Math.cos(angles[i]),y=cy+rr*Math.sin(angles[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
-    ctx.closePath();ctx.strokeStyle=gridC;ctx.lineWidth=0.5;ctx.stroke();
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();
   }
+  // axes
   for(let i=0;i<n;i++){
     ctx.beginPath();ctx.moveTo(cx,cy);
     ctx.lineTo(cx+R*Math.cos(angles[i]),cy+R*Math.sin(angles[i]));
-    ctx.strokeStyle=gridC;ctx.lineWidth=0.5;ctx.stroke();
+    ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
   }
+  // data polygon
+  const pts=p.map((v,i)=>[cx+R*v/100*Math.cos(angles[i]), cy+R*v/100*Math.sin(angles[i])]);
+  ctx.beginPath();
+  pts.forEach((pt,i)=>i===0?ctx.moveTo(pt[0],pt[1]):ctx.lineTo(pt[0],pt[1]));
+  ctx.closePath();
+  ctx.fillStyle='rgba(245,166,35,0.22)';
+  ctx.fill();
+  ctx.strokeStyle='#F5A623';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  const dotC=['#5b6cb8','#4fb085','#F5A623'];
+  pts.forEach((pt,i)=>{ctx.beginPath();ctx.arc(pt[0],pt[1],5,0,Math.PI*2);ctx.fillStyle=dotC[i];ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();});
 
-  function drawPillar(d0,d1,color,fillAlpha){
-    const r0=R*scores[d0]/100,r1=R*scores[d1]/100;
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    const steps=16;
-    for(let s=0;s<=steps;s++){
-      const t=s/steps;
-      const a=angles[d0]+(angles[d1]-angles[d0])*t;
-      const r=r0+(r1-r0)*t;
-      ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
-    }
-    ctx.closePath();
-    ctx.fillStyle=color.replace('rgb(','rgba(').replace(')',','+fillAlpha+')');
-    ctx.fill();
-    ctx.strokeStyle=color;
-    ctx.lineWidth=2;
-    ctx.stroke();
-    [[d0,r0],[d1,r1]].forEach(([d,r])=>{
-      const x=cx+r*Math.cos(angles[d]),y=cy+r*Math.sin(angles[d]);
-      ctx.beginPath();ctx.arc(x,y,4.5,0,Math.PI*2);
-      ctx.fillStyle=color;ctx.fill();
-    });
-  }
-
-  drawPillar(0,1,'rgb(74,158,255)',0.18);
-  drawPillar(2,3,'rgb(92,184,92)',0.18);
-  drawPillar(4,5,'rgb(167,139,250)',0.18);
-
-  const labs=['S1\n系统化','S2\n复制性','S3\n护城河','S4\n财务韧性','S5\n话语权','S6\n品牌独立'];
-  const labelR=R+28;
-  ctx.font='10px DM Sans, sans-serif';
-  ctx.fillStyle='rgba(255,255,255,0.45)';
-  ctx.textAlign='center';
-  ctx.textBaseline='middle';
+  // labels at vertices
+  const labs=[['复制能力','SCALABILITY'],['护城河','SUSTAINABILITY'],['话语权','BRAND INFLUENCE']];
+  const labelR=R+30;
+  ctx.textAlign='center';ctx.textBaseline='middle';
   labs.forEach((lb,i)=>{
-    const x=cx+labelR*Math.cos(angles[i]),y=cy+labelR*Math.sin(angles[i]);
-    const parts=lb.split('\n');
-    ctx.fillText(parts[0],x,y-6);
-    ctx.fillText(parts[1],x,y+6);
-  });
-
-  const dotColors=['#4a9eff','#2d7dd2','#5cb85c','#3a8a3a','#a78bfa','#7c5cdb'];
-  scores.forEach((s,i)=>{
-    const r=R*s/100;
-    const x=cx+r*Math.cos(angles[i]),y=cy+r*Math.sin(angles[i]);
-    ctx.font='bold 10px DM Sans, sans-serif';
-    ctx.fillStyle=dotColors[i];
-    ctx.textAlign='center';
-    const offset=r>15?-14:14;
-    ctx.fillText(s+'%',x,y+offset);
+    let x=cx+labelR*Math.cos(angles[i]), y=cy+labelR*Math.sin(angles[i]);
+    if(i>0) y+=6;
+    ctx.font='600 13px Montserrat, sans-serif';ctx.fillStyle='#fff';
+    ctx.fillText(lb[0],x,y-7);
+    ctx.font='500 8.5px "JetBrains Mono", monospace';ctx.fillStyle=dotC[i];
+    ctx.fillText(lb[1],x,y+6);
+    // score % near the dot
+    const v=p[i], r=R*v/100;
+    const sx=cx+r*Math.cos(angles[i]), sy=cy+r*Math.sin(angles[i]);
+    ctx.font='700 12px Montserrat, sans-serif';ctx.fillStyle='#FFB942';
+    const off = i===0 ? -16 : 16;
+    ctx.fillText(v+'%', sx, sy+off);
   });
 }
 
-/* find the user's weakest answered question in a dimension, for a concrete gap callout */
-function getDimGap(d){
+/* find the user's weakest answered question within a pillar's two sub-dims */
+function getPillarGap(pillar){
   let weakest=null;
   pool.forEach((q,i)=>{
-    if(q.d!==d||ans[i]===null)return;
+    if(!pillar.dims.includes(q.d)||ans[i]===null)return;
     const picked=q.c[ans[i]].s;
     if(weakest===null||picked<weakest.picked){
       const best=q.c.reduce((m,c)=>c.s>m.s?c:m,q.c[0]);
       weakest={picked,qzh:q.zh,bestZh:best.zh};
     }
   });
-  if(!weakest||weakest.picked>=2)return null; // only flag genuine weak spots
+  if(!weakest||weakest.picked>=2)return null;
   return weakest;
 }
 
-function dimCard(score,info,dimIndex){
-  const level=score>=67?'high':score>=34?'mid':'low';
-  const label=level==='high'?'HIGH':level==='mid'?'MID':'LOW';
-  const elab=(ELAB[dimIndex]&&ELAB[dimIndex][level])||['',''];
-  const gap=getDimGap(dimIndex);
-  let gapHtml='';
-  if(gap){
-    gapHtml=`<div class="dim-gap">
-      <span class="dim-gap-label">待补强 / Your gap</span>
-      ${gap.qzh}<br>
-      <span class="dim-gap-better">→ 更强的状态：${gap.bestZh}</span>
-    </div>`;
-  }
-  const div=document.createElement('div');
-  div.className='dim-card';
-  div.innerHTML=`
-    <div class="dim-top">
-      <div><div class="dim-name">${info.name}</div><div class="dim-name-en">${info.en}</div></div>
-      <div class="dim-badge badge-${level}">${label}</div>
-    </div>
-    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
-      <div class="dim-score">${score}<span style="font-size:13px;color:#555;font-weight:400">%</span></div>
-      <span class="dim-note-inline">${info.note}</span>
-    </div>
-    <div class="dim-bar-wrap"><div class="dim-bar" style="width:${score}%;background:${info.color}"></div></div>
-    <div class="dim-elab">${elab[0]}</div>
-    <div class="dim-elab-en">${elab[1]}</div>
-    ${gapHtml}`;
-  return div;
-}
-
-function renderDims(scores){
-  const gs=document.getElementById('dims-s');
-  const gsu=document.getElementById('dims-su');
-  const gb=document.getElementById('dims-b');
-  gs.innerHTML='';gsu.innerHTML='';gb.innerHTML='';
-  gs.appendChild(dimCard(scores[0],DIM_INFO[0],0));
-  gs.appendChild(dimCard(scores[1],DIM_INFO[1],1));
-  gsu.appendChild(dimCard(scores[2],DIM_INFO[2],2));
-  gsu.appendChild(dimCard(scores[3],DIM_INFO[3],3));
-  gb.appendChild(dimCard(scores[4],DIM_INFO[4],4));
-  gb.appendChild(dimCard(scores[5],DIM_INFO[5],5));
+/* ── PART 2b: 3 detailed pillar cards ── */
+function renderDims3(pScores){
+  const wrap=document.getElementById('dims-3');
+  wrap.innerHTML='';
+  PILLARS.forEach((p,i)=>{
+    const score=pScores[i];
+    const level=score>=75?'high':score>=40?'mid':'low';
+    const label=level==='high'?'强 STRONG':level==='mid'?'中 MODERATE':'弱 WEAK';
+    const e=PILLAR_ELAB[p.key][level];
+    const gap=getPillarGap(p);
+    const wPct=Math.round(PILLAR_WEIGHTS[i]*100);
+    let gapHtml='';
+    if(gap){
+      gapHtml=`<div class="dim-gap">
+        <span class="dim-gap-label">待补强 / Your gap</span>
+        ${gap.qzh}<br>
+        <span class="dim-gap-better">→ 更强的状态：${gap.bestZh}</span>
+      </div>`;
+    }
+    const card=document.createElement('div');
+    card.className='dim-card';
+    card.style.setProperty('--pc',p.color);
+    card.innerHTML=`
+      <div class="dim-top">
+        <div>
+          <div class="dim-name">${p.zh} <span class="dim-weight">权重 ${wPct}%</span></div>
+          <div class="dim-name-en">${p.en} · ${p.sub}</div>
+        </div>
+        <div class="dim-badge badge-${level}">${label}</div>
+      </div>
+      <div class="dim-score-row">
+        <div class="dim-score">${score}<span class="dim-score-pct">%</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" style="width:${score}%;background:${p.color}"></div></div>
+      </div>
+      <div class="dim-block dim-good">
+        <span class="dim-block-label good">✓ 好的地方 / What's working</span>
+        ${e.good}
+      </div>
+      <div class="dim-block dim-risk">
+        <span class="dim-block-label risk">! 风险 / The risk</span>
+        ${e.risk}
+      </div>
+      <div class="dim-elab-en">${e.en}</div>
+      ${gapHtml}`;
+    wrap.appendChild(card);
+  });
 }
 
 /* ════════════════ PERSISTENCE & PDF ════════════════ */
@@ -1295,65 +1490,77 @@ function writeLocalLeads(arr){
   try{ localStorage.setItem('ssb_leads', JSON.stringify(arr)); }catch(e){}
 }
 
-/* save one submission: POST to your Google Sheet endpoint (if set) + always keep a local backup */
+/* save one submission locally (backup) + POST to the backend with answers + PDF */
 function saveLead(record){
-  // 1) local backup
   const all=readLocalLeads();
   all.push(record);
   writeLocalLeads(all);
-
-  // 2) send to your Google Apps Script "database" if configured
-  if(CONFIG.LEAD_ENDPOINT){
-    try{
-      fetch(CONFIG.LEAD_ENDPOINT,{
-        method:'POST',
-        mode:'no-cors',                              // required for Apps Script from a static page
-        headers:{'Content-Type':'text/plain;charset=utf-8'}, // keeps it a "simple" request (no CORS preflight)
-        body:JSON.stringify({action:'lead', data:record})
-      }).catch(()=>{});
-    }catch(e){}
-  }
+  submitToBackend();
 }
 
-/* generate the report as a PDF, download it, and (optionally) upload it to your Drive folder */
-async function downloadPDF(){
-  const btn=document.getElementById('btn-pdf');
-  const actions=document.querySelector('#s-result .action-row');
-  const target=document.getElementById('s-result');
-  if(btn){ btn.disabled=true; btn.textContent='生成中… Generating…'; }
-  if(actions) actions.style.visibility='hidden';   // keep buttons out of the PDF
+let _pdfBase64=null;
+let _pdfFilename=null;
+let _submitted=false;
 
+/* build the PDF once (scale 1.5 / jpeg 0.85 to stay under Vercel's body limit) */
+async function buildPdfBase64(){
+  if(_pdfBase64) return _pdfBase64;
+  const target=document.getElementById('s-result');
+  const actions=document.querySelector('#s-result .action-row');
+  if(actions) actions.style.visibility='hidden';
   const safeName=(userName||'report').replace(/[^\w\u4e00-\u9fa5]+/g,'_');
-  const fname=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  _pdfFilename=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
   const opt={
     margin:[8,8,8,8],
-    filename:fname,
-    image:{type:'jpeg',quality:0.95},
-    html2canvas:{scale:2,backgroundColor:'#0d0d0d',useCORS:true},
+    filename:_pdfFilename,
+    image:{type:'jpeg',quality:0.85},
+    html2canvas:{scale:1.5,backgroundColor:'#14152E',useCORS:true},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
     pagebreak:{mode:['css','legacy']}
   };
-
   try{
-    const worker=html2pdf().set(opt).from(target);
-    // optional: upload a copy to your Drive folder via the same endpoint
-    if(CONFIG.LEAD_ENDPOINT && CONFIG.SAVE_PDF_TO_DRIVE){
-      const dataUri=await worker.outputPdf('datauristring');
-      const base64=dataUri.split(',')[1];
-      try{
-        fetch(CONFIG.LEAD_ENDPOINT,{
-          method:'POST', mode:'no-cors',
-          headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body:JSON.stringify({action:'pdf', filename:fname, pdfBase64:base64,
-            name:userName, phone:userPhone, pattern:lastResult?lastResult.pattern:''})
-        }).catch(()=>{});
-      }catch(e){}
-    }
-    await worker.save();
+    const dataUri=await html2pdf().set(opt).from(target).outputPdf('datauristring');
+    _pdfBase64=dataUri.split(',')[1];
+  }catch(e){
+    console.error('PDF build failed',e);
+    _pdfBase64=null;
+  }finally{
+    if(actions) actions.style.visibility='';
+  }
+  return _pdfBase64;
+}
+
+/* POST submission + answers + PDF to the Vercel function */
+async function submitToBackend(){
+  if(_submitted||!CONFIG.API_ENDPOINT) return;
+  _submitted=true;
+  const pdfBase64=await buildPdfBase64();
+  try{
+    await fetch(CONFIG.API_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({submission:lastResult, answers:lastAnswers, pdfBase64:pdfBase64||''})
+    });
+  }catch(e){
+    console.error('submit failed',e);
+    _submitted=false;
+  }
+}
+
+/* download button: reuse the cached PDF (build if needed), save to device */
+async function downloadPDF(){
+  const btn=document.getElementById('btn-pdf');
+  if(btn){ btn.disabled=true; btn.textContent='生成中… Generating…'; }
+  try{
+    const b64=await buildPdfBase64();
+    if(!b64) throw new Error('no pdf');
+    const a=document.createElement('a');
+    a.href='data:application/pdf;base64,'+b64;
+    a.download=_pdfFilename||'SSB_Report.pdf';
+    a.click();
   }catch(e){
     alert('PDF 生成失败，请重试 / PDF generation failed, please try again.');
   }finally{
-    if(actions) actions.style.visibility='';
     if(btn){ btn.disabled=false; btn.textContent='⬇ 下载 PDF Download Report'; }
   }
 }
@@ -1363,7 +1570,8 @@ async function downloadPDF(){
 function exportLeadsCSV(){
   const leads=readLocalLeads();
   if(!leads.length){ alert('No submissions stored locally yet.'); return; }
-  const cols=['timestamp','name','phone','industry','industryLabel','pattern','archetype',
+  const cols=['timestamp','name','phone','projectedPAT','estimatedPE','estimatedValuation','industry','industryLabel','pattern','summary',
+              'Scalability','Sustainability','BrandInfluence',
               'S1_系统化','S2_复制性','S3_护城河','S4_财务韧性','S5_话语权','S6_品牌独立'];
   const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const rows=[cols.join(',')].concat(leads.map(l=>cols.map(c=>esc(l[c])).join(',')));
@@ -1392,15 +1600,28 @@ function maybeShowAdmin(){
 }
 
 function restartQuiz(){
-  cur=0;ans=[];userName='';userPhone='';selectedIndustry=null;lastResult=null;
+  cur=0;ans=[];userName='';userPhone='';userEmail='';userPAT=null;selectedIndustry=null;lastResult=null;lastAnswers=[];
+  _pdfBase64=null;_pdfFilename=null;_submitted=false;
   document.getElementById('inp-name').value='';
   document.getElementById('inp-phone').value='';
+  document.getElementById('inp-email').value='';
+  document.getElementById('inp-pat').value='';
   document.getElementById('btn-ind-start').disabled=true;
   showScreen('s-intro');
 }
 
 window.addEventListener('load', maybeShowAdmin);
 window.addEventListener('hashchange', maybeShowAdmin);
+
+// PAT input: digits only, with thousands separators for readability
+window.addEventListener('load', function(){
+  const pat=document.getElementById('inp-pat');
+  if(!pat)return;
+  pat.addEventListener('input', function(){
+    const digits=this.value.replace(/[^\d]/g,'');
+    this.value=digits?Number(digits).toLocaleString('en-US'):'';
+  });
+});
 
 </script>
 </body>
