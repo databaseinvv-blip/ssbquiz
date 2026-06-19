@@ -1816,8 +1816,10 @@ async function buildPdfBase64(){
   const target=document.getElementById('s-result');
   const actions=document.querySelector('#s-result .action-row');
   const banner=document.getElementById('email-status');
-  if(actions) actions.style.visibility='hidden';
-  const bannerPrev=banner?banner.style.display:'';
+  // hide (display:none, not visibility) so they leave no trailing gap
+  const actPrev=actions?actions.style.display:'';
+  const banPrev=banner?banner.style.display:'';
+  if(actions) actions.style.display='none';
   if(banner) banner.style.display='none';
 
   // html2canvas often drops live <canvas> pixels \u2192 swap the spider chart for a
@@ -1837,23 +1839,24 @@ async function buildPdfBase64(){
 
   const safeName=(userName||'report').replace(/[^\w\u4e00-\u9fa5]+/g,'_');
   _pdfFilename=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  // Render as ONE tall page sized to the content. No A4 pagination means no
+  // page-break logic at all -> no phantom spacer boxes, no split/blank cards.
+  const M=18, w=target.offsetWidth, h=target.offsetHeight;
   const opt={
-    margin:[8,8,8,8],
+    margin:[M,M,M,M],
     filename:_pdfFilename,
     image:{type:'png'},               // PNG → no JPEG haze over the light background
-    html2canvas:{scale:1.5,backgroundColor:'#FAF8F4',useCORS:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    // keep cards/sections from splitting across a page boundary (which made
-    // a split block render blank, e.g. the "Next Move" box)
-    pagebreak:{mode:['css','legacy'],avoid:['.val-card','.move-box','.hex-section','.dim-card','.section-head']}
+    html2canvas:{scale:2,backgroundColor:'#FAF8F4',useCORS:true},
+    jsPDF:{unit:'px',format:[w+2*M, h+2*M+4],orientation:'portrait'},
+    pagebreak:{mode:[]}
   };
   try{
     const dataUri=await html2pdf().set(opt).from(target).outputPdf('datauristring');
     _pdfBase64=dataUri.split(',')[1];
   }catch(e){ console.error('PDF build failed',e); _pdfBase64=null; }
   finally{
-    if(actions) actions.style.visibility='';
-    if(banner) banner.style.display=bannerPrev;
+    if(actions) actions.style.display=actPrev;
+    if(banner) banner.style.display=banPrev;
     if(chartImg){ chartImg.remove(); chart.style.display=''; }
   }
   return _pdfBase64;
