@@ -483,6 +483,24 @@
   @media (prefers-reduced-motion:reduce) {
     *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; }
   }
+
+  /* ── native print → PDF (crisp, identical to the on-screen report) ── */
+  @media print {
+    @page { size:A4; margin:12mm; }
+    html,body { background:#fff !important; }
+    body { display:block !important; padding:0 !important; }
+    .wrap { max-width:none !important; width:100% !important; }
+    .screen:not(.active) { display:none !important; }
+    /* render the report even if it isn't the active screen */
+    #s-result { display:block !important; }
+    #s-result .action-row, #s-result #email-status { display:none !important; }
+    /* force background colors / gradients to print (navy cards, chart box) */
+    * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+    /* keep blocks from splitting across pages */
+    .val-card, .move-box, .hex-section, .hex-center, .dim-card, .section-head {
+      break-inside:avoid; page-break-inside:avoid;
+    }
+  }
 </style>
 </head>
 <body>
@@ -661,7 +679,7 @@
     <div id="email-status" class="email-status" style="display:none"></div>
 
     <div class="action-row">
-      <button class="btn primary" id="btn-pdf" onclick="downloadPDF()">⬇ 下载 PDF Download Report</button>
+      <button class="btn primary" id="btn-pdf" onclick="downloadPDF()">🖨 保存 PDF Save as PDF</button>
       <button class="btn ghost" onclick="restartQuiz()">↺ 重新测试 Restart</button>
     </div>
   </div>
@@ -1801,6 +1819,22 @@ async function buildPdfBase64(){
   if(actions) actions.style.visibility='hidden';
   const bannerPrev=banner?banner.style.display:'';
   if(banner) banner.style.display='none';
+
+  // html2canvas often drops live <canvas> pixels \u2192 swap the spider chart for a
+  // static PNG snapshot during capture so it appears in the emailed PDF.
+  const chart=document.getElementById('hexC');
+  let chartImg=null;
+  if(chart){
+    try{
+      chartImg=document.createElement('img');
+      chartImg.src=chart.toDataURL('image/png');
+      chartImg.width=chart.width; chartImg.height=chart.height;
+      chartImg.style.cssText=chart.style.cssText;
+      chart.style.display='none';
+      chart.parentNode.insertBefore(chartImg, chart);
+    }catch(e){ chartImg=null; }
+  }
+
   const safeName=(userName||'report').replace(/[^\w\u4e00-\u9fa5]+/g,'_');
   _pdfFilename=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
   const opt={
@@ -1815,7 +1849,11 @@ async function buildPdfBase64(){
     const dataUri=await html2pdf().set(opt).from(target).outputPdf('datauristring');
     _pdfBase64=dataUri.split(',')[1];
   }catch(e){ console.error('PDF build failed',e); _pdfBase64=null; }
-  finally{ if(actions) actions.style.visibility=''; if(banner) banner.style.display=bannerPrev; }
+  finally{
+    if(actions) actions.style.visibility='';
+    if(banner) banner.style.display=bannerPrev;
+    if(chartImg){ chartImg.remove(); chart.style.display=''; }
+  }
   return _pdfBase64;
 }
 
@@ -1859,21 +1897,11 @@ async function submitToBackend(){
   }
 }
 
-async function downloadPDF(){
-  const btn=document.getElementById('btn-pdf');
-  if(btn){ btn.disabled=true; btn.textContent='生成中… Generating…'; }
-  try{
-    const b64=await buildPdfBase64();
-    if(!b64) throw new Error('no pdf');
-    const a=document.createElement('a');
-    a.href='data:application/pdf;base64,'+b64;
-    a.download=_pdfFilename||'SSB_Report.pdf';
-    a.click();
-  }catch(e){
-    alert('PDF 生成失败，请重试 / PDF generation failed, please try again.');
-  }finally{
-    if(btn){ btn.disabled=false; btn.textContent='⬇ 下载 PDF Download Report'; }
-  }
+/* Use the browser's own print engine so the saved PDF is crisp (vector text,
+   the spider chart intact) and identical to what's on screen. The user picks
+   "Save as PDF" (or a printer) in the print dialog. */
+function downloadPDF(){
+  window.print();
 }
 
 /* OWNER TOOL: export all locally-stored submissions as CSV.
