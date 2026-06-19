@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSB Capital Readiness Test</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Inter+Tight:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    /* Invictus core */
+    --navy-900:#14152E; --navy-800:#1A1B3A; --navy-700:#21234A;
+    --navy-600:#2D2F5C; --navy-500:#3D406E;
+    --gold-700:#C77F0E; --gold-600:#E89412; --gold-500:#F5A623;
+    --gold-400:#FFB942; --gold-100:#FFF1D6;
+    --paper:#FAF8F4; --ivory:#F2EFE8; --line:#E4DFD4;
+    --mute:#8A8576; --ink:#14152E;
+    --success:#2E7D5B; --danger:#B0383D;
+
+    /* Pillar colors — navy / gold / a calm slate-teal middle (no purple, per brand) */
+    --p-scale:#1A1B3A;   /* Scalability → navy */
+    --p-sustain:#2E7D5B; /* Sustainability → deep green (moat) */
+    --p-brand:#C77F0E;   /* Brand → gold */
+
+    --font-display:'Montserrat',system-ui,sans-serif;
+    --font-body:'Inter Tight',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+
+    --radius-sm:4px; --radius-md:8px; --radius-lg:16px; --radius-pill:999px;
+    --shadow-card:0 1px 2px rgba(20,21,46,.04),0 8px 24px rgba(20,21,46,.06);
+    --shadow-hover:0 4px 12px rgba(20,21,46,.08),0 24px 48px rgba(20,21,46,.12);
+    --shadow-gold:0 8px 24px rgba(245,166,35,.25);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+
+    /* legacy aliases still referenced by canvas/JS */
+    --gold:var(--gold-500);
+    --red:var(--danger);
+    --amber:var(--gold-600);
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    min-height:100vh;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:48px 20px 96px;
+  }
+
+  .wrap { width:100%; max-width:720px; }
+  .screen { display:none; }
+  .screen.active { display:block; animation:fade .4s var(--ease-out); }
+  @keyframes fade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+  /* ── shared eyebrow ── */
+  .intro-eyebrow,.result-eyebrow {
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--font-mono);
+    font-size:12px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold-600); margin-bottom:24px;
+  }
+  .intro-eyebrow::before,.result-eyebrow::before {
+    content:''; width:28px; height:1.5px; background:var(--gold-500);
+  }
+
+  /* ── titles ── */
+  .intro-title {
+    font-family:var(--font-display);
+    font-weight:900;
+    font-size:clamp(36px,7vw,64px);
+    line-height:1.02; letter-spacing:-.03em;
+    color:var(--navy-900); margin-bottom:14px;
+  }
+  .intro-title span {
+    display:block;
+    font-family:var(--font-display);
+    font-style:normal; font-weight:300;
+    color:var(--mute);
+    font-size:.42em; letter-spacing:-.01em; margin-top:12px;
+  }
+
+  .intro-desc {
+    font-size:18px; color:var(--navy-700); line-height:1.5;
+    margin:22px 0; max-width:560px;
+  }
+  .intro-desc br + * , .intro-desc { }
+  .intro-desc .en, .intro-desc-en {
+    display:block; font-size:14px; color:var(--mute); margin-top:6px;
+    font-style:normal; font-family:var(--font-display); font-weight:300;
+  }
+
+  /* ── HERO band (intro backdrop card) ── */
+  .hero-band {
+    position:relative; overflow:hidden; isolation:isolate;
+    background:var(--navy-900); color:#fff;
+    border-radius:var(--radius-lg);
+    padding:48px 40px 48px 44px;
+    margin-bottom:32px;
+    border-left:4px solid var(--gold-500);
+  }
+  .hero-band > * { position:relative; z-index:2; }
+  .hero-band .intro-eyebrow { color:var(--gold-400); }
+  .hero-band .intro-title { color:#fff; }
+  .hero-band .intro-title span { color:rgba(255,255,255,.7); }
+  .hero-band .intro-desc { color:rgba(255,255,255,.82); }
+  .hero-band .intro-desc-en { color:rgba(255,255,255,.5); }
+
+  /* ── pillars row ── */
+  .pillars-intro {
+    font-family:var(--font-display);
+    font-size:18px; font-weight:600; color:var(--navy-900);
+    line-height:1.45; margin:4px 0 16px;
+  }
+  .pillars-row {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:14px; margin:0 0 28px;
+  }
+  .pillar-card {
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:20px 18px;
+    transition:all .32s var(--ease-out);
+    position:relative;
+  }
+  .pillar-card:hover {
+    border-color:var(--gold-500);
+    box-shadow:var(--shadow-hover);
+    transform:translateY(-3px);
+  }
+  .pillar-num {
+    font-family:var(--font-mono);
+    font-size:13px; font-weight:500; letter-spacing:.1em;
+    color:var(--gold-600); margin-bottom:12px;
+  }
+  .pillar-name {
+    font-family:var(--font-display);
+    font-size:21px; font-weight:800; letter-spacing:-.01em;
+    color:var(--navy-900); line-height:1.1;
+  }
+  .pillar-en {
+    font-family:var(--font-mono);
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--mute); margin:4px 0 14px;
+  }
+  .pillar-dims {
+    font-size:13.5px; color:var(--navy-700); line-height:1.5;
+    padding-top:12px; border-top:1px solid var(--line);
+  }
+
+  /* ── note ── */
+  .note-box {
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold-500);
+    border-radius:0 var(--radius-md) var(--radius-md) 0;
+    padding:14px 18px;
+    background:var(--gold-100);
+    font-size:14px; color:var(--navy-700); line-height:1.55;
+    margin-bottom:32px;
+  }
+  .note-box span { color:var(--mute) !important; font-family:var(--font-mono); letter-spacing:.04em; }
+
+  /* ── buttons ── */
+  .btn {
+    display:inline-flex; align-items:center; gap:10px;
+    padding:15px 30px;
+    font-family:var(--font-body);
+    font-size:14px; font-weight:600;
+    letter-spacing:.05em; text-transform:uppercase;
+    border:none; border-radius:var(--radius-sm);
+    cursor:pointer; text-decoration:none;
+    transition:all .32s var(--ease-out);
+  }
+  .btn.primary {
+    background:var(--gold-500); color:var(--navy-900);
+  }
+  .btn.primary:hover {
+    background:var(--gold-600); transform:translateY(-2px);
+    box-shadow:var(--shadow-gold);
+  }
+  .btn.primary:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn.ghost {
+    background:transparent; color:var(--navy-900);
+    border:1.5px solid var(--navy-900);
+    text-transform:none; letter-spacing:.02em; font-weight:500;
+    padding:12px 22px;
+  }
+  .btn.ghost:hover { background:var(--navy-900); color:#fff; }
+
+  /* ── industry select ── */
+  .ind-grid {
+    display:grid; grid-template-columns:repeat(2,1fr);
+    gap:14px; margin:28px 0;
+  }
+  .ind-card {
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:18px 18px;
+    cursor:pointer;
+    transition:all .32s var(--ease-out);
+    display:flex; gap:14px; align-items:center;
+  }
+  .ind-card:hover { border-color:var(--gold-500); box-shadow:var(--shadow-hover); transform:translateY(-2px); }
+  .ind-card.selected { border-color:var(--gold-500); border-width:1.5px; background:var(--gold-100); }
+  .ind-icon { font-size:28px; line-height:1; flex-shrink:0; }
+  .ind-zh { font-size:16px; font-weight:600; color:var(--navy-900); font-family:var(--font-display); }
+  .ind-en { font-size:12px; color:var(--mute); margin-top:3px; }
+
+  /* ── quiz ── */
+  .q-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px;
+  }
+  .q-counter,.pct-label {
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.08em;
+    color:var(--mute); font-variant-numeric:tabular-nums;
+  }
+  .pct-label { color:var(--gold-600); }
+  .progress-track {
+    height:3px; background:var(--ivory);
+    border-radius:var(--radius-pill); margin-bottom:40px; overflow:hidden;
+  }
+  .progress-bar {
+    height:3px; background:var(--gold-500);
+    border-radius:var(--radius-pill);
+    transition:width .5s var(--ease-out);
+  }
+  .q-text {
+    font-family:var(--font-display);
+    font-size:clamp(22px,4vw,30px); font-weight:600; line-height:1.25;
+    letter-spacing:-.01em;
+    color:var(--navy-900); margin-bottom:8px;
+  }
+  .q-sub {
+    font-size:14px; color:var(--mute); line-height:1.5;
+    margin-bottom:30px; min-height:20px; font-style:normal;
+    font-family:var(--font-display); font-weight:300;
+  }
+  .choices { display:flex; flex-direction:column; gap:12px; }
+  .choice {
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md); padding:18px 20px;
+    cursor:pointer;
+    transition:all .2s var(--ease-out);
+    display:flex; gap:16px; align-items:flex-start;
+  }
+  .choice:hover { border-color:var(--navy-500); transform:translateX(3px); }
+  .choice.selected { border-color:var(--gold-500); border-width:1.5px; background:var(--gold-100); }
+  .choice-letter {
+    width:26px; height:26px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--mute);
+    flex-shrink:0; margin-top:1px;
+    transition:all .2s var(--ease-out);
+  }
+  .choice.selected .choice-letter { background:var(--navy-900); border-color:var(--navy-900); color:var(--gold-400); }
+  .choice-zh { font-size:16px; color:var(--navy-900); line-height:1.45; font-weight:500; }
+  .choice-en { font-size:12px; color:var(--mute); margin-top:3px; }
+
+  .nav-row {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:32px;
+  }
+
+  .shake { animation:shake .35s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} }
+
+  /* ── gate ── */
+  .gate-wrap { max-width:480px; margin:0 auto; padding-top:8px; }
+  .gate-title {
+    font-family:var(--font-display); font-weight:800;
+    font-size:32px; letter-spacing:-.02em;
+    color:var(--navy-900); margin-bottom:10px;
+  }
+  .gate-sub { font-size:15px; color:var(--mute); line-height:1.6; margin-bottom:32px; }
+  .form-group { margin-bottom:18px; }
+  .form-label {
+    display:block; font-family:var(--font-mono);
+    font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--mute); margin-bottom:8px;
+  }
+  .form-input {
+    width:100%; padding:14px 16px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    color:var(--ink); font-family:var(--font-body); font-size:16px;
+    outline:none; transition:border-color .2s;
+  }
+  .form-input:focus { border-color:var(--gold-500); box-shadow:0 0 0 3px var(--gold-100); }
+  .form-input::placeholder { color:#bbb4a4; }
+  .input-prefix { display:flex; align-items:stretch; }
+  .input-prefix .prefix-tag {
+    display:flex; align-items:center; padding:0 14px;
+    background:var(--ivory); border:1px solid var(--line); border-right:none;
+    border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+    font-family:var(--font-mono); font-size:14px; font-weight:500; color:var(--navy-700);
+  }
+  .input-prefix .form-input { border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
+  .form-hint { font-size:12px; color:var(--mute); margin-top:8px; line-height:1.55; }
+  .form-note { font-size:12px; color:var(--mute); margin-top:20px; line-height:1.6; }
+  .error-msg { font-size:12px; color:var(--danger); margin-top:6px; display:none; }
+
+  /* ── result ── */
+  .greeting { font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; color:var(--mute); margin-bottom:10px; }
+  .result-arch {
+    font-family:var(--font-display); font-weight:900;
+    font-size:clamp(30px,6vw,48px); line-height:1.05; letter-spacing:-.03em;
+    color:var(--navy-900); margin-bottom:10px;
+  }
+  .result-arch-en { color:var(--gold-600); font-weight:300; font-style:normal; }
+  .result-desc { font-size:17px; color:var(--navy-700); line-height:1.6; margin-bottom:36px; max-width:600px; }
+
+  .pattern-badge {
+    display:inline-block; font-family:var(--font-mono);
+    font-size:12px; font-weight:500; letter-spacing:.12em;
+    padding:5px 14px; border-radius:var(--radius-pill);
+    background:var(--navy-900); color:var(--gold-400);
+    margin-bottom:14px;
+  }
+  .ind-tag {
+    display:inline-block; font-size:13px; font-weight:500;
+    padding:5px 14px; border-radius:var(--radius-pill);
+    background:var(--ivory); border:1px solid var(--line);
+    color:var(--navy-700); margin-bottom:14px; margin-left:8px;
+  }
+
+  .hex-section { margin-bottom:40px; }
+  .hex-center { display:flex; flex-direction:column; align-items:center;
+    background:var(--navy-900); border-radius:var(--radius-lg); padding:32px 20px 28px; position:relative; overflow:hidden; }
+  .hex-center canvas { position:relative; z-index:1; }
+  .hex-legend { display:flex; gap:22px; flex-wrap:wrap; justify-content:center; margin-top:18px; position:relative; z-index:1; }
+  .leg-item { display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,.7); font-family:var(--font-mono); letter-spacing:.03em; }
+  .leg-swatch { width:28px; height:3px; border-radius:2px; }
+
+  .pillar-sections { margin-bottom:28px; }
+  .pillar-section { margin-bottom:28px; }
+  .pillar-header {
+    font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-.01em;
+    margin-bottom:14px; padding-bottom:10px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:10px;
+  }
+  .pillar-header::before {
+    content:''; width:10px; height:10px; border-radius:2px;
+    background:var(--ph-color,var(--gold-500));
+  }
+
+  .dims-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+  .dim-card {
+    background:#fff; border:1px solid var(--line);
+    border-left:3px solid var(--pc,var(--gold-500));
+    border-radius:var(--radius-md); padding:20px;
+    box-shadow:var(--shadow-card);
+  }
+  .dim-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; gap:12px; }
+  .dim-name { font-family:var(--font-display); font-size:18px; font-weight:800; color:var(--navy-900); letter-spacing:-.01em; }
+  .dim-weight {
+    font-family:var(--font-mono); font-size:10px; font-weight:500;
+    color:var(--gold-700); background:var(--gold-100);
+    padding:2px 7px; border-radius:var(--radius-pill); margin-left:6px; letter-spacing:.04em;
+    vertical-align:middle;
+  }
+  .dim-name-en { font-size:11px; color:var(--mute); margin-top:4px; font-family:var(--font-mono); letter-spacing:.03em; }
+  .dim-badge {
+    font-family:var(--font-mono); font-size:10px; font-weight:600; padding:5px 11px;
+    border-radius:var(--radius-pill); letter-spacing:.06em; white-space:nowrap;
+  }
+  .badge-high { background:rgba(46,125,91,.12); color:var(--success); }
+  .badge-mid { background:var(--gold-100); color:var(--gold-700); }
+  .badge-low { background:rgba(176,56,61,.1); color:var(--danger); }
+  .dim-score-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .dim-score { font-family:var(--font-display); font-size:32px; font-weight:900; color:var(--navy-900); line-height:1; flex-shrink:0; }
+  .dim-score-pct { font-size:16px; color:var(--mute); font-weight:600; }
+  .dim-bar-wrap { flex:1; height:6px; background:var(--ivory); border-radius:var(--radius-pill); }
+  .dim-bar { height:6px; border-radius:var(--radius-pill); transition:width 1s var(--ease-out); }
+  .dim-block {
+    font-size:13.5px; line-height:1.6; color:var(--navy-700);
+    padding:11px 13px; border-radius:var(--radius-sm); margin-bottom:8px;
+  }
+  .dim-good { background:rgba(46,125,91,.06); }
+  .dim-risk { background:rgba(176,56,61,.05); }
+  .dim-block-label {
+    display:block; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    letter-spacing:.08em; margin-bottom:5px; text-transform:uppercase;
+  }
+  .dim-block-label.good { color:var(--success); }
+  .dim-block-label.risk { color:var(--danger); }
+  .dim-elab-en { font-size:11.5px; color:var(--mute); line-height:1.5; margin-top:8px; }
+  .dim-gap {
+    margin-top:10px; padding:11px 14px;
+    border:1px solid var(--line); border-left:3px solid var(--gold-500);
+    border-radius:0 var(--radius-md) var(--radius-md) 0;
+    background:var(--gold-100);
+    font-size:13px; color:var(--navy-800); line-height:1.55;
+  }
+  .dim-gap-label {
+    display:block; font-family:var(--font-mono); font-size:10px; font-weight:600;
+    text-transform:uppercase; letter-spacing:.1em; color:var(--gold-700); margin-bottom:5px;
+  }
+  .dim-gap-better { color:var(--mute); font-size:12.5px; }
+
+  /* ── valuation card (part 1) ── */
+  .val-card {
+    position:relative; overflow:hidden; isolation:isolate;
+    background:var(--navy-900); color:#fff;
+    border-radius:var(--radius-lg);
+    border-left:4px solid var(--gold-500);
+    padding:30px 32px; margin-bottom:44px;
+    text-align:center;
+  }
+  .val-label {
+    font-family:var(--font-mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:.16em; color:var(--gold-400); margin-bottom:14px;
+  }
+  .val-amount {
+    font-family:var(--font-display); font-weight:900;
+    font-size:clamp(38px,8vw,60px); line-height:1; letter-spacing:-.03em;
+    color:#fff; margin-bottom:14px;
+  }
+  .val-note { font-size:12.5px; color:rgba(255,255,255,.65); line-height:1.55; max-width:460px; margin:0 auto; }
+  .val-note span { display:block; font-size:11px; color:rgba(255,255,255,.4); margin-top:6px; }
+
+  /* ── section heads (parts 2 & 3) ── */
+  .section-head { margin:0 0 18px; }
+  .section-kicker {
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--gold-600); margin-bottom:8px;
+  }
+  .section-h {
+    font-family:var(--font-display); font-weight:800; font-size:24px;
+    letter-spacing:-.02em; color:var(--navy-900);
+  }
+
+  .move-box {
+    position:relative; overflow:hidden; isolation:isolate;
+    background:var(--navy-900); color:#fff;
+    border-radius:var(--radius-lg);
+    padding:28px 30px 28px 34px; margin-bottom:28px;
+    border-left:4px solid var(--gold-500);
+  }
+  .move-box > * { position:relative; z-index:2; }
+  .move-label {
+    font-family:var(--font-mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:.15em; color:var(--gold-400); font-weight:500; margin-bottom:10px;
+  }
+  .move-text { font-family:var(--font-display); font-size:19px; color:#fff; line-height:1.55; font-weight:400; }
+
+  .action-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+
+  canvas { display:block; }
+
+  @media (max-width:560px) {
+    .pillars-row { grid-template-columns:1fr; }
+    .dims-grid { grid-template-columns:1fr; }
+    .ind-grid { grid-template-columns:1fr; }
+    .hex-legend { gap:14px; }
+    .hero-band { padding:36px 24px; }
+    body { padding:28px 16px 64px; }
+  }
+
+  @media (prefers-reduced-motion:reduce) {
+    *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ══ INTRO ══ -->
+  <div id="s-intro" class="screen active">
+    <div class="hero-band">
+      <div class="intro-eyebrow">SSB Capital Readiness Test</div>
+      <h1 class="intro-title">
+        你的生意，值多少钱？
+        <span>How much is your business really worth?</span>
+      </h1>
+      <p class="intro-desc">
+        5分钟，测出你的生意值多少钱。从资本的3个维度，分析你的企业。
+        <span class="intro-desc-en">5 minutes to find out what your business is really worth — through the 3 dimensions capital cares about.</span>
+      </p>
+    </div>
+    <div class="pillars-intro">资本只看三件事，这30道题就在帮你打分：</div>
+    <div class="pillars-row">
+      <div class="pillar-card">
+        <div class="pillar-num">01</div>
+        <div class="pillar-name">复制能力</div>
+        <div class="pillar-en">Scalability</div>
+        <div class="pillar-dims">生意能不能离开你、放大10倍？</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-num">02</div>
+        <div class="pillar-name">护城河</div>
+        <div class="pillar-en">Sustainability</div>
+        <div class="pillar-dims">客户为什么离不开你？对手抢不走、也不愿来抢吗？</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-num">03</div>
+        <div class="pillar-name">话语权</div>
+        <div class="pillar-en">Brand Influence</div>
+        <div class="pillar-dims">客户要买，第一个想到的是你吗？</div>
+      </div>
+    </div>
+    <div class="note-box">
+      30道题，凭直觉选最像你生意现状的答案就好。<br>
+      <span>30 questions · answer honestly, not aspirationally.</span>
+    </div>
+    <button class="btn primary" onclick="showScreen('s-industry')">
+      测测我的生意值多少 &nbsp;→
+    </button>
+  </div>
+
+  <!-- ══ INDUSTRY SELECT ══ -->
+  <div id="s-industry" class="screen">
+    <div class="intro-eyebrow">Step 1 / 选择行业</div>
+    <h1 class="intro-title" style="font-size:clamp(26px,5vw,38px)">
+      你的生意属于哪个行业？
+      <span>Which industry is your business in?</span>
+    </h1>
+    <p class="intro-desc">
+      不同行业有专属的题目和评分逻辑，确保每一题都与你的生意相关。<br>
+      Each industry has its own tailored questions, so every question is relevant to you.
+    </p>
+    <div class="ind-grid" id="ind-grid"></div>
+    <div class="nav-row">
+      <button class="btn ghost" onclick="showScreen('s-intro')">← 返回 Back</button>
+      <button class="btn primary" id="btn-ind-start" onclick="startQuiz()" disabled>开始测试 Start →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div id="s-quiz" class="screen">
+    <div class="q-header">
+      <span class="q-counter">题目 <span id="qnum">1</span> / <span id="qtotal">30</span></span>
+      <span class="pct-label" id="qpct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="prog" style="width:3%"></div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="q-sub" id="q-sub"></div>
+    <div class="choices" id="choices"></div>
+    <div class="nav-row">
+      <button class="btn ghost" id="btn-prev" onclick="prevQ()" disabled>← 上一题</button>
+      <button class="btn primary" id="btn-next" onclick="nextQ()">下一题 →</button>
+    </div>
+  </div>
+
+  <!-- ══ GATE ══ -->
+  <div id="s-gate" class="screen">
+    <div class="gate-wrap">
+      <div class="intro-eyebrow" style="margin-bottom:20px">测试完成 Test Complete</div>
+      <h2 class="gate-title">查看你的结果</h2>
+      <p class="gate-sub">
+        你的 SSB 资本档案已经生成。填写以下资料即可查看完整分析报告。<br>
+        <span style="font-size:12px;color:#444">Your SSB profile is ready. Enter your details to unlock the full report.</span>
+      </p>
+      <div class="form-group">
+        <label class="form-label">姓名 / Name</label>
+        <input type="text" id="inp-name" class="form-input" placeholder="你的名字 Your name">
+        <div class="error-msg" id="err-name">请输入姓名 / Please enter your name</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">联系电话 / Contact Number</label>
+        <input type="tel" id="inp-phone" class="form-input" placeholder="+60 12-345 6789">
+        <div class="error-msg" id="err-phone">请输入有效电话号码 / Please enter a valid number</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">电子邮箱 / Email</label>
+        <input type="email" id="inp-email" class="form-input" placeholder="you@example.com">
+        <div class="form-hint">报告将发送到这个邮箱。<br>
+          <span style="color:#bbb4a4">Your report will be sent to this email.</span></div>
+        <div class="error-msg" id="err-email">请输入有效邮箱 / Please enter a valid email</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">下个财年预计净利 PAT / Next FY Projected PAT</label>
+        <div class="input-prefix">
+          <span class="prefix-tag">RM</span>
+          <input type="text" inputmode="numeric" id="inp-pat" class="form-input" placeholder="例如 500000">
+        </div>
+        <div class="form-hint">下一个财政年度预计的税后净利（Profit After Tax），用来估算你的生意估值。<br>
+          <span style="color:#bbb4a4">Your projected profit after tax for next financial year — used to estimate your valuation.</span></div>
+        <div class="error-msg" id="err-pat">请输入有效金额 / Please enter a valid amount</div>
+      </div>
+      <button class="btn primary" style="width:100%;justify-content:center;margin-top:8px" onclick="unlockResult()">
+        查看我的结果 View My Results &nbsp;→
+      </button>
+      <p class="form-note">
+        📌 你的资料仅用于发送报告，不会用于其他用途。<br>
+        Your details are only used to send your report and will not be shared.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ RESULT ══ -->
+  <div id="s-result" class="screen">
+    <div class="greeting" id="r-greeting"></div>
+    <div class="result-eyebrow">你的 SSB 档案 / Your SSB Profile</div>
+    <div>
+      <span class="pattern-badge" id="r-pattern"></span>
+      <span class="ind-tag" id="r-ind"></span>
+    </div>
+    <h2 class="result-arch" id="r-arch"></h2>
+    <p class="result-desc" id="r-desc"></p>
+
+    <!-- ── PART 1: VALUATION ── -->
+    <div class="val-card">
+      <div class="val-label">资本估值 / Estimated Business Valuation</div>
+      <div class="val-amount" id="r-valuation">RM —</div>
+      <div class="val-note" id="r-val-note"></div>
+    </div>
+
+    <!-- ── PART 2: SPIDER + DETAIL ── -->
+    <div class="section-head">
+      <div class="section-kicker">02 — 三个维度 / Three Dimensions</div>
+      <h3 class="section-h">你的生意，资本怎么看</h3>
+    </div>
+    <div class="hex-section">
+      <div class="hex-center">
+        <canvas id="hexC" width="360" height="320" role="img" aria-label="三个维度 spider chart"></canvas>
+        <div class="hex-legend">
+          <div class="leg-item"><div class="leg-swatch" style="background:#5b6cb8"></div>复制能力</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#4fb085"></div>护城河</div>
+          <div class="leg-item"><div class="leg-swatch" style="background:#F5A623"></div>话语权</div>
+        </div>
+      </div>
+    </div>
+    <div class="dims-grid" id="dims-3"></div>
+
+    <!-- ── PART 3: NEXT FOCUS ── -->
+    <div class="section-head">
+      <div class="section-kicker">03 — 下一步 / Next Move</div>
+      <h3 class="section-h">接下来，先 focus 这件事</h3>
+    </div>
+    <div class="move-box">
+      <div class="move-label">最关键的一步 / The One Next Move</div>
+      <div class="move-text" id="r-move"></div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn primary" id="btn-pdf" onclick="downloadPDF()">⬇ 下载 PDF Download Report</button>
+      <button class="btn ghost" onclick="restartQuiz()">↺ 重新测试 Restart</button>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<!-- PDF generation library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   ►►► CONFIG ◄◄◄
+   API_ENDPOINT is your Cloud Run service URL + /submit.
+   ════════════════════════════════════════════════════════ */
+const CONFIG = {
+  API_ENDPOINT: 'https://ssb-backend-v7ofl7u46a-as.a.run.app/submit'
+};
+
+/* ════════════════════════════════════════════════════════
+   SSB Capital Readiness Test — Industry-adaptive data
+   d: dimension index 0..5  →  S1 系统化, S2 复制性, S3 护城河,
+                                S4 财务韧性, S5 话语权, S6 品牌独立
+   c: choices, each with score s (0..3). max per dimension = 5 questions.
+   ════════════════════════════════════════════════════════ */
+
+const INDUSTRIES = [
+  {id:'fnb',         icon:'🍜', zh:'餐饮 F&B',            en:'Restaurants, cafes, food chains'},
+  {id:'services',    icon:'💼', zh:'服务业 Services',      en:'Consulting, education, clinics, agencies'},
+  {id:'retail',      icon:'🛍️', zh:'零售 / 电商 Retail',   en:'Physical retail, e-commerce, wholesale-to-consumer'},
+  {id:'manufacturing',icon:'🏭', zh:'制造业 Manufacturing', en:'Factory, production, OEM/ODM'},
+  {id:'tech',        icon:'💻', zh:'科技 / SaaS Tech',     en:'Software, platform, digital products'},
+  {id:'trading',     icon:'📦', zh:'贸易 Trading',         en:'Import/export, distribution, agency'},
+  {id:'construction',icon:'🏗️', zh:'建筑 / 工程 Construction', en:'Contractors, engineering, fit-out'},
+  {id:'logistics',   icon:'🚚', zh:'物流 / 运输 Logistics', en:'Transport, warehousing, delivery'}
+];
+
+/* 27 SSB patterns. Key = Scalability + Sustainability + Brand, each H/M/L.
+   desc = 诊断 (capital lens, 3-4 sentences). move = ONE next move. en = short English line. */
+const PATTERNS={
+/* ───── 三项皆强 ───── */
+"HHH":{desc:"复制能力、护城河、话语权三项全部过硬。系统能无我也能跑、护城河扛得住竞争、品牌能脱离你独立交易——这是资本眼里最完整的生意形态，PE 倍数也最高。你已经不只是在经营一门生意，而是握着一项随时可以变现的资产。",move:"停止继续优化内部，你的内功已经够了。现在唯一该做的，是找到对的买家或战略投资人，把这个估值变现——别让一项成熟的资产，继续被当成一份工作来做。",en:"All three strong — the most capital-ready shape, top PE. Stop optimising; find the right buyer and realise the value."},
+
+/* ───── 复制高、护城河高 ───── */
+"HHM":{desc:"系统能复制、护城河也够深，你已经建出了真正的价值，这是绝大多数老板做不到的。但话语权只到中等——市场认识你，却还没在客户潜意识里牢牢占住位置。结果就是：你的实力配得上更高的估值，市场却还没给到，差的就是那一层认知。",move:"把资源压在话语权上：收窄定位、持续做内容、抢占 top of mind。你不缺实力，缺的是让市场清楚记得『这件事就找你』——这一层补上，溢价空间立刻打开。",en:"Real value built, but you don't yet own mind-space. Push brand to top-of-mind to unlock the premium."},
+"HHL":{desc:"你建了真正有价值的东西——系统能复制、护城河也够深——但市场几乎不认识你。这是典型的『隐形冠军』：东西做得好，却没人知道。资本看不到你护城河的价值，PE 因此被大幅打折，你的估值远低于你的真实实力。",move:"把资源压在话语权上，先抢占客户潜意识里的位置（top of mind）。你的护城河已经在那里了，现在要做的是让市场看见它、说得出它——估值才追得上你的实力。",en:"A hidden champion — strong but unknown. Invest in brand voice so the moat converts to valuation."},
+
+/* ───── 复制高、护城河中 ───── */
+"HMH":{desc:"系统能复制、品牌也有话语权，这两项都很漂亮，但护城河只到中等——你的优势还能被对手用价格或更好的服务追上。问题在于：你正在快速放大一个根基还不够稳的模型，规模越大，一旦优势被追平，崩塌的面积也越大。",move:"先把护城河从『中』做到『高』，再谈继续扩张。找一件对手抢不走、或就算有能力也不愿意来抢的东西做深：抢不走的像独家货源、别人没有的牌照或技术、客户换掉你成本很高；不愿抢的，是你的定位让大对手一进来就会砸掉他自己原本的生意。先把这个根基夯实，规模才是资产而不是风险。",en:"Scalable and known, but the moat is shallow. Deepen the moat before scaling further."},
+"HMM":{desc:"复制能力很强，你有一台能跑的机器，但护城河和话语权都只到中等。这意味着你产出的东西既不够独特、也还没占住客户心智——机器转得越快，越容易把自己推进同质化的红海。效率是你的强项，差异化才是你缺的那块。",move:"先补护城河（权重仅次于复制能力）：找一件对手抢不走、或不愿意来抢的东西做深——可以是独家货源、客户换你成本很高，也可以是一个让大对手来抢就会砸掉自己生意的定位。否则你复制得越快，价格战来得也越猛——先有这道护城河，再谈放大。",en:"A strong engine, but undifferentiated. Build a defensible moat before competition catches up."},
+"HML":{desc:"系统能复制、效率很高，但护城河中等、话语权很弱。你能高效产出，却既没把优势做深、市场也几乎不认识你。增长引擎转得很快，方向却还没立住——这种状态下扩张，只是在更快地放大『守不住、没人知道』这两个问题。",move:"先补话语权：市场连你是谁都说不清，再强的复制能力也只是在放大一个无人认识的品牌。先让客户记住你、想起你，曝光立住了，后面的优势才有人买单。",en:"Efficient but unknown and only mildly defensible. Fix brand first — scale amplifies an unknown name."},
+
+/* ───── 复制高、护城河低 ───── */
+"HLH":{desc:"你能复制、也有品牌话语权，这两项撑起了声势，但你没有真正的护城河。生意靠系统和流量在跑，看着热闹，底下却是空的——一旦对手用更低价或更好服务切进来，你几乎没有还手之力。这是最危险的『空中楼阁』：看起来大，实际上脆。",move:"立刻补护城河：趁现在有流量和规模，建一道对手跨不过去的门槛——让客户换掉你成本很高、锁住别人拿不到的货源、或拿下别人没有的牌照/技术。没有护城河，规模不是护城的城墙，只是放大脆弱的放大器。",en:"Scalable and known but undefended. Convert reach into a real moat before a price war hits."},
+"HLM":{desc:"系统能复制，话语权中等，但护城河很弱。你在快速复制一个没有护城河的模型——每开一个新点、每上一个新渠道，都是在把『容易被替代』这件事复制一遍。规模在涨，但每一份规模底下都是同样脆弱的地基。",move:"先补护城河：在继续复制之前，找一件对手抢不走、或不愿意来抢的东西做深（独家货源、客户换你成本很高，或一个大对手不划算来抢的定位）。复制一个没护城河的模型，本质上是在用更快的速度放大同一个风险——先把这块补上，复制才有意义。",en:"Replicating a model with no moat. Build defensibility before you scale the weakness."},
+"HLL":{desc:"你有系统、能复制，这是真本事，但既没有护城河、也没有话语权。这是典型的『扩张型经营者』：正在放大一个还没差异化、也没人认识的模型。规模越大，守不住和没认知这两个问题就被复利放大得越严重，风险其实在加速累积。",move:"停止扩张，先补护城河。在没建起一道对手跨不过的门槛之前继续复制，只是在加速暴露问题——先找一件对手抢不走、或不愿意来抢的东西做深，立住根基，再谈放大。",en:"Scaling an undifferentiated, unknown model. Stop expanding; build a moat first."},
+
+/* ───── 复制中、护城河高 ───── */
+"MHH":{desc:"护城河深、品牌也有话语权，你手上是真正的好资产，但复制能力只到中等——系统还没完全脱离你。这意味着你守得住、也叫得响，却还没法轻松放大。资本最看重的『规模化想象空间』被卡住了，好资产装在一个还放不大的容器里。",move:"先把复制能力（权重最高）从『中』推到『高』：把核心流程系统化到无我也能跑。你的护城河和品牌已经就位，只要复制能力跟上，这套资产立刻能装进更大的盘子。",en:"Strong moat and brand, but not yet scalable. Systemise to 'runs without you' to unlock scale."},
+"MHM":{desc:"护城河够深，这是你的根，但复制能力和话语权都只到中等。你的核心很稳，却既没完全系统化、也没完全占住客户心智。好底子已经有了，缺的是把它放大、把它说响——目前还停在『稳但小』的阶段。",move:"先补复制能力（权重最高）：把生意从『靠你』推向『靠系统』。复制能力是把护城河变现成规模的前提——根扎得再深，长不大也结不出资本愿意买的果。",en:"Solid core but only half-scaled and half-known. Systemise first — it carries the most weight."},
+"MHL":{desc:"护城河深，这是你最强的一环，但复制能力中等、话语权很弱。你守得住一块别人攻不进的地，却既难放大、外面也几乎没人知道你有多强。价值是真实的，曝光却接近于零——典型的『深藏功与名』，资本想买都找不到你。",move:"先补话语权：你有真东西却没人知道（隐形冠军的困局）。先让市场认识到你护城河的价值、说得出你强在哪，再回头去解决系统化放大的问题。",en:"Deep moat, but unscaled and invisible. Make the market see your moat's value first."},
+
+/* ───── 复制中、护城河中 ───── */
+"MMH":{desc:"话语权强、客户认你，品牌跑在最前面，但复制能力和护城河都只到中等。流量和注意力进来了，落点却是一个内功还没扎稳的底盘——你很会让人来，却还没准备好接得住、也守不住。品牌在前面拉，内功在后面拖。",move:"先补复制能力（权重最高）：把系统做到无我也能跑。否则品牌带来的增长，最终会卡在你个人的产能天花板上——人来了你接不住，反而砸了刚建起来的话语权。",en:"Brand leads, but systems and moat lag. Systemise so growth doesn't hit your personal ceiling."},
+"MMM":{desc:"三项都只到中等——复制能力、护城河、话语权，哪个都有基础，哪个都不够硬。生意能稳定运转，这说明你是个合格的经营者，但没有任何一项强到能撑起高估值。这是最常见、也最容易『一直忙、一直不值钱』的卡点：处处及格，处处不拔尖。",move:"千万别三件事一起抓，那只会让你哪个都做不深。先把复制能力（权重最高）从『中』推到『高』——把核心流程系统化到无我也能跑，这是其他一切的地基，也是最划算的第一步。",en:"All moderate, nothing strong. Pick one: push Scalability to high first — it's the foundation."},
+"MML":{desc:"复制能力和护城河都只到中等——有基础但不够硬，而话语权偏弱。三项都没真正站稳，生意能运转，却还撑不起高估值。尤其市场对你几乎没印象，连被资本看见的入口都还没打开——这是『样样有、样样不够』的状态。",move:"先补话语权（当前最弱的一环）：先让客户记住你、第一时间想起你。在内功还在补的阶段，被看见才有机会被买单——曝光立住了，才谈得上把中等的内功变现。",en:"Two moderate, brand weak. Make customers remember you first — visibility precedes value."},
+
+/* ───── 复制中、护城河低 ───── */
+"MLH":{desc:"品牌话语权强、客户认得你，复制能力也有中等水准，但护城河很弱。你很会让人记住你，手上却没有对手抢不走的东西。结果是：注意力在撑着这门生意，可一旦热度过去或对手切入，留不下真正的资本价值——你赚到的是流量，不是估值。",move:"先补护城河：趁有流量，赶紧把它沉淀成对手抢不走的东西——独家货源、客户换你成本很高，或一个大对手不愿来抢的定位。现在你手上是一池会流走的流量，把它变成留得住的资产，估值才立得住。",en:"Strong brand, no moat. Turn attention into defensibility — you're earning reach, not capital value."},
+"MLM":{desc:"复制能力和话语权都只到中等，护城河很弱。你有一定的系统、也有一点知名度，但缺乏真正能守住的东西——这意味着你现在的位置，随时可能被一个更狠、更便宜的对手整碗端走。中规中矩的外壳下，是一个守不住的核心。",move:"先补护城河（当前最弱）：找一件对手抢不走、或不愿意来抢的东西做深，把它变成别人拿不走的。没有护城河，再多的系统和曝光都只是在帮对手教育市场——先守得住，才轮得到放大和扬名。",en:"No real moat under moderate systems and awareness. Build defensibility before profit erodes."},
+"MLL":{desc:"复制能力中等，护城河和话语权都很弱。你有点系统，能让生意转起来，但既守不住、也没人知道你。生意是在运转，可几乎没有任何让资本看上眼的『值钱』要素——它更像一份你给自己安排的工作，而不是一项资产。",move:"先补护城河：在没建起一道对手跨不过的门槛之前，曝光和扩张都是空中楼阁。先找一件对手抢不走、或不愿意来抢的东西做深，把根基立住——这是把『一门生意』变成『一项资产』的真正起点。",en:"Some systems, but undefended and unknown. Build one real moat before anything else."},
+
+/* ───── 复制低、护城河高 ───── */
+"LHH":{desc:"护城河深、品牌也强，这两项都很难得，但复制能力很弱——整门生意高度绑在你个人身上，离了你就转不动。你建出了真价值、也有名气，却把自己变成了最大的瓶颈。资本看到的不是机会，而是一个没有退出路径的『困住的明星』。",move:"接下来 90 天只做一件事：把你脑子里的东西系统化、写出来、交出去。你的护城河和品牌都够强了，唯一压住估值的就是你自己——天花板是你，不是市场。",en:"Deep moat and brand, but locked to you. Systemise relentlessly — you are the bottleneck."},
+"LHM":{desc:"护城河深、话语权也有中等水准，但复制能力很弱。你守得住、也小有名气，可整门生意离不开你——所有关键判断、关键关系都压在你一个人身上。好资产装在一个无法放大的容器里，再值钱也搬不动、卖不掉。",move:"先补复制能力：把核心从你个人身上转移到系统上、流程上、团队上。无我也能跑，你的护城河才有机会被放大、被资本定价——否则它永远只值『你在场』的那个价。",en:"Strong moat, but unscalable. Move the core off your shoulders onto systems."},
+"LHL":{desc:"护城河是你唯一的强项，但复制能力和话语权都很弱。你守得住一块地，却既无法复制、外面也没人知道你。生意很稳，但没有增长引擎、也没有规模化的可能——资本会把它看成一份很稳的工作，而不是一项能放大、能退出的资产。",move:"先补复制能力（权重最高）：把生意系统化到能完全脱离你。否则你拥有的不是一项资产，而是一份只要你一停下来就会停摆的高级工作——先让它能离开你，才谈得上值钱。",en:"A defended niche, but trapped and invisible. Systemise so the business can exist without you."},
+
+/* ───── 复制低、护城河中 ───── */
+"LMH":{desc:"你很会做品牌、客户认你，护城河也算过得去——但生意高度绑在你个人身上，无法复制。你是这门生意最大的瓶颈，资本看不到退出路径。这是『叫好不一定叫座』的资本困局：外面很热闹，里面却离不开你这个人。",move:"接下来 90 天只做一件事——把你脑子里的东西系统化、写出来、交出去。你的品牌和护城河已经够用，真正卡住估值的是复制能力——你的天花板是你自己，不是市场。",en:"Known and moderately defended, but locked to you. Systemise — your ceiling is you, not the market."},
+"LMM":{desc:"复制能力很弱，护城河和话语权都只到中等。你有点底子、也有点名气，但整门生意离不开你——它跟着你走，同时也被你死死困住。中等的护城河和品牌本来是好苗子，却因为无法复制，全被锁在你一个人的时间和精力里。",move:"先补复制能力（权重最高）：把流程沉淀成文件、把关键岗位真正交出去。生意能离开你，中等的护城河和品牌才有机会继续长大——否则它们永远受限于你一个人的产能。",en:"Moderate moat and brand, but unscalable. Document and delegate so it runs without you."},
+"LML":{desc:"护城河中等，但复制能力和话语权都很弱。你守住了一点东西，却既无法放大、外面也没人知道。说到底，这门生意几乎完全等于你这个人——你在它就在，你停它就停。中等的护城河是仅有的亮点，也被困在你一个人身上。",move:"先补复制能力（权重最高）：先把自己从日常运营里抽出来，把流程和岗位系统化。系统化是把『一份你亲力亲为的工作』变成『一项能独立运转的资产』的第一步，也是最关键的一步。",en:"A little moat, but trapped and unknown. Systemise first — turn a job into an asset."},
+
+/* ───── 复制低、护城河低 ───── */
+"LLH":{desc:"品牌有流量、客户认你，声势很大，但复制能力和护城河几乎为零。看起来风光，实际上是空心的——这是典型的『空壳网红』：流量不断进来，却既留不住、也守不住。热闹是真的，能沉淀成资本价值的东西却很少。",move:"立即停止对外扩张，把火力转向内部建设，先把复制能力（系统化）补起来。否则品牌带来的流量，正源源不断地流向一个漏水的桶——补好桶，再开水龙头。",en:"Loud but hollow — traffic with no systems or moat. Stop scaling out; build the inside first."},
+"LLM":{desc:"复制能力和护城河都很弱，话语权只到中等。你有点知名度，但内功几乎是空的——既没有能脱离你的系统，也没有能守得住的护城河。生意撑不起重量，也彻底离不开你。中等的曝光，反而可能把你接不住的短板暴露在更多人面前。",move:"先补复制能力（权重最高）：把最基本的系统和流程立起来，让生意能稳定交付。没有可复制的底盘，知名度越大越危险——人来了你接不住，名气反而成了反噬。",en:"Thin inside, mildly known. Build basic systems first — awareness without capacity backfires."},
+"LLL":{desc:"复制能力、护城河、话语权三个维度都很弱。坦白说，这目前是一门生意，还不是一项资产——它能让你赚钱维生，但在资本眼里几乎没有估值价值。这不是坏消息，而是起点清晰：你现在该想的不是怎么卖，而是怎么从零开始把它建成值钱的东西。",move:"先补复制能力（权重最高、也是地基）：从把核心流程系统化、让生意能脱离你开始。这是『值钱』的第一块砖——地基没立起来之前，护城河和品牌都无从谈起。",en:"A job, not an asset. Start with Scalability — systemise so the business can run without you."}
+};
+
+const DIM_INFO=[
+  {name:'S1 系统化',en:'System Readiness',color:'#5b6cb8',note:'运营能否在没有老板时正常运转'},
+  {name:'S2 复制性',en:'Replication Potential',color:'#3D406E',note:'模型能否在新地点或渠道复制相同结果'},
+  {name:'S3 护城河',en:'Moat Depth',color:'#4fb085',note:'竞争壁垒有多深，是否持续复利'},
+  {name:'S4 财务韧性',en:'Financial Resilience',color:'#2E7D5B',note:'GP/NP健康状况与客户集中度风险'},
+  {name:'S5 话语权',en:'Category Ownership',color:'#F5A623',note:'你是否在客户潜意识中占据位置'},
+  {name:'S6 品牌独立性',en:'Brand Independence',color:'#C77F0E',note:'品牌是否能脱离创始人独立存在'}
+];
+
+/* Per-dimension elaboration, keyed by score band: high (≥67) / mid (34-66) / low (<34).
+   Written in the SSB capital lens. {gap} placeholder is filled with the user's weakest answer. */
+const ELAB={
+  0:{ // S1 系统化
+    high:["系统化是你的强项。运营已经能在你不在场时正常运转，这意味着你从『经营者』走向了『拥有者』——资本最看重的正是这种『无我也能跑』的能力。","Systems are your strength. The business runs without you in the room — the 'owner not operator' shift capital pays for."],
+    mid:["系统初具雏形，但还没真正脱离你。一旦你抽身，质量和效率会打折。这是从『值钱』迈进的关键卡口，先把核心岗位的流程沉淀成文件。","Systems are forming but still lean on you. Document the core roles before you scale."],
+    low:["这是你最危险的一环。生意高度依赖你个人，等于把价值锁死在你身上——PE投资人看不到退出路径，估值会被直接打折。系统化应是你的第一优先。","Your most dangerous gap. The business is locked to you personally, so buyers see no exit. Systemise first."]
+  },
+  1:{ // S2 复制性
+    high:["你的模型可复制。给足资源就能在新地点或新渠道跑出同样结果，这正是资本估值里『规模化想象空间』的来源。","Your model replicates. With resources it clones to new sites/channels — the scale story capital buys."],
+    mid:["有一定复制潜力，但每次扩张都还要你亲自磨合。把单位经济和交付流程算清、写清，复制成本才会真正下降。","Some replicability, but each expansion still needs you. Nail unit economics and a documented playbook."],
+    low:["你的生意目前几乎无法复制——价值高度绑在你个人的判断或手艺上。在解决这一点之前，扩张只会放大对你的依赖，而不是放大价值。","Hard to replicate today; value is tied to your personal craft. Scaling now multiplies dependence, not value."]
+  },
+  2:{ // S3 护城河
+    high:["你有真正的护城河。客户转换成本高、竞争对手难以复制，这让你的定价权和利润可以持续复利——可持续性的根基稳固。","A real moat: high switching costs, hard to copy. Pricing power compounds — sustainability is solid."],
+    mid:["护城河存在但不深。你有优势，但还能被价格或服务追上。把局部优势做成结构性壁垒（IP、锁定供应、转换成本），否则容易陷入价格战。","A shallow moat — catchable on price/service. Turn your edge into structural barriers before a price war."],
+    low:["你几乎没有护城河。客户留下来更多是出于方便或习惯，而非无法替代。一旦有人用更低价或更好服务切入，你会很被动。这是估值倍数最大的拖累项。","Little defensibility — customers stay on convenience, not lock-in. The biggest drag on your multiple."]
+  },
+  3:{ // S4 财务韧性
+    high:["财务底盘扎实。利润健康、客户分散、现金流能扛住波动——资本买的不只是增长，更是这种『扛得住』的韧性。","Strong financial base: healthy margins, diversified clients, resilient cash flow. Buyers pay for durability."],
+    mid:["财务尚可但有隐忧——可能是利润偏薄、客户集中，或现金流偏紧。先堵住最脆弱的那个口子，韧性比增长更能稳住估值。","Decent but exposed — thin margin, concentration, or tight cash. Plug the weakest hole first."],
+    low:["财务韧性偏弱，是高风险信号。利润、客户集中度或现金流中至少一项让生意经不起风浪。资本看到的是风险溢价，会直接压低出价。","Weak resilience is a red flag. Margin, concentration, or cash can't weather a storm — buyers price in the risk."]
+  },
+  4:{ // S5 话语权
+    high:["你在客户潜意识里占据了位置。被主动想起、被报道、能收溢价——这是品牌影响力里最值钱的『话语权』，直接抬升你的议价能力。","You own mind-space: top-of-mind, covered, premium-priced. The most valuable form of brand influence."],
+    mid:["有一些知名度，但还没真正占领品类。客户认得你，却说不清你最擅长什么。把定位收窄、把话语权做实，溢价空间才会打开。","Some awareness but no category ownership. Sharpen positioning to unlock premium."],
+    low:["市场基本不认识你。你可能建了真东西，却没人知道——这正是『隐形冠军』的陷阱，护城河的价值无法兑现成估值。需要投资品牌话语权。","The market barely knows you — the 'hidden champion' trap. Your moat can't convert to valuation. Invest in voice."]
+  },
+  5:{ // S6 品牌独立性
+    high:["品牌已经能脱离你独立存在。客户认的是品牌而非你本人，这意味着品牌是一项可交易的独立资产——卖掉生意时，新东家能直接接手。","The brand stands without you — a transferable asset. A buyer can take over and keep running it."],
+    mid:["品牌有一定独立性，但还和你绑着。你一旦淡出，会有动摇。培养能代表品牌发声的人，把品牌资产从你身上转移出去。","Partly independent but still tied to you. Develop others who can speak for the brand."],
+    low:["品牌几乎就是你本人。你就是招牌——这在做生意时是优势，在卖生意时是致命伤，因为品牌无法和你分离交易。这是『网红老板』最常见的天花板。","The brand is you. Great for running it, fatal for selling it — it can't be separated and sold. The 'celebrity boss' ceiling."]
+  }
+};
+
+/* ── 3 main pillars: weights, colors, and good/bad elaboration by band ── */
+const PILLAR_WEIGHTS=[0.45,0.35,0.20]; // Scalability / Sustainability / Brand
+const PILLARS=[
+  {key:'scale', zh:'复制能力', en:'Scalability', color:'#5b6cb8',
+   sub:'生意能不能离开你、系统化、可放大', dims:[0,1]},
+  {key:'sustain', zh:'护城河', en:'Sustainability', color:'#4fb085',
+   sub:'壁垒够不够深、财务扛不扛得住', dims:[2,3]},
+  {key:'brand', zh:'话语权', en:'Brand Influence', color:'#F5A623',
+   sub:'客户是否第一个想到你、品牌能否独立', dims:[4,5]}
+];
+
+/* good (≥67) / okay (34-66) / weak (<34) — written in the capital lens, what's GOOD and what's the RISK */
+const PILLAR_ELAB={
+  scale:{
+    high:{good:'生意已经能离开你运转，流程和复制路径清晰。资本最看重这种「无我也能跑」的能力，因为它意味着可以放大、可以退出。',
+          risk:'守住它。扩张时别让新点位重新依赖你个人，否则会打回原形。',
+          en:'The business runs without you and can be cloned — the scalable, exitable asset capital pays a premium for.'},
+    mid:{good:'系统已经成形，部分环节能脱离你。',
+         risk:'核心决策和质量仍然绑在你身上。一旦你抽身，复制就会走样——这是估值倍数上不去的主因之一。先把关键岗位的流程沉淀成文件。',
+         en:'Systems are forming but still lean on you; document core roles before scaling.'},
+    low:{good:'你对生意每个环节都了如指掌。',
+         risk:'整门生意锁死在你个人身上，无法复制、无法放大，PE 投资人看不到退出路径，估值会被直接打折。这是你最优先要解决的一环。',
+         en:'The business is locked to you — not replicable, no exit path. The biggest drag on your multiple.'}
+  },
+  sustain:{
+    high:{good:'你有真正的护城河：客户换掉你成本很高、对手难复制，加上财务底盘扎实，利润和定价权能持续复利。',
+          risk:'护城河会被时间侵蚀。持续把它做深（独家货源、客户锁定、长约），别吃老本——也别让大对手有一天觉得来抢划算。',
+          en:'A real moat plus a solid financial base — pricing power compounds and the business weathers storms.'},
+    mid:{good:'你有一定优势，财务也还过得去。',
+         risk:'护城河不够深，优势仍可能被价格或服务追平；或利润偏薄、客户偏集中。先把客户离不开你的那个理由做扎实，否则容易陷入价格战。',
+         en:'A shallow moat, catchable on price; plug the weakest financial or competitive hole first.'},
+    low:{good:'生意目前还在运转，有现金流进来。',
+         risk:'几乎没有护城河——客户留下来靠习惯而非无可替代；财务也经不起波动。一旦有人低价切入，你会很被动。资本会因此压低出价。',
+         en:'Little defensibility and fragile finances — customers stay on convenience, not lock-in.'}
+  },
+  brand:{
+    high:{good:'你在客户潜意识里占据了位置：被主动想起、能收溢价，而且品牌能脱离你独立存在——这是一项可交易的资产。',
+          risk:'把品牌资产从你个人身上彻底转移出去，培养能代表品牌发声的人，确保卖掉时新东家能直接接手。',
+          en:'You own mind-space and the brand stands without you — a transferable, premium-commanding asset.'},
+    mid:{good:'市场对你有一定认知。',
+         risk:'还没真正占领品类，客户说不清你最擅长什么；品牌也仍和你本人绑着。收窄定位、培养代言人，溢价空间才打得开。',
+         en:'Some awareness but no category ownership, and still tied to you personally.'},
+    low:{good:'你专注在把事情做好，没把精力花在外部曝光。',
+         risk:'市场基本不认识你，品牌几乎就是你本人。你可能建了真东西却没人知道（隐形冠军陷阱），而且品牌无法和你分离交易——卖生意时这是致命伤。',
+         en:'The market barely knows you and the brand is you — it can\'t be separated and sold.'}
+  }
+};
+
+/* shorthand builders */
+const C3=(a,b,c)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:1.5},{zh:c[0],en:c[1],s:0}];
+const C4=(a,b,c,d)=>[{zh:a[0],en:a[1],s:3},{zh:b[0],en:b[1],s:2},{zh:c[0],en:c[1],s:1},{zh:d[0],en:d[1],s:0}];
+
+const BANKS = {};
+
+/* ══════════════ 1. 餐饮 F&B ══════════════ */
+BANKS.fnb=[
+  // ───────── S1 系统化 (10) ─────────
+  // 去人化
+  {d:0,zh:"你上一次连续离开店里超过一周是什么时候？那段时间生意怎样？",en:"When did you last leave the outlet for over a week, and how did it go?",c:C3(["今年有过，照常运转","This year — ran normally"],["有过，但要远程盯着","Yes, but I monitored remotely"],["几乎没敢离开过","Almost never dared to"])},
+  {d:0,zh:"如果你今天手机关机一整天，店里最可能出什么状况？",en:"If your phone were off all day, what would happen at the outlet?",c:C3(["基本不会有事","Basically fine"],["有些决定会卡住","Some decisions would stall"],["会乱","It'd be chaos"])},
+  {d:0,zh:"过去一个月，员工因为「不知道该怎么办」来问你，大概几次？",en:"Last month, how often did staff ask you because they didn't know what to do?",c:C3(["几乎没有","Almost never"],["每周几次","A few times a week"],["几乎每天","Almost daily"])},
+  // 交接
+  {d:0,zh:"店里出问题时，员工第一反应是？",en:"When something goes wrong, what do staff do first?",c:C3(["照流程自己处理","Handle it by the process"],["小事自扛、大事找我","Small yes, big ones to me"],["基本都等我决定","Mostly wait for me"])},
+  {d:0,zh:"打烊全套事情，除你外几个人能完整独立搞定？",en:"Besides you, how many can fully close the outlet alone?",c:C3(["好几个","Several"],["一两个","One or two"],["只有我","Only me"])},
+  {d:0,zh:"让一个店长全权管一家店——实际发生了吗？",en:"Letting a manager fully run an outlet — has it actually happened?",c:C3(["已经在放手做","Already doing it"],["试过但还要盯","Tried but still watch"],["没人能接","No one can take over"])},
+  // 流程沉淀
+  {d:0,zh:"开店、收银、订货这些关键事，有没有写下来的步骤？",en:"Are key tasks (opening, cashier, ordering) written down?",c:C3(["有成文SOP","Documented SOPs"],["部分有","Partially"],["全靠记忆和习惯","All by memory/habit"])},
+  {d:0,zh:"新员工到能独立顶岗，实际花多久？",en:"How long until a new hire works independently?",c:C3(["两周内，有培训表","Within 2 weeks, with checklist"],["一个月，靠老人带","A month, by mentoring"],["没准，看人","Depends on the person"])},
+  {d:0,zh:"排班、采购、盘点现在怎么做？",en:"How are rostering, purchasing, stock-take done now?",c:C3(["系统/固定表格在跑","System/templates run it"],["一半靠系统一半靠我","Half system, half me"],["主要我亲自弄","Mostly me personally"])},
+  {d:0,zh:"上个月你花在亲自盯店/救火的时间，比三个月前多还是少？",en:"vs 3 months ago, time you spend firefighting on-site — more or less?",c:C3(["明显变少","Clearly less"],["差不多","About the same"],["更多了","More"])},
+
+  // ───────── S2 复制 + 放大 (11) ─────────
+  // 复制一家
+  {d:1,zh:"核心出品有没有写成标准配方/流程，新人照着能还原八成？",en:"Are core dishes documented so a new hire can reproduce ~80%?",c:C3(["有完整文档","Full documentation"],["大概有，靠口传","Roughly, by word of mouth"],["全在师傅脑里","All in the chef's head"])},
+  {d:1,zh:"主厨突然请假两周，这两周出品会怎样？",en:"If the head chef were off for two weeks, what happens to the food?",c:C3(["几乎没影响","Barely affected"],["熟客吃得出差别","Regulars notice"],["撑不住，要换菜单或关","Can't cope, change menu or close"])},
+  {d:1,zh:"除了现在这位主厨，店里还有没有人做得出同样水准的招牌菜？",en:"Besides the current chef, can anyone else make the signature dishes at the same level?",c:C3(["有，好几个人都行","Yes, several can"],["勉强一个人","Barely one"],["只有他，别人做不了","Only him"])},
+  {d:1,zh:"你现在开过几家店/点？",en:"How many outlets/points have you run?",c:C3(["多家，模型跑通了","Several — model proven"],["两家，在摸索","Two, still figuring out"],["就一家","Just one"])},
+  // 成长空间
+  {d:1,zh:"像你这样的店，你所在的城市/区域还开得下很多家吗？",en:"Could many more stores like yours fit in your city/area?",c:C3(["还能开很多，远没饱和","Plenty of room"],["还能开一些","Some room"],["差不多满了，再开就互相抢客","Saturated — would cannibalise"])},
+  {d:1,zh:"有没有客人专程从比较远的地方、别的区跑来你这吃？",en:"Do customers travel from far/other districts just to eat at yours?",c:C3(["经常有，不少人特地来","Often — many come on purpose"],["偶尔有","Occasionally"],["基本都是附近的人","Mostly locals only"])},
+  {d:1,zh:"有没有人主动找过你——想加盟、想拉你去别的地方开分店、或想投资你扩张？",en:"Has anyone approached you about franchising, opening elsewhere, or investing to expand?",c:C3(["有，不止一次有人来谈","Yes, more than once"],["偶尔有人提过","Occasionally mentioned"],["没有","No"])},
+  // 扩张轻重
+  {d:1,zh:"生意要翻一倍，你脑子里第一个想到的是？",en:"To double the business, what's your first thought?",c:C3(["再投点钱、上点货就行","Just add capacity/stock"],["得再开一两家店、再请一批人","Open more outlets, hire more"],["想都不敢想，太重了","Too heavy to imagine"])},
+  {d:1,zh:"再开一家新店，大概要砸多少钱、多久能开起来？",en:"To open a new outlet, how much money and time roughly?",c:C3(["不多，很快能开","Little, opens fast"],["一笔不小的钱，要准备几个月","Sizeable, months of prep"],["很大一笔，光筹备就很久","Huge, long lead time"])},
+  {d:1,zh:"你每开一家新店，要配多少人才转得动？",en:"How many people does each new outlet need to run?",c:C3(["很少，几个人就行","Few — a handful"],["一支不小的团队","A sizeable team"],["很多人，很重","Lots — heavy"])},
+  // 放大经验
+  {d:1,zh:"过去你有没有「不多开店、不多花你时间」就把收入做上去过？",en:"Have you ever grown revenue without more outlets or more of your time?",c:C3(["有，产品化/批发/授权","Yes — products/wholesale/licensing"],["偶尔","Occasionally"],["没有，增收就得多开店多投人","No — growth needs more outlets/people"])},
+
+  // ───────── S3 护城河 · 革命 (10) ─────────
+  // 革命记录
+  {d:2,zh:"你现在卖得最好、赚最多的东西，和刚开始做生意时是同一个吗？",en:"Is your top earner today the same as when you started?",c:C3(["完全是后来发展出来的","Developed later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+  {d:2,zh:"你的生意有没有遇过一段差点撑不下去的难关？后来怎么过来的？",en:"Has the business ever hit a near-death patch? How did you get through?",c:C3(["挺过来了，还变得更强","Survived and came out stronger"],["勉强撑过，伤了元气","Barely, took a hit"],["还没遇过这种坎","Haven't hit one yet"]),tag:'revo_neutral'},
+  {d:2,zh:"有没有出现过「本来很赚的东西，你主动减少或停掉，换新方向」？",en:"Have you ever cut a profitable line on purpose to pivot?",c:C3(["有过，事后证明是对的","Yes — proved right"],["有过，但很犹豫/被逼的","Yes, but reluctant/forced"],["没有，赚钱的不会停","No — won't touch what earns"]),tag:'revo'},
+  // 时代信号 (交叉用)
+  {d:2,zh:"这几年身边有没有同行因为跟不上变化而走下坡、甚至关掉？",en:"Have peers declined or closed for failing to keep up?",c:C3(["有，看着一些掉队了","Yes — some fell behind"],["好像有一些","Maybe a few"],["没注意，这行挺稳","Not really, stable trade"]),tag:'era_neutral'},
+  {d:2,zh:"这两年，你这行的客人，买东西/消费的习惯有没有明显变？",en:"Have customer habits in your trade clearly shifted in 2 years?",c:C3(["变了不少，我能感觉到","Shifted a lot"],["有一点变","A little"],["基本没变","Barely"]),tag:'era'},
+  // 收入结构
+  {d:2,zh:"你现在的收入，是不是几乎全压在一个来源上（同一家店/平台/一类客人）？",en:"Is nearly all revenue from one source (one outlet/platform/customer type)?",c:C3(["来自好几个地方","From several sources"],["主要靠一个，但有补充","Mainly one, with backup"],["几乎全压一个","Almost all on one"])},
+  // 试新
+  {d:2,zh:"过去两年，你有没有花钱试过新东西（新菜品线/新店型/新卖法/新设备）？",en:"In 2 years, have you spent on trying new things (new line/format/channel/equipment)?",c:C3(["试了好几样","Several"],["一两样","One or two"],["没有，维持现状","No — status quo"])},
+  // reinvestment 交叉
+  {d:2,zh:"你每年赚到的钱，大概留多少出来投回生意里（改进、试新、升级）？",en:"What share of yearly profit do you reinvest into the business?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["投一点点","A little"],["基本不留，赚的都拿出来了","Barely — mostly taken out"]),tag:'reinvest'},
+  {d:2,zh:"你过去投回生意的钱，主要花在哪？",en:"Where did your reinvestment mostly go?",c:C3(["让客人更黏、更难走的地方（产品/体验/独家）","Stickiness — product/experience/exclusivity"],["扩张/装修/铺面这些","Expansion/renovation/space"],["说不清，零散花掉了","Scattered, unclear"])},
+  {d:2,zh:"你的净利率和同行比，大概在？",en:"How does your net margin compare to peers?",c:C3(["跟同行差不多或略高","Similar or slightly higher"],["比同行高出一大截","Far above peers"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+
+  // ───────── S4 财务韧性 (10) ─────────
+  // 现金缓冲
+  {d:3,zh:"如果接下来生意突然掉一半，你账上的钱能撑多久？",en:"If sales halved suddenly, how long can your cash last?",c:C3(["半年以上，稳","6+ months, stable"],["三到六个月","3–6 months"],["不到三个月就紧张","Under 3 months"])},
+  {d:3,zh:"过去一年，有没有出现过发工资、付货款很吃力的月份？",en:"Last year, any months where payroll/payables were a struggle?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常紧张","Often tight"])},
+  {d:3,zh:"现在让你马上拿一笔钱出来应急（修设备、补货），要紧吗？",en:"Can you pull emergency cash now (repairs, restock) easily?",c:C3(["拿得出，不影响运转","Yes, no impact"],["有点紧但能挤","Tight but doable"],["很难，会伤到周转","Hard — hurts cash flow"])},
+  // 收款/欠账
+  {d:3,zh:"你的钱，基本是当下就收到，还是有不少要等客户/平台结账？",en:"Is your money mostly immediate, or waiting on client/platform settlement?",c:C3(["基本即时到手","Mostly immediate"],["一部分要等","Some waiting"],["很多压在账期或欠款上","Lots tied in terms/debt"])},
+  {d:3,zh:"过去一年，有没有收不回来的烂账，或被拖很久的钱？",en:"Last year, any bad debt or long-overdue money?",c:C3(["几乎没有","Almost none"],["有一点","A little"],["有不少","Quite a bit"])},
+  // 集中度
+  {d:3,zh:"你最大的一个收入来源（某平台/大客/某门店），如果明天突然没了，生意会怎样？",en:"If your biggest single revenue source vanished tomorrow, what happens?",c:C3(["扛得住，影响有限","Holds, limited impact"],["伤筋动骨但活得下","Painful but survives"],["基本垮一大半","Most of it collapses"])},
+  {d:3,zh:"你跟供应商/房东这些，有没有被某一家卡得很死、换不掉的？",en:"Are you locked to any one supplier/landlord you can't replace?",c:C3(["没有，都有替代","No — alternatives exist"],["有一两个不好换","One or two hard to switch"],["有，被卡得很死","Yes — locked in"])},
+  // 成本掌控
+  {d:3,zh:"上个月的食材成本占营收几成，你现在说得出吗？",en:"Can you state last month's food-cost ratio now?",c:C3(["说得出，而且我盯得住","Yes, and I control it"],["大概知道","Roughly"],["不清楚","Unclear"])},
+  {d:3,zh:"这一两年，租金、人工、食材这些成本涨上来时，你转得动吗？",en:"When rent/labour/food costs rose, could you pass it on?",c:C3(["能，调价或调结构消化掉","Yes — repriced/restructured"],["勉强吸收","Barely absorbed"],["只能硬扛，利润被吃掉","Just ate the hit"])},
+  // 账务
+  {d:3,zh:"你能不能马上拿出过去两年清楚的账（损益、现金流）？",en:"Can you produce clean 2-year accounts (P&L, cash flow) now?",c:C3(["能，随时","Yes, anytime"],["要整理一下","Needs tidying"],["拿不出/没正经做账","No proper books"])},
+
+  // ───────── S5 话语权 (11) ─────────
+  // 广告依赖
+  {d:4,zh:"你每个月花在打广告、买平台流量上的钱，大概占营业额多少？",en:"What share of revenue goes to ads/paid traffic monthly?",c:C3(["很少或几乎不花","Little to none"],["占一些","Some"],["占不小一块，停不得","A big chunk, can't stop"]),tag:'adspend'},
+  {d:4,zh:"如果你把所有付费推广停一个月，新客会怎样？",en:"If you paused all paid promotion for a month, what happens to new customers?",c:C3(["影响不大，人照样来","Little impact"],["掉一些","Drop some"],["几乎就断了","Nearly dries up"]),tag:'adstop'},
+  // 促销依赖
+  {d:4,zh:"你最近一次促销/打折，是因为不做就没什么客人，还是本来生意就稳、只是顺势做？",en:"Last promo — was it because you'd have no customers otherwise, or just a bonus?",c:C3(["本来就稳，促销只是加菜","Stable anyway, just a bonus"],["一半一半","Half and half"],["不做就明显没人","No promo, no crowd"])},
+  {d:4,zh:"过去一年，你大概多常要靠促销/优惠来拉客？",en:"How often did you rely on promos to pull customers last year?",c:C3(["很少，基本不靠","Rarely"],["偶尔","Occasionally"],["经常，不促就掉","Often — drops without it"])},
+  // 转介绍
+  {d:4,zh:"你的新客里，靠老客介绍带来的大概占多少？",en:"What share of new customers come via referrals?",c:C3(["过半是介绍来的","Over half"],["一部分","Some"],["很少，基本要自己拉","Few — mostly self-driven"])},
+  {d:4,zh:"有没有客人主动帮你拉过人、带过朋友团来？",en:"Have customers actively brought friends/groups in?",c:C3(["经常有","Often"],["偶尔","Occasionally"],["几乎没有","Rarely"])},
+  // 自发曝光
+  {d:4,zh:"过去三个月，有没有人没收你钱、你也没要求，自己把你的店发上网？",en:"In 3 months, has anyone posted your outlet unpaid and unprompted?",c:C3(["有，不止一次","Yes, repeatedly"],["好像一两次","Maybe once or twice"],["想不起来","Can't recall"])},
+  {d:4,zh:"有没有媒体、博主主动（不是你花钱）来报道、推荐过你？",en:"Have media/bloggers covered you unpaid and unprompted?",c:C3(["有，主动找来","Yes, they came"],["都是花钱合作的","Only paid ones"],["没有","No"])},
+  // 溢价 + 涨价业绩 (交叉)
+  {d:4,zh:"同样的东西，你比周边同类卖得贵，客人还照样来吗？",en:"Priced above nearby peers, do customers still come?",c:C3(["贵，照样来","Yes, still come"],["贵一点点","A little pricier"],["一贵就跑","They leave if pricier"])},
+  {d:4,zh:"你最近一次涨价，涨了多少？",en:"Your last price increase — how much?",c:C3(["涨了不少，客人也接受了","A fair bit, accepted"],["只敢小涨一点","Only a small bump"],["这一两年没敢涨过价","Haven't dared raise"]),tag:'priceup'},
+  {d:4,zh:"那次涨价之后，你的整体营业额/利润怎样？",en:"After that increase, how were overall sales/profit?",c:C3(["不降反升，赚得更多了","Rose — earned more"],["差不多，没太大影响","About the same"],["掉了，涨价赶跑了人","Dropped — drove people off"]),tag:'priceres'},
+
+  // ───────── S6 品牌独立性 (7) ─────────
+  {d:5,zh:"你的店招、宣传、点评页，主要打的是店的名字/品牌，还是你个人？",en:"Do your signage/marketing/reviews lead with the brand or you personally?",c:C3(["打店名/品牌","The brand"],["两个都有","Both"],["主要是我个人","Mainly me"])},
+  {d:5,zh:"你的商标/店名注册了吗？",en:"Is your trademark/name registered?",c:C3(["已注册，是登记在册的资产","Registered asset"],["在办","In progress"],["没有","No"])},
+  {d:5,zh:"你的店有没有一套统一的视觉（logo、装修、包装、菜单风格），换个人也能照着做？",en:"Do you have a consistent visual identity others could replicate?",c:C3(["有，很统一","Yes, consistent"],["有基础","Basic"],["几乎没有，靠感觉","Barely — ad hoc"])},
+  {d:5,zh:"你的品牌名，别人在网上搜得到、有内容/评价可看吗？",en:"Can people find your brand online with content/reviews?",c:C3(["搜得到，有沉淀","Yes, with footprint"],["一点点","A little"],["几乎搜不到","Barely findable"])},
+  {d:5,zh:"你现在有没有「不是家人、能独当一面把店管起来」的店长/负责人？",en:"Do you have a non-family manager who can fully run the outlet?",c:C3(["有，已经稳定做了一段时间","Yes, stable for a while"],["有，但还在带","Yes, still mentoring"],["没有","No"])},
+  {d:5,zh:"过去一年，你实际有多少天是完全没去店里、生意照常的？",en:"Last year, how many days were you fully away while it ran normally?",c:C3(["不少天，照常运转","Many — ran fine"],["偶尔几天","A few"],["几乎天天都得到","Almost daily presence"])},
+  {d:5,zh:"有没有人来问过你——加盟、合作、或者收购？",en:"Has anyone asked about franchising, partnering, or buying you out?",c:C3(["有，有人看中这个牌子","Yes — interest in the brand"],["偶尔有人提","Occasionally"],["没有","No"]),tag:'neutral_last'}
+];
+/* ===== SERVICES 服务业 ===== */
+BANKS.services=[
+// S1 系统化
+{d:0,zh:"你上一次连续离开公司超过一周是什么时候？那段时间业务怎样？",en:"When did you last step away for over a week, and how did it go?",c:C3(["今年就有过，团队照常运转","This year — team ran fine"],["有过，但全程要远程盯着","Yes, but I monitored throughout"],["几乎没敢离开过这么久","Hardly ever dared to"])},
+{d:0,zh:"如果你今天一整天联系不上，团队还能照常把活交付给客户吗？",en:"If you were unreachable all day, could the team still deliver to clients?",c:C3(["能，大家照着流程走","Yes — they follow the process"],["有些事会卡住等我","Some things stall waiting for me"],["基本就停摆了","It basically grinds to a halt"])},
+{d:0,zh:"过去一个月，员工因为「不知道该怎么处理」来问你，大概几次？",en:"Last month, how often did staff come to you because they were stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times each week"],["几乎每天都有","Almost every day"])},
+{d:0,zh:"客户的关键决定，是不是大多要经过你点头才行？",en:"Do most key client decisions still need your sign-off?",c:C3(["不到三成需要我拍板","Under 30% need me"],["差不多一半要经过我","About half go through me"],["几乎每一件都得我决定","Almost every one needs me"])},
+{d:0,zh:"一个完整的客户项目，除了你之外有几个人能独立带完？",en:"Besides you, how many people can run a full client project end-to-end?",c:C3(["好几个人都可以","Several can"],["勉强一两个","Barely one or two"],["只有我自己能","Only me"])},
+{d:0,zh:"让一个负责人全权管一条业务线——这件事实际发生了吗？",en:"Letting someone fully own a business line — has it actually happened?",c:C3(["已经在放手让人做了","Already handed over"],["试过，但还得我盯着","Tried, but I still watch closely"],["没人能接得住","No one can take it on"])},
+{d:0,zh:"你的服务交付，有没有写成一套别人能照做的方法/流程？",en:"Is your service delivery written into a method others can follow?",c:C3(["有成文的方法论","A documented methodology"],["部分写了，核心还在我脑里","Partly — the core is still in my head"],["基本全靠我的经验","Mostly just my experience"])},
+{d:0,zh:"一个新员工，到能独立服务客户，实际要花多久？",en:"How long does a new hire really take to serve clients independently?",c:C3(["一两个月，有培训体系","1–2 months, with training"],["三到六个月，靠老人带","3–6 months, by mentoring"],["很久，甚至带不出来","Very long, or never quite"])},
+{d:0,zh:"现在的项目/客户管理，主要是怎么在跑的？",en:"How is project/client management actually run today?",c:C3(["有系统/CRM在跑流程","A system/CRM runs it"],["半靠系统、半靠我盯","Half system, half me"],["主要还是我亲自在管","Mainly me, hands-on"])},
+{d:0,zh:"上个月你花在亲自救火的时间，比三个月前是多还是少？",en:"vs three months ago, is your firefighting time more or less?",c:C3(["明显变少了","Clearly less"],["差不多，没什么变化","About the same"],["反而更多了","Actually more"])},
+// S2 复制+放大
+{d:1,zh:"你的服务有没有写成方法/流程，别人照着能做出八成水准？",en:"Is your service documented so someone else could deliver ~80% of your quality?",c:C3(["有完整方法论，照着能做","Full methodology — they can follow it"],["大概有，但很多靠口传","Roughly, but a lot is word-of-mouth"],["基本全靠我个人的判断","Almost entirely my own judgment"])},
+{d:1,zh:"你的核心顾问/技术骨干请假两周，交付会变成怎样？",en:"If your core consultant/expert took two weeks off, what happens to delivery?",c:C3(["几乎不受影响","Barely affected"],["客户能感觉到差别","Clients would notice"],["基本撑不住","It can't really hold up"])},
+{d:1,zh:"除了某个核心的人，还有没有别人能做出同样水准？",en:"Besides that one key person, can anyone else deliver the same level?",c:C3(["有，好几个人都行","Yes — several can"],["勉强只有一个","Barely one other"],["只有那个人做得到","Only that person"])},
+{d:1,zh:"你的服务，能不能打包成标准的产品/套餐来卖？",en:"Can your service be packaged into standard products/tiers?",c:C3(["已经产品化了，有套餐","Already productised, with tiers"],["正在尝试打包","Trying to package it"],["每一单都是从头定制","Every job is bespoke"])},
+{d:1,zh:"像你这样的服务，你所在的市场还有很多需求没被满足吗？",en:"For a service like yours, is there lots of unmet demand in your market?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些空间","Some room left"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有外地、别的城市的客户专程来找你做？",en:"Do clients from other cities come to you specifically?",c:C3(["经常有，不少是慕名而来","Often — many seek us out"],["偶尔会有","Once in a while"],["基本都是本地客户","Almost all local"])},
+{d:1,zh:"有没有人主动找过你——想加盟、合作开分支、或投资你扩张？",en:"Has anyone approached you about franchising, opening branches, or investing to expand?",c:C3(["有，不止一次有人来谈","Yes — more than once"],["偶尔有人提起过","Occasionally mentioned"],["没有过","Never"])},
+{d:1,zh:"业务要翻一倍，你脑子里第一个想到的是什么？",en:"To double the business, what's the first thing that comes to mind?",c:C3(["现有方式加把力就行","Just push the current model harder"],["得大量招人、扩团队","Hire a lot and grow the team"],["想都不敢想，太靠我个人了","Can't imagine it — too dependent on me"])},
+{d:1,zh:"要服务多一倍的客户，主要靠加人，还是靠系统/产品？",en:"To serve double the clients, do you add people, or lean on system/product?",c:C3(["靠系统/产品，不用加太多人","System/product — few extra hires"],["得成比例地多招人","Have to hire proportionally"],["全靠加人，很重","All on more people — heavy"])},
+{d:1,zh:"换一个城市开分支，你这套模式还成立吗？",en:"In another city, would your model still hold up?",c:C3(["成立，可以复制过去","Holds — it can be replicated"],["要做不少本地化调整","Needs a lot of localising"],["太依赖本地关系或我本人","Too tied to local ties or me"])},
+{d:1,zh:"过去你有没有「不多招人、也不多花你时间」就把收入做上去过？",en:"Have you ever grown revenue without more hires or more of your time?",c:C3(["有，靠产品化/授权/订阅","Yes — via products/licensing/subscription"],["偶尔有一点","Occasionally, a little"],["没有，增收就得多投人","No — growth always meant more people"])},
+// S3 护城河·革命
+{d:2,zh:"你现在最赚钱的服务，和你刚开始做时是同一个吗？",en:"Is your most profitable service today the same as when you started?",c:C3(["完全是后来才发展出来的","Developed entirely later"],["变了一部分","Partly changed"],["差不多还是当初那个","Much the same as at the start"]),tag:'revo'},
+{d:2,zh:"你的业务有没有遇过一段差点撑不下去的难关？后来怎么过来的？",en:"Has the business ever hit a stretch where it nearly didn't survive? How did you get through?",c:C3(["挺过来了，还变得更强","Survived — and came out stronger"],["勉强撑过去，伤了元气","Barely made it, took a hit"],["还没真正遇过这种坎","Haven't faced one like that yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动放掉一块还在赚钱、但你觉得会过时的业务，去换新方向？",en:"Have you ever deliberately dropped a still-profitable but fading line to pivot?",c:C3(["有，事后证明是对的","Yes — and it proved right"],["有，但是被逼的/很犹豫","Yes, but reluctantly or forced"],["没有，赚钱的我不会动","No — I won't touch what earns"]),tag:'revo'},
+{d:2,zh:"这几年，你身边有没有同行因为跟不上变化而走下坡、甚至关掉？",en:"In recent years, have peers declined or closed for failing to keep up?",c:C3(["有，看着一些同行掉队了","Yes — I've watched some fall behind"],["好像有一些","There seem to be a few"],["没太注意，这行挺稳的","Haven't noticed — it's a stable trade"]),tag:'era_neutral'},
+{d:2,zh:"这两年，你的客户的需求、找服务的方式，有没有明显变化？",en:"In the past two years, have client needs or how they find services clearly shifted?",c:C3(["变了不少，我能明显感觉到","Shifted a lot — I can feel it"],["有一点点变化","A little"],["基本没什么变","Barely changed"]),tag:'era'},
+{d:2,zh:"你的收入，是不是几乎全压在一类客户/一个大客/一个渠道上？",en:"Is nearly all your revenue riding on one client type, one big client, or one channel?",c:C3(["来自好几个不同的地方","Spread across several sources"],["主要靠一个，但有补充","Mainly one, with some backup"],["几乎全压在一个上面","Almost all on a single one"])},
+{d:2,zh:"过去两年，你有没有花钱试过新东西（新服务线/新打法/新工具）？",en:"In the past two years, have you spent money trying new things (new service lines, approaches, tools)?",c:C3(["试了好几样","Tried several"],["试过一两样","One or two"],["没有，维持现状","No — kept things as they were"])},
+{d:2,zh:"你每年赚到的钱，大概留多少投回业务里（升级、试新、人才）？",en:"Of what you earn each year, roughly how much goes back into the business (upgrades, new bets, talent)?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留，赚的都拿出来了","Barely any — most is taken out"]),tag:'reinvest'},
+{d:2,zh:"你的净利率和同行比，大概在什么水平？",en:"How does your net margin compare with peers?",c:C3(["跟同行差不多，或略高一点","Similar to peers, or a touch higher"],["比同行高出一大截","A good deal above peers"],["比同行低，或者我不太清楚","Lower than peers, or I'm not sure"]),tag:'npmargin'},
+// S4 财务韧性
+{d:3,zh:"如果接下来一段时间没有新单进来，你账上的钱能撑多久？",en:"If no new deals came in for a while, how long would your cash last?",c:C3(["半年以上，很稳","Over six months — comfortable"],["大概三到六个月","Around three to six months"],["不到三个月就紧张了","Under three months and it's tight"])},
+{d:3,zh:"过去一年，有没有出现过发工资、付款很吃力的月份？",en:"In the past year, were there months when payroll or payments were a real strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常都很紧张","Often tight"])},
+{d:3,zh:"你的应收账款（客户欠的钱），回得快吗？",en:"Do your clients pay you back quickly?",c:C3(["基本30天内收到","Mostly within 30 days"],["大概30到60天","Around 30–60 days"],["常常拖到60天以上","Often dragged past 60 days"])},
+{d:3,zh:"你的收入，是项目做完一次性收，还是有稳定的经常性/合约收入？",en:"Is your revenue one-off per project, or do you have steady recurring/contract income?",c:C3(["有稳定的经常性收入","Steady recurring income"],["一半一半","A mix of both"],["几乎全是一次性的","Almost all one-off"])},
+{d:3,zh:"你最大的一个客户，占了营收的多少？",en:"How much of your revenue does your single biggest client make up?",c:C3(["低于15%","Under 15%"],["大概15%到40%之间","Somewhere between 15% and 40%"],["超过40%","Over 40%"])},
+{d:3,zh:"那个最大的客户如果明天就走了，你的业务会变成怎样？",en:"If that biggest client walked tomorrow, what would happen to the business?",c:C3(["扛得住，影响有限","We'd hold — limited impact"],["伤筋动骨，但活得下来","A heavy blow, but survivable"],["基本会垮掉一大半","Most of it would collapse"])},
+{d:3,zh:"你的成本里，固定开销（房租、固定工资）的压力大吗？",en:"How heavy is your fixed-cost burden (rent, fixed salaries)?",c:C3(["可控，需要时能伸缩","Manageable — can flex when needed"],["一般","Moderate"],["很重，几乎停不下来","Heavy — hard to scale back"])},
+{d:3,zh:"当成本涨上来时（人工、办公、获客），你转嫁得动吗？",en:"When costs rise (labour, office, client acquisition), can you pass them on?",c:C3(["能，靠调价或调结构消化","Yes — reprice or restructure to absorb"],["勉强能吸收一部分","Barely absorb some"],["只能自己硬扛","Just have to eat it"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账（损益、现金流）？",en:"Could you produce clean two-year accounts (P&L, cash flow) right now?",c:C3(["能，随时拿得出","Yes — anytime"],["要整理一下才行","Need to tidy them first"],["基本拿不出来","Not really"])},
+{d:3,zh:"你的毛利率，这两三年是往上走还是往下走？",en:"Over the past two or three years, is your gross margin trending up or down?",c:C3(["明显往上","Clearly up"],["基本持平","Roughly flat"],["在往下掉","Sliding down"])},
+// S5 话语权
+{d:4,zh:"你每个月花在打广告、买流量/线索上的钱，大概占营收多少？",en:"Roughly what share of revenue goes to ads or buying leads each month?",c:C3(["很少，或几乎不花","Very little, or none"],["占一些","Some of it"],["占不小一块，停不得","A sizeable chunk — can't stop"]),tag:'adspend'},
+{d:4,zh:"如果你把所有付费推广停掉一个月，新客户会怎样？",en:"If you paused all paid promotion for a month, what would happen to new clients?",c:C3(["影响不大，照样有人来","Little impact — they still come"],["会掉一些","Some drop-off"],["新客几乎就断了","New clients nearly dry up"]),tag:'adstop'},
+{d:4,zh:"你最近接的单，是因为不接就没生意，还是本来就有得挑？",en:"Your recent deals — taken out of necessity, or could you afford to be picky?",c:C3(["有得挑，不愁没单","Could pick — no shortage"],["一半一半","Somewhere in between"],["不接就没生意了","Take it or go hungry"])},
+{d:4,zh:"过去一年，你大概多常要靠降价/折扣来抢单？",en:"Over the past year, how often did you have to discount to win work?",c:C3(["很少，基本不靠","Rarely — hardly ever"],["偶尔会","Now and then"],["经常，不降就抢不到","Often — can't win without it"])},
+{d:4,zh:"你的新客户里，靠老客户转介绍来的大概占多少？",en:"What share of your new clients come through referrals from existing ones?",c:C3(["过半都是介绍来的","Over half come by referral"],["有一部分","A fair portion"],["很少，基本得自己去拉","Few — mostly self-driven"])},
+{d:4,zh:"有没有客户主动帮你转介绍、把客户带到你这来？",en:"Have clients actively referred others or brought clients to you?",c:C3(["经常有","Often"],["偶尔会有","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"过去三个月，有没有人没收你钱、你也没要求，主动公开推荐过你？",en:"In the past three months, has anyone publicly recommended you, unpaid and unprompted?",c:C3(["有，不止一次","Yes — more than once"],["好像有过一两次","Maybe once or twice"],["想不起来有","Can't recall any"])},
+{d:4,zh:"有没有行业媒体/平台主动（不是你花钱）报道、引用过你？",en:"Has industry media or a platform covered or cited you unprompted (not paid)?",c:C3(["有，是他们主动来的","Yes — they came to me"],["有，但都是花钱合作的","Yes, but only paid placements"],["没有","No"])},
+{d:4,zh:"同样的服务，你收得比同行贵，客户还是选你吗？",en:"Priced above your peers for the same service, do clients still choose you?",c:C3(["贵，客户也照样选","Yes — they still pick us"],["只能贵一点点","Only a little higher"],["一贵客户就走了","Price up and they leave"])},
+{d:4,zh:"你最近一次涨价/提高报价，提了多少？",en:"Your last price increase — how much did you raise it?",c:C3(["提了不少，客户也接受了","A fair bit — and clients accepted"],["只敢小幅提一点","Only a small bump"],["这一两年根本不敢提","Haven't dared raise it in a year or two"]),tag:'priceup'},
+{d:4,zh:"那次提价之后，你的整体营收/利润变成怎样？",en:"After that increase, what happened to overall revenue/profit?",c:C3(["不降反升，赚得更多了","Rose instead — earned more"],["差不多，没太大影响","About the same"],["掉了，把客人赶跑了","Dropped — it drove clients off"]),tag:'priceres'},
+// S6 品牌独立
+{d:5,zh:"你的公司对外，主要打的是公司品牌，还是你个人的名气？",en:"In public, does the firm lead with its brand, or with your personal name?",c:C3(["主要是公司品牌","The company brand"],["两个都有","Both"],["主要靠我个人","Mainly me personally"])},
+{d:5,zh:"你的商标/公司名注册了吗？",en:"Are your trademark and company name registered?",c:C3(["已经注册，是公司资产","Registered — a company asset"],["正在办","In progress"],["还没有","Not yet"])},
+{d:5,zh:"公司有没有一套统一的对外形象（品牌、网站、资料），换个人也能延续？",en:"Is there a consistent outward identity (brand, site, materials) someone else could carry on?",c:C3(["有，很统一","Yes — consistent"],["有个基础","A basic one"],["几乎没有","Barely any"])},
+{d:5,zh:"你的公司名，别人在网上搜得到、有内容可看吗？",en:"Can people find your company online, with real content to see?",c:C3(["搜得到，有内容沉淀","Yes — with a real footprint"],["能搜到一点点","A little shows up"],["几乎搜不到","Barely findable"])},
+{d:5,zh:"你有没有「不是你本人、能独当一面谈客户/带团队」的负责人？",en:"Do you have a leader who isn't you — able to own clients and run the team?",c:C3(["有，已经稳定做了一段时间","Yes — steady for a while now"],["有，但还在带","Yes, but still being mentored"],["没有，只有我","No — only me"])},
+{d:5,zh:"过去一年，有多少时间是你完全没参与、业务照常运转的？",en:"Over the past year, how much time ran with you completely uninvolved?",c:C3(["不少时间，照常运转","Plenty — it ran fine"],["偶尔几段","A few spells"],["几乎离不开我","It can barely run without me"])},
+{d:5,zh:"有没有人来问过你——想加盟、合作、或者收购？",en:"Has anyone ever asked about franchising, partnering, or acquiring you?",c:C3(["有，有人看中这个牌子","Yes — interest in the brand"],["偶尔有人提一下","Occasionally raised"],["没有过","Never"]),tag:'neutral_last'}
+];
+BANKS.retail=[
+// S1
+{d:0,zh:"你上一次连续离开店/公司超过一周是什么时候？那段时间生意怎样？",en:"When did you last step away for over a week, and how did sales hold up?",c:C3(["今年就有过，照常运转","This year — ran fine"],["有过，但全程要远程盯着","Yes, but monitored throughout"],["几乎没敢离开这么久","Hardly ever dared"])},
+{d:0,zh:"如果你今天一整天联系不上，进货、上架、发货、客服还转得动吗？",en:"If you were unreachable all day, would buying, listing, shipping and support still run?",c:C3(["能，大家照流程走","Yes — everyone follows the process"],["有些环节会卡住","Some parts would stall"],["基本就停摆了","It basically stops"])},
+{d:0,zh:"过去一个月，员工因为不知道怎么办来问你，大概几次？",en:"Last month, how often did staff come to you stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times a week"],["几乎每天都有","Almost daily"])},
+{d:0,zh:"退换货、客诉，员工能自己按规矩处理吗？",en:"Can staff handle returns and complaints by the rules on their own?",c:C3(["能，有明确权限和流程","Yes — clear authority and process"],["小事能，大事还是找我","Small ones yes, big ones to me"],["基本都得来找我","Almost all come to me"])},
+{d:0,zh:"除了你，有几个人能完整搞定一天的运营（从上货到收款）？",en:"Besides you, how many can run a full day end-to-end (stocking to cash)?",c:C3(["好几个人都行","Several can"],["勉强一两个","Barely one or two"],["只有我自己","Only me"])},
+{d:0,zh:"让一个店长/运营全权管一摊——实际发生了吗？",en:"Letting a manager fully run a unit — has it actually happened?",c:C3(["已经在放手让人做","Already handed over"],["试过，但还得我盯","Tried, but I still watch"],["没人能接得住","No one can take it"])},
+{d:0,zh:"进货、上架、库存、对账，有没有写下来的流程？",en:"Are buying, listing, stock and reconciliation written into a process?",c:C3(["有成文流程","Documented"],["部分有","Partly"],["全靠人记、靠习惯","All by memory and habit"])},
+{d:0,zh:"新店员/客服，到能独立上岗实际要多久？",en:"How long does a new sales/support hire really take to work solo?",c:C3(["两周内，有培训","Within two weeks, with training"],["一个月，靠老人带","About a month, by mentoring"],["没准，全看人","No telling — depends on the person"])},
+{d:0,zh:"库存和销售数据，是系统自动，还是手工？",en:"Are stock and sales data automated, or manual?",c:C3(["系统自动跑","System handles it"],["半自动","Semi-automated"],["基本靠手工","Mostly manual"])},
+{d:0,zh:"上个月你花在亲自盯/救火的时间，比三个月前多还是少？",en:"vs three months ago, is your firefighting time more or less?",c:C3(["明显变少了","Clearly less"],["差不多","About the same"],["反而更多了","Actually more"])},
+// S2
+{d:1,zh:"你的选品/运营有没有写成方法，新人照着能做出八成？",en:"Is your selection/ops documented so a newcomer could do ~80% of it?",c:C3(["有完整方法，照着能做","Full method — they can follow it"],["大概有，但很多靠口传","Roughly, but much is verbal"],["全靠我的眼光","All on my instinct"])},
+{d:1,zh:"你的核心运营/采购骨干请假两周，生意会怎样？",en:"If your core ops/buyer took two weeks off, what would happen?",c:C3(["几乎没影响","Barely affected"],["明显感觉得到","Clearly noticeable"],["基本撑不住","Can't really hold"])},
+{d:1,zh:"除了某个核心的人，别人也能做出同样结果吗？",en:"Besides that one key person, can others get the same results?",c:C3(["有，好几个都行","Yes — several"],["勉强一个","Barely one"],["只有那个人","Only that person"])},
+{d:1,zh:"你现在开过几个店/几个渠道？",en:"How many stores or channels have you actually run?",c:C3(["多个，模型跑通了","Several — model proven"],["两个，还在摸索","Two — still figuring it out"],["就一个","Just one"])},
+{d:1,zh:"像你卖的这类东西，市场上还有很多需求没被满足吗？",en:"For what you sell, is there lots of unmet demand out there?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些空间","Some room"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有外地客人专程来买、或指定要你发货？",en:"Do out-of-area customers buy from you on purpose or insist you ship to them?",c:C3(["经常有","Often"],["偶尔会有","Occasionally"],["基本都是本地","Almost all local"])},
+{d:1,zh:"有没有人主动找你——想加盟、做代理、或投资你扩张？",en:"Has anyone approached you about franchising, distributing, or investing to expand?",c:C3(["有，不止一次","Yes — more than once"],["偶尔有人提","Occasionally raised"],["没有过","Never"])},
+{d:1,zh:"生意要翻一倍，你脑子里第一个想到的是？",en:"To double sales, what's your first thought?",c:C3(["多上点货、加点投放就行","Just add stock and spend"],["得多开店/多铺渠道/多请人","Open stores, add channels, hire"],["想都不敢想，太重了","Can't imagine it — too heavy"])},
+{d:1,zh:"再开一个新店/新渠道，大概要砸多少钱、多久能起来？",en:"To open a new store/channel, how much money and how long?",c:C3(["不多，很快就能开起来","Not much — opens fast"],["一笔不小的钱，要准备几个月","A sizeable sum, months of prep"],["很大一笔，光筹备就很久","A big sum, long lead time"])},
+{d:1,zh:"过去你有没有「不多开店、也不多花你时间」就把收入做上去过？",en:"Have you grown revenue without more stores or more of your time?",c:C3(["有，靠自有品牌/批发/线上","Yes — own brand, wholesale, online"],["偶尔有一点","Occasionally"],["没有，增收就得多开店","No — growth meant more stores"])},
+{d:1,zh:"换个城市/换个平台，你的模式还成立吗？",en:"In another city or on another platform, would your model still work?",c:C3(["成立，可以复制","Holds — replicable"],["要做本地化调整","Needs localising"],["不太确定","Not sure"])},
+// S3
+{d:2,zh:"你现在卖得最好、最赚钱的东西，和刚开始时是同一个吗？",en:"Is your best-selling, most profitable item the same as when you started?",c:C3(["完全是后来才做起来的","Came up entirely later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+{d:2,zh:"你的生意有没有遇过差点撑不下去的难关？后来怎么过来的？",en:"Has the business hit a stretch where it nearly didn't make it? How did you get through?",c:C3(["挺过来了，还更强","Survived — and stronger for it"],["勉强撑过，伤了元气","Barely, took a hit"],["还没真正遇过","Haven't faced one yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动停掉一个还在赚、但会过时的做法，去换新方向？",en:"Have you deliberately stopped a still-earning but fading approach to pivot?",c:C3(["有，事后证明对了","Yes — proved right"],["有，但被逼/很犹豫","Yes, but forced or reluctant"],["没有，赚钱的不会停","No — won't stop what earns"]),tag:'revo'},
+{d:2,zh:"这几年身边有没有同行因为跟不上变化而掉队、关掉？",en:"In recent years, have peers fallen behind or closed for not keeping up?",c:C3(["有，看着一些掉队了","Yes — watched some fall behind"],["好像有一些","Seem to be a few"],["没太注意，挺稳的","Haven't noticed — fairly stable"]),tag:'era_neutral'},
+{d:2,zh:"这两年，客人买东西的方式、习惯有没有明显变？",en:"In the past two years, have customers' buying habits clearly changed?",c:C3(["变了不少","Changed a lot"],["有一点点","A little"],["基本没变","Barely"]),tag:'era'},
+{d:2,zh:"你的收入是不是几乎全压在一个平台/一个爆款/一类客上？",en:"Is nearly all your revenue riding on one platform, one hit product, or one customer type?",c:C3(["来自好几个地方","Spread across several"],["主要一个，但有补充","Mainly one, with backup"],["几乎全压在一个上","Almost all on one"])},
+{d:2,zh:"过去两年，你有没有花钱试新东西（新品类/新渠道/新打法）？",en:"In two years, have you spent on trying new things (categories, channels, tactics)?",c:C3(["试了好几样","Several"],["试过一两样","One or two"],["没有，维持现状","No — kept as is"])},
+{d:2,zh:"你每年赚的钱，大概留多少投回生意里？",en:"Of yearly profit, roughly how much goes back into the business?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留","Barely any"]),tag:'reinvest'},
+{d:2,zh:"你的净利率和同行比，大概在什么水平？",en:"How does your net margin compare with peers?",c:C3(["跟同行差不多或略高","Similar or a touch higher"],["比同行高出一大截","A good deal above"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+// S4
+{d:3,zh:"生意要是突然掉一半，你账上的钱能撑多久？",en:"If sales suddenly halved, how long would your cash last?",c:C3(["半年以上","Over six months"],["大概三到六个月","Three to six months"],["不到三个月","Under three months"])},
+{d:3,zh:"过去一年，有没有发工资/付货款很吃力的月份？",en:"In the past year, any months when payroll or supplier payments were a strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常很紧张","Often tight"])},
+{d:3,zh:"你的滞销/压货情况严重吗？",en:"How bad is your dead stock or overstock?",c:C3(["低，周转健康","Low — healthy turnover"],["中等","Moderate"],["高，压了不少货","High — a lot tied up"])},
+{d:3,zh:"你的钱基本即时收，还是有不少压在账期/平台结算里？",en:"Is your money mostly immediate, or tied up in terms and platform settlement?",c:C3(["基本即时到手","Mostly immediate"],["一部分要等","Some has to wait"],["很多压在账期里","A lot tied up"])},
+{d:3,zh:"你最大的一个收入来源，占了多少？",en:"How much does your single biggest revenue source make up?",c:C3(["低于两成","Under 20%"],["大概两到四成","Around 20–40%"],["超过四成","Over 40%"])},
+{d:3,zh:"那个最大来源明天就没了，生意会怎样？",en:"If that biggest source vanished tomorrow, what then?",c:C3(["扛得住","We'd hold"],["伤但活得下","Hurts, but survives"],["垮一大半","Most collapses"])},
+{d:3,zh:"进货/供货有没有被某一家卡得很死、换不掉？",en:"Are you locked to one supplier you can't switch away from?",c:C3(["没有，都有替代","No — alternatives exist"],["有一两个不好换","One or two hard to switch"],["有，被卡得很死","Yes — locked in"])},
+{d:3,zh:"成本涨上来时（进货、物流、平台费），你转嫁得动吗？",en:"When costs rise (goods, logistics, platform fees), can you pass them on?",c:C3(["能，调价消化","Yes — reprice to absorb"],["勉强吸收一部分","Barely absorb some"],["只能自己硬扛","Just eat it"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账？",en:"Could you produce clean two-year accounts right now?",c:C3(["能，随时","Yes — anytime"],["要整理一下","Need to tidy first"],["拿不出来","Not really"])},
+{d:3,zh:"你的毛利率这两三年是往上还是往下？",en:"Over the past two or three years, is gross margin up or down?",c:C3(["往上","Up"],["基本持平","Flat"],["在往下掉","Down"])},
+// S5
+{d:4,zh:"你每个月花在广告/买流量上的钱，占营收多少？",en:"What share of revenue goes to ads or buying traffic each month?",c:C3(["很少，或几乎不花","Very little, or none"],["占一些","Some"],["占不小一块，停不得","A big chunk — can't stop"]),tag:'adspend'},
+{d:4,zh:"如果把所有付费推广停一个月，新客会怎样？",en:"If you paused all paid promotion for a month, what happens to new customers?",c:C3(["影响不大，照样有人来","Little impact — they still come"],["会掉一些","Some drop-off"],["新客几乎就断了","New customers nearly dry up"]),tag:'adstop'},
+{d:4,zh:"你的销量，是要不停促销才撑得住，还是平时就稳？",en:"Do your sales need constant promotions, or hold steady on their own?",c:C3(["平时就稳","Steady on their own"],["一半一半","A bit of both"],["不促销就掉","They drop without promos"])},
+{d:4,zh:"过去一年，你多常靠打折/促销来冲量？",en:"Over the past year, how often did you lean on discounts to drive volume?",c:C3(["很少","Rarely"],["偶尔","Now and then"],["经常","Often"])},
+{d:4,zh:"你的新客里，靠老客/口碑带来的占多少？",en:"What share of new customers come from regulars or word-of-mouth?",c:C3(["过半","Over half"],["有一部分","A fair portion"],["很少","Few"])},
+{d:4,zh:"客人会自发晒单、带话题、推荐给人吗？",en:"Do customers post, tag, or recommend you on their own?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"过去三个月，有没有人没收钱、也没被你要求，自己发你的产品/店？",en:"In three months, has anyone posted your product/store unpaid and unprompted?",c:C3(["有，不止一次","Yes — more than once"],["好像一两次","Maybe once or twice"],["想不起来","Can't recall"])},
+{d:4,zh:"客人能直接记住、直接搜你的品牌名吗？",en:"Can customers recall and search your brand name directly?",c:C3(["有直接搜品牌的流量","Yes — direct brand searches"],["多数还是搜品类","Mostly search the category"],["基本搜不到","Barely searched"])},
+{d:4,zh:"同样的东西你卖得比同行贵，客人还买吗？",en:"Priced above peers for the same thing, do customers still buy?",c:C3(["贵，照样买","Yes — still buy"],["只能贵一点点","Only a little higher"],["一贵就走","Price up and they leave"])},
+{d:4,zh:"你最近一次涨价，涨了多少？",en:"Your last price increase — how much?",c:C3(["涨了不少，客人也接受","A fair bit — and accepted"],["只敢小涨一点","Only a small bump"],["这一两年没敢涨","Haven't dared in a year or two"]),tag:'priceup'},
+{d:4,zh:"那次涨价之后，整体营收/利润怎样？",en:"After that increase, what happened to overall revenue/profit?",c:C3(["不降反升","Rose instead"],["差不多","About the same"],["掉了","Dropped"]),tag:'priceres'},
+// S6
+{d:5,zh:"你的生意对外，主要打的是品牌，还是你个人？",en:"In public, does your business lead with its brand, or with you?",c:C3(["主要是品牌","The brand"],["两个都有","Both"],["主要靠我个人","Mainly me"])},
+{d:5,zh:"商标/品牌名注册了吗？",en:"Is your trademark or brand name registered?",c:C3(["已经注册","Registered"],["正在办","In progress"],["还没有","Not yet"])},
+{d:5,zh:"有没有统一的品牌视觉（logo、包装、店面），换人也能延续？",en:"Is there a consistent brand look (logo, packaging, storefront) others could continue?",c:C3(["有，很统一","Yes — consistent"],["有个基础","A basic one"],["几乎没有","Barely any"])},
+{d:5,zh:"你的品牌名网上搜得到、有内容/评价吗？",en:"Can your brand be found online with content and reviews?",c:C3(["搜得到，有沉淀","Yes — a real footprint"],["有一点点","A little"],["几乎搜不到","Barely findable"])},
+{d:5,zh:"有没有「不是你本人、能独当一面管运营」的负责人？",en:"Do you have a leader who isn't you and can run operations alone?",c:C3(["有，稳定做了一段时间","Yes — steady for a while"],["有，但还在带","Yes, still mentoring"],["没有","No"])},
+{d:5,zh:"过去一年，有多少时间你完全没参与、生意照常？",en:"Over the past year, how much time ran with you fully uninvolved?",c:C3(["不少，照常运转","Plenty — ran fine"],["偶尔几段","A few spells"],["几乎离不开我","Barely runs without me"])},
+{d:5,zh:"有没有人来问过你——加盟、代理、或者收购？",en:"Has anyone asked about franchising, distributing, or buying you out?",c:C3(["有，有人看中这个牌子","Yes — interest in the brand"],["偶尔有人提","Occasionally raised"],["没有","No"]),tag:'neutral_last'}
+];
+BANKS.manufacturing=[
+// S1
+{d:0,zh:"你上一次连续离开厂超过一周是什么时候？那段时间生产怎样？",en:"When did you last leave the plant for over a week, and how did production hold up?",c:C3(["今年就有过，照常生产","This year — production ran fine"],["有过，但全程要远程盯","Yes, but monitored throughout"],["几乎没敢离开这么久","Hardly ever dared"])},
+{d:0,zh:"如果你今天一整天联系不上，生产线还能正常运转吗？",en:"If you were unreachable all day, would the line still run normally?",c:C3(["能，有排程和标准","Yes — scheduling and standards in place"],["有些环节会卡住","Some parts would stall"],["容易乱套","It tends to go off the rails"])},
+{d:0,zh:"过去一个月，主管/工人因为不知道怎么办来问你，大概几次？",en:"Last month, how often did supervisors or workers come to you stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times a week"],["几乎每天都有","Almost daily"])},
+{d:0,zh:"出了质量问题，主管能自己按标准处理吗？",en:"When quality issues arise, can supervisors resolve them by standard on their own?",c:C3(["能，有明确标准","Yes — clear standards"],["小问题能，大的还找我","Small ones yes, big ones to me"],["基本都来找我","Almost all come to me"])},
+{d:0,zh:"除了你，有几个人能完整管完一整条线的运作？",en:"Besides you, how many can fully run an entire line's operation?",c:C3(["好几个都行","Several can"],["勉强一两个","Barely one or two"],["只有我自己","Only me"])},
+{d:0,zh:"让一个厂长全权管一个厂——实际发生了吗？",en:"Letting a plant manager fully run a plant — has it actually happened?",c:C3(["已经在放手让人做","Already handed over"],["试过，但还得我盯","Tried, but I still watch"],["没人能接得住","No one can take it"])},
+{d:0,zh:"工艺、质检、设备维护有没有书面SOP？",en:"Are process, QC and maintenance backed by written SOPs?",c:C3(["有完整的SOP","Full SOPs"],["部分有","Partly"],["主要靠老师傅的经验","Mostly veterans' experience"])},
+{d:0,zh:"一个新工人，到能达标上岗实际要多久？",en:"How long does a new worker really take to hit standard?",c:C3(["一两周，有培训","One or two weeks, with training"],["一两个月","One or two months"],["很久，全靠悟性","A long time — all by feel"])},
+{d:0,zh:"生产、库存、订单数据，是系统化的吗？",en:"Are production, stock and order data systematised?",c:C3(["有ERP/MES在跑","Run on ERP/MES"],["半系统化","Semi-systematised"],["基本靠手工Excel","Mostly manual spreadsheets"])},
+{d:0,zh:"上个月你花在亲自盯现场的时间，比三个月前多还是少？",en:"vs three months ago, is your time on the floor more or less?",c:C3(["明显变少","Clearly less"],["差不多","About the same"],["反而更多","Actually more"])},
+// S2
+{d:1,zh:"工艺有没有标准化到，新线/新厂照着也能做出八成质量？",en:"Is the process standardised enough that a new line/plant could hit ~80% quality?",c:C3(["有完整工艺文档","Full process documentation"],["大概有，靠老师傅传","Roughly — passed down by veterans"],["全靠那几个老师傅","All on a few key masters"])},
+{d:1,zh:"核心老师傅请假两周，质量会怎样？",en:"If your key masters took two weeks off, what would happen to quality?",c:C3(["几乎没影响","Barely affected"],["会有波动","It would wobble"],["基本撑不住","Can't really hold"])},
+{d:1,zh:"除了那几位老师傅，别人也能做出同样质量吗？",en:"Besides those masters, can others produce the same quality?",c:C3(["能，好几个都行","Yes — several"],["勉强","Only just"],["只有那几位","Only them"])},
+{d:1,zh:"你现在跑过几条线/几个厂？",en:"How many lines or plants have you actually run?",c:C3(["多条，模型跑通了","Several — model proven"],["两条，还在摸索","Two — still figuring out"],["就一条","Just one"])},
+{d:1,zh:"你做的这类产品，市场上还有很多需求没被满足吗？",en:"For your kind of product, is there lots of unmet demand out there?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些","Some"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有外地/海外客户专程找你代工或采购？",en:"Do out-of-area or overseas clients seek you out for OEM or supply?",c:C3(["经常有","Often"],["偶尔有","Occasionally"],["基本都是本地","Almost all local"])},
+{d:1,zh:"有没有人主动找你——想投资、合资、或包销你的产能？",en:"Has anyone approached about investing, a JV, or buying up your capacity?",c:C3(["有，不止一次","Yes — more than once"],["偶尔有人提","Occasionally raised"],["没有过","Never"])},
+{d:1,zh:"产能要翻一倍，你第一个想到的是？",en:"To double capacity, what's your first thought?",c:C3(["加设备基本就行","Mostly just add machines"],["得加设备，还得大量加人","Add machines and a lot of people"],["处处卡人，很重","People bottlenecks everywhere — heavy"])},
+{d:1,zh:"扩产能主要靠加设备，还是处处都要靠人？",en:"Does scaling capacity come down to machines, or people at every step?",c:C3(["加设备即可","Machines do it"],["部分环节卡人","Some steps need people"],["处处都靠人","People at every step"])},
+{d:1,zh:"过去你有没有不靠多建厂、也不多花你时间，就把产值提上去过？",en:"Have you raised output without new plants or more of your time?",c:C3(["有，靠自有品牌/自动化","Yes — own brand or automation"],["偶尔","Occasionally"],["没有","No"])},
+{d:1,zh:"换个地点设厂，你的模式还成立吗？",en:"If you set up in another location, would your model still hold?",c:C3(["成立","Holds"],["要做调整","Needs adjusting"],["太多本地依赖","Too many local dependencies"])},
+// S3
+{d:2,zh:"你现在最赚钱的产品，和刚开始做时是同一个吗？",en:"Is your most profitable product the same as when you started?",c:C3(["完全是后来发展出来的","Developed entirely later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+{d:2,zh:"你的厂有没有遇过差点撑不下去的难关？后来怎么过的？",en:"Has the plant ever hit a near-death stretch? How did you get through?",c:C3(["挺过来了，还更强","Survived — and stronger"],["勉强撑过，伤了元气","Barely, took a hit"],["还没真正遇过","Haven't faced one yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动停掉一条还在赚、但会过时的产品线，去转新方向？",en:"Have you deliberately shut a still-earning but fading product line to pivot?",c:C3(["有，事后证明对了","Yes — proved right"],["有，但被逼/犹豫","Yes, but forced or reluctant"],["没有，赚钱的不会动","No — won't touch what earns"]),tag:'revo'},
+{d:2,zh:"这几年同行有没有因为跟不上（自动化、环保、新需求）掉队、关厂？",en:"Have peers fallen behind or closed for not keeping up (automation, compliance, new demand)?",c:C3(["有，看着一些掉队了","Yes — watched some fall behind"],["好像有一些","Seem to be a few"],["没太注意，挺稳","Haven't noticed — fairly stable"]),tag:'era_neutral'},
+{d:2,zh:"这两年，你这行的客户要求、采购方式有没有明显变？",en:"In two years, have client demands or procurement clearly shifted in your trade?",c:C3(["变了不少","Changed a lot"],["有一点","A little"],["基本没变","Barely"]),tag:'era'},
+{d:2,zh:"你的收入是不是几乎全压在一个大客/一个产品上？",en:"Is nearly all your revenue riding on one big client or one product?",c:C3(["来自好几个地方","Spread across several"],["主要一个，但有补充","Mainly one, with backup"],["几乎全压在一个上","Almost all on one"])},
+{d:2,zh:"过去两年，你有没有花钱试新东西（新工艺/新产品/自动化）？",en:"In two years, have you spent on trying new things (process, product, automation)?",c:C3(["试了好几样","Several"],["试过一两样","One or two"],["没有","No"])},
+{d:2,zh:"你每年赚的钱，大概留多少投回去（设备、研发、升级）？",en:"Of yearly profit, roughly how much goes back in (equipment, R&D, upgrades)?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留","Barely any"]),tag:'reinvest'},
+{d:2,zh:"你的净利率和同行比，大概在什么水平？",en:"How does your net margin compare with peers?",c:C3(["跟同行差不多或略高","Similar or a touch higher"],["比同行高出一大截","A good deal above"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+// S4
+{d:3,zh:"订单要是断档了，你账上的钱能撑多久？",en:"If orders dried up, how long would your cash last?",c:C3(["半年以上","Over six months"],["大概三到六个月","Three to six months"],["不到三个月","Under three months"])},
+{d:3,zh:"过去一年，有没有发工资/付款很吃力的月份？",en:"In the past year, any months when payroll or payments were a strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常很紧张","Often tight"])},
+{d:3,zh:"你的应收账款回得快吗？",en:"Do clients pay you back quickly?",c:C3(["基本60天内","Mostly within 60 days"],["大概60到90天","Around 60–90 days"],["常拖到90天以上","Often past 90 days"])},
+{d:3,zh:"你的固定成本（设备、厂房、固定工）压力大吗？",en:"How heavy is your fixed-cost burden (equipment, plant, fixed labour)?",c:C3(["可控，能伸缩","Manageable — can flex"],["一般","Moderate"],["很重，停产风险大","Heavy — high shutdown risk"])},
+{d:3,zh:"你最大的一个客户占营收多少？",en:"How much of revenue is your single biggest client?",c:C3(["低于15%","Under 15%"],["大概15%到40%","Around 15–40%"],["超过40%","Over 40%"])},
+{d:3,zh:"那个最大客户明天就没了，厂会怎样？",en:"If that biggest client left tomorrow, what would happen to the plant?",c:C3(["扛得住","We'd hold"],["伤但活得下","Hurts, but survives"],["垮一大半","Most collapses"])},
+{d:3,zh:"原材料/供应有没有被某一家卡死、换不掉？",en:"Are you locked to one material supplier you can't replace?",c:C3(["没有，都有替代","No — alternatives"],["有一两个不好换","One or two hard to switch"],["有，被卡死","Yes — locked"])},
+{d:3,zh:"原料/人工成本涨上来时，你转嫁得动吗？",en:"When material or labour costs rise, can you pass them on?",c:C3(["能，调价消化","Yes — reprice to absorb"],["勉强吸收","Barely absorb"],["只能硬扛","Just eat it"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账？",en:"Could you produce clean two-year accounts right now?",c:C3(["能，随时","Yes — anytime"],["要整理一下","Need to tidy"],["拿不出来","Not really"])},
+{d:3,zh:"你的毛利率这两三年是往上还是往下？",en:"Over two or three years, is gross margin up or down?",c:C3(["往上","Up"],["基本持平","Flat"],["在往下掉","Down"])},
+// S5
+{d:4,zh:"在你这个产品领域，客户/同行会先想到你吗？",en:"In your product niche, are you the first name clients or peers think of?",c:C3(["多数时候是","Mostly yes"],["有时候","Sometimes"],["基本不是","Rarely"])},
+{d:4,zh:"你拿单主要靠主动去争取，还是客户主动找上门？",en:"Do you win orders by chasing, or do clients come to you?",c:C3(["客户主动来找","Clients come to us"],["一半一半","A bit of both"],["全靠我去争取","All on my chasing"])},
+{d:4,zh:"过去一年，你多常靠压价来拿单？",en:"Over the past year, how often did you cut price to win orders?",c:C3(["很少","Rarely"],["偶尔","Now and then"],["经常","Often"])},
+{d:4,zh:"你的新客里，靠老客转介绍来的占多少？",en:"What share of new clients come via referrals from existing ones?",c:C3(["过半","Over half"],["有一部分","A fair portion"],["很少","Few"])},
+{d:4,zh:"有没有客户/上游主动转介绍、带客户来？",en:"Do clients or partners actively refer others to you?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"有没有行业媒体/展会主动（非付费）报道你、邀你参展？",en:"Has trade media or an expo featured or invited you unprompted (not paid)?",c:C3(["有，主动来的","Yes — they came to us"],["有，但都是付费的","Yes, but only paid"],["没有","No"])},
+{d:4,zh:"你能参与定行业标准、或被同行当参考吗？",en:"Do you help set industry standards, or get referenced by peers?",c:C3(["常被同行参考","Often referenced"],["偶尔","Occasionally"],["我们都是跟随者","We follow others"])},
+{d:4,zh:"同样的产品你报价比同行高，客户还选你吗？",en:"Priced above peers for the same product, do clients still choose you?",c:C3(["贵，客户也照样选","Yes — still pick us"],["只能贵一点点","Only a little higher"],["一贵客户就走","Price up and they leave"])},
+{d:4,zh:"你最近一次涨价，涨了多少？",en:"Your last price increase — how much?",c:C3(["涨了不少，客户也接受","A fair bit — and accepted"],["只敢小涨","Only a small bump"],["这一两年没敢涨","Haven't dared in a year or two"]),tag:'priceup'},
+{d:4,zh:"那次涨价之后，整体营收/利润怎样？",en:"After that increase, what happened to revenue/profit?",c:C3(["不降反升","Rose instead"],["差不多","About the same"],["掉了","Dropped"]),tag:'priceres'},
+// S6
+{d:5,zh:"客户关系靠的是公司/品牌，还是你个人？",en:"Do client relationships rest on the firm/brand, or on you personally?",c:C3(["靠公司/品牌","On the firm/brand"],["两个都有","Both"],["主要靠我个人","Mainly me"])},
+{d:5,zh:"商标/品牌注册了吗？",en:"Is your trademark or brand registered?",c:C3(["已经注册","Registered"],["正在办","In progress"],["还没有","Not yet"])},
+{d:5,zh:"公司有没有完整的品牌与产品资料体系，换人能延续？",en:"Is there a complete brand and product documentation set others could continue?",c:C3(["有，很规范","Yes — well organised"],["有个基础","A basic one"],["几乎没有","Barely any"])},
+{d:5,zh:"你的公司/厂牌，在网上或行业里找得到、有信息吗？",en:"Can your company be found online or in the trade, with real information?",c:C3(["找得到，有信息","Yes — with info"],["有一点点","A little"],["几乎没有","Barely any"])},
+{d:5,zh:"有没有「不是你本人、能独当一面谈大客户」的负责人？",en:"Do you have a leader who isn't you and can handle key accounts alone?",c:C3(["有，稳定做了一段","Yes — steady for a while"],["有，但还在带","Yes, still mentoring"],["只有我","Only me"])},
+{d:5,zh:"过去一年，有多少时间你完全没参与、厂照常运转？",en:"Over the past year, how much time ran with you fully uninvolved?",c:C3(["不少时间，照常","Plenty — ran fine"],["偶尔几段","A few spells"],["几乎离不开我","Barely runs without me"])},
+{d:5,zh:"有没有人来问过你——合资、合作、或者收购？",en:"Has anyone asked about a JV, partnership, or acquisition?",c:C3(["有，有人看中","Yes — there's interest"],["偶尔有人提","Occasionally raised"],["没有","No"]),tag:'neutral_last'}
+];
+BANKS.tech=[
+// S1
+{d:0,zh:"你上一次连续离开公司超过一周是什么时候？产品和运营怎样？",en:"When did you last step away for over a week, and how did product and ops hold up?",c:C3(["今年就有过，照常运转","This year — ran fine"],["有过，但全程要远程盯","Yes, but monitored throughout"],["几乎没敢离开这么久","Hardly ever dared"])},
+{d:0,zh:"如果你今天一整天联系不上，产品和服务还能正常跑吗？",en:"If you were unreachable all day, would product and service still run?",c:C3(["能，有监控和流程","Yes — monitoring and process in place"],["有些事会卡住","Some things would stall"],["容易出问题","Things tend to break"])},
+{d:0,zh:"过去一个月，团队因为不知道怎么办来问你，大概几次？",en:"Last month, how often did the team come to you stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times a week"],["几乎每天都有","Almost daily"])},
+{d:0,zh:"产品/技术决定，是不是大多要经过你？",en:"Do most product or technical decisions still go through you?",c:C3(["不到三成要我","Under 30% need me"],["差不多一半","About half"],["几乎全部都要我","Almost all need me"])},
+{d:0,zh:"关键知识是沉淀成文档了，还是在个别人脑里？",en:"Is key knowledge captured in docs, or stuck in a few people's heads?",c:C3(["已经文档化","Documented"],["部分有","Partly"],["高度依赖个别人","Highly dependent on individuals"])},
+{d:0,zh:"让一个负责人全权管一条产品线——实际发生了吗？",en:"Letting someone fully own a product line — has it actually happened?",c:C3(["已经在放手让人做","Already handed over"],["试过，但还得我盯","Tried, but I still watch"],["没人能接得住","No one can take it"])},
+{d:0,zh:"开发、部署、客服有没有文档化的流程？",en:"Are dev, deployment and support backed by documented processes?",c:C3(["有完整文档和CI/CD","Full docs and CI/CD"],["部分有","Partly"],["在核心几个人脑里","In a few key heads"])},
+{d:0,zh:"一个新工程师，到能独立交付实际要多久？",en:"How long does a new engineer really take to ship independently?",c:C3(["两到四周，有onboarding","2–4 weeks, with onboarding"],["一两个月","One or two months"],["很久，或靠口口相传","A long time, or by tribal knowledge"])},
+{d:0,zh:"运维和监控，是系统自动，还是靠人盯？",en:"Are ops and monitoring automated, or watched by people?",c:C3(["自动化","Automated"],["半自动","Semi-automated"],["主要靠人盯","Mostly watched manually"])},
+{d:0,zh:"上个月你花在亲自救火的时间，比三个月前多还是少？",en:"vs three months ago, is your firefighting time more or less?",c:C3(["明显变少","Clearly less"],["差不多","About the same"],["反而更多","Actually more"])},
+// S2
+{d:1,zh:"获取一个新客户的边际成本，接近零吗？",en:"Is the marginal cost of acquiring one more customer close to zero?",c:C3(["是，规模效应很明显","Yes — clear scale effect"],["部分，还有人工交付","Partly — some manual delivery"],["每个客户都要重新投入","Heavy effort per customer"])},
+{d:1,zh:"产品能让客户自助上手，还是要你/团队手把手？",en:"Can customers onboard themselves, or does it take you/the team hands-on?",c:C3(["以自助为主","Mostly self-serve"],["半自助","Semi self-serve"],["全程要高接触","Fully high-touch"])},
+{d:1,zh:"核心技术骨干请假两周，会怎样？",en:"If a core engineer took two weeks off, what would happen?",c:C3(["几乎没影响","Barely affected"],["明显感觉得到","Clearly noticeable"],["基本撑不住","Can't really hold"])},
+{d:1,zh:"你现在跑过几个产品/几个市场？",en:"How many products or markets have you actually run?",c:C3(["多个，跑通了","Several — proven"],["两个，还在摸索","Two — still figuring out"],["就一个","Just one"])},
+{d:1,zh:"你这类产品，市场上还有很多需求没被满足吗？",en:"For your kind of product, is there lots of unmet demand out there?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些","Some"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有本地以外（外地/海外）的客户在用、在付费？",en:"Are customers beyond your area (other regions/overseas) using and paying?",c:C3(["有，已经在卖了","Yes — already selling there"],["偶尔有","Occasionally"],["基本都是本地","Almost all local"])},
+{d:1,zh:"有没有人主动找你——想投资、收购，或大客户主动找上门？",en:"Has anyone approached about investing, acquiring, or a big client coming to you?",c:C3(["有，不止一次","Yes — more than once"],["偶尔有人提","Occasionally raised"],["没有过","Never"])},
+{d:1,zh:"用户要翻十倍，你的架构/团队第一个会卡在哪？",en:"To 10x users, what would break first — your architecture or your team?",c:C3(["加资源就能接住","Just add resources"],["要大量改造或加人","Heavy rework or hiring"],["接不了，强绑在创始人身上","Can't — bound to the founder"])},
+{d:1,zh:"产品能跨市场/跨语言扩展吗？",en:"Can the product expand across markets and languages?",c:C3(["架构支持，已经或很容易扩","Architected for it — easy"],["要做不少改造","Needs real rework"],["强绑本地，很难","Locked to local — hard"])},
+{d:1,zh:"过去你有没有不靠加人、靠产品本身就把收入做上去过？",en:"Have you grown revenue through the product itself, not headcount?",c:C3(["有，靠自助/订阅放大","Yes — self-serve/subscription scaled it"],["偶尔","Occasionally"],["没有，全靠加人或创始人去销售","No — all on hiring or founder sales"])},
+// S3
+{d:2,zh:"你现在最赚钱的产品/功能，和刚开始时是同一个吗？",en:"Is your most profitable product/feature the same as when you started?",c:C3(["完全是后来才做出来的","Built entirely later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+{d:2,zh:"你的公司有没有遇过差点撑不下去的难关？后来怎么过的？",en:"Has the company ever hit a near-death stretch? How did you get through?",c:C3(["挺过来了，还更强","Survived — and stronger"],["勉强撑过，伤了元气","Barely, took a hit"],["还没真正遇过","Haven't faced one yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动砍掉一个还在赚、但你觉得会过时的产品，去转新方向？",en:"Have you deliberately killed a still-earning but fading product to pivot?",c:C3(["有，事后证明对了","Yes — proved right"],["有，但被逼/犹豫","Yes, but forced or reluctant"],["没有，赚钱的不会动","No — won't touch what earns"]),tag:'revo'},
+{d:2,zh:"这几年同行有没有因为跟不上技术/需求变化而掉队、倒掉？",en:"Have peers fallen behind or folded for not keeping up with tech or demand?",c:C3(["有，看着一些掉队了","Yes — watched some fall behind"],["好像有一些","Seem to be a few"],["没太注意，挺稳","Haven't noticed — fairly stable"]),tag:'era_neutral'},
+{d:2,zh:"这两年，用户的需求和习惯有没有明显变（比如AI、新平台）？",en:"In two years, have user needs and habits clearly shifted (e.g. AI, new platforms)?",c:C3(["变了不少","Changed a lot"],["有一点","A little"],["基本没变","Barely"]),tag:'era'},
+{d:2,zh:"你的收入是不是几乎全压在一个大客/一个产品/一个渠道上？",en:"Is nearly all your revenue riding on one big client, product, or channel?",c:C3(["来自好几个地方","Spread across several"],["主要一个，但有补充","Mainly one, with backup"],["几乎全压在一个上","Almost all on one"])},
+{d:2,zh:"过去两年，你有没有花钱/资源试新方向（新产品/新技术）？",en:"In two years, have you put money or resources into new directions (products, tech)?",c:C3(["试了好几样","Several"],["试过一两样","One or two"],["没有","No"])},
+{d:2,zh:"你每年赚的钱（或融的钱），大概留多少投回产品/研发？",en:"Of what you earn or raise each year, how much goes back into product/R&D?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留","Barely any"]),tag:'reinvest'},
+{d:2,zh:"你的净利率/毛利和同行比，大概在什么水平？",en:"How do your margins compare with peers?",c:C3(["跟同行差不多或略高","Similar or a touch higher"],["比同行高出一大截","A good deal above"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+// S4
+{d:3,zh:"按现在的烧钱速度，账上的钱还能撑多久？",en:"At your current burn, how long does your cash last?",c:C3(["12个月以上","Over 12 months"],["大概6到12个月","Around 6–12 months"],["不到6个月","Under 6 months"])},
+{d:3,zh:"过去一年，有没有发工资/付款很吃力的时候？",en:"In the past year, any times payroll or payments were a real strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常很紧张","Often tight"])},
+{d:3,zh:"经常性收入（MRR/ARR）占比高吗？",en:"Is recurring revenue (MRR/ARR) a high share?",c:C3(["高，收入可预测","High — predictable"],["一半一半","A mix"],["多是一次性的","Mostly one-off"])},
+{d:3,zh:"你的净收入留存（续费/扩张）健康吗？",en:"Is your net revenue retention (renewals/expansion) healthy?",c:C3(["NRR超过100%或续费很高","NRR over 100% or high renewals"],["一般","Average"],["流失明显","Notable churn"])},
+{d:3,zh:"你最大的一个客户占营收多少？",en:"How much of revenue is your single biggest customer?",c:C3(["低于15%","Under 15%"],["大概15%到40%","Around 15–40%"],["超过40%","Over 40%"])},
+{d:3,zh:"那个最大客户明天就走了，公司会怎样？",en:"If that biggest customer left tomorrow, what would happen?",c:C3(["扛得住","We'd hold"],["伤但活得下","Hurts, but survives"],["垮一大半","Most collapses"])},
+{d:3,zh:"你依赖的关键平台/供应商，有没有被卡死的风险？",en:"Is there a risk of being locked in by a key platform or vendor?",c:C3(["没有，都有替代","No — alternatives exist"],["有一两个不好换","One or two hard to switch"],["有，被卡得很死","Yes — locked in"])},
+{d:3,zh:"成本涨上来时（云、人力、获客），你转得动吗？",en:"When costs rise (cloud, people, acquisition), can you adjust?",c:C3(["能，调价或优化消化","Yes — reprice or optimise"],["勉强吸收","Barely absorb"],["只能硬扛","Just eat it"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账？",en:"Could you produce clean two-year accounts right now?",c:C3(["能，随时","Yes — anytime"],["要整理一下","Need to tidy"],["拿不出来","Not really"])},
+{d:3,zh:"你的毛利率这两三年是往上还是往下？",en:"Over two or three years, is gross margin up or down?",c:C3(["往上","Up"],["基本持平","Flat"],["在往下掉","Down"])},
+// S5
+{d:4,zh:"你每个月花在获客（广告、销售）上的钱，占营收多少？",en:"What share of revenue goes to acquisition (ads, sales) each month?",c:C3(["很少","Very little"],["占一些","Some"],["占不小一块，停不得","A big chunk — can't stop"]),tag:'adspend'},
+{d:4,zh:"如果停掉所有付费获客一个月，新客会怎样？",en:"If you paused all paid acquisition for a month, what happens to new customers?",c:C3(["影响不大","Little impact"],["会掉一些","Some drop-off"],["新客几乎就断了","New customers nearly dry up"]),tag:'adstop'},
+{d:4,zh:"你的增长，是要靠不停促销/打折，还是有机增长？",en:"Is your growth driven by constant promos, or is it organic?",c:C3(["以有机增长为主","Mostly organic"],["一半一半","A mix"],["主要靠促销撑","Mostly promo-driven"])},
+{d:4,zh:"过去一年，你多常靠降价/优惠来签单？",en:"Over the past year, how often did you discount to close deals?",c:C3(["很少","Rarely"],["偶尔","Now and then"],["经常","Often"])},
+{d:4,zh:"你的新客里，靠口碑/转介绍/自传播来的占多少？",en:"What share of new customers come via word-of-mouth, referral, or virality?",c:C3(["过半","Over half"],["有一部分","A fair portion"],["很少","Few"])},
+{d:4,zh:"用户会自发推荐、自传播你的产品吗？",en:"Do users recommend and spread your product on their own?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"过去三个月，有没有人没收钱、也没被你要求，自己公开推荐你？",en:"In three months, has anyone publicly recommended you unpaid and unprompted?",c:C3(["有，不止一次","Yes — more than once"],["好像一两次","Maybe once or twice"],["想不起来","Can't recall"])},
+{d:4,zh:"有没有科技媒体/社区主动（非付费）报道、讨论你？",en:"Has tech media or a community covered or discussed you unprompted (not paid)?",c:C3(["有，主动来的","Yes — unprompted"],["有，但都是付费的","Yes, but only paid"],["没有","No"])},
+{d:4,zh:"同样的产品你定价比同行高，客户还买吗？",en:"Priced above peers for the same product, do customers still buy?",c:C3(["贵，照样买","Yes — still buy"],["只能贵一点点","Only a little higher"],["一贵就走","Price up and they leave"])},
+{d:4,zh:"你最近一次涨价/提价，涨了多少？",en:"Your last price increase — how much?",c:C3(["涨了不少，客户也接受","A fair bit — and accepted"],["只敢小涨","Only a small bump"],["这一两年没敢涨","Haven't dared in a year or two"]),tag:'priceup'},
+{d:4,zh:"那次涨价之后，整体营收/留存怎样？",en:"After that increase, what happened to revenue/retention?",c:C3(["不降反升","Rose instead"],["差不多","About the same"],["掉了/流失了","Dropped or churned"]),tag:'priceres'},
+// S6
+{d:5,zh:"产品品牌对外，主要打的是公司/产品，还是你个人（创始人IP）？",en:"In public, does the brand lead with the product/company, or with you (founder IP)?",c:C3(["主要是产品/公司","Product/company"],["两个都有","Both"],["主要靠我个人","Mainly me"])},
+{d:5,zh:"商标/产品名注册了吗？",en:"Is your trademark or product name registered?",c:C3(["已经注册","Registered"],["正在办","In progress"],["还没有","Not yet"])},
+{d:5,zh:"品牌资产（域名、社媒、内容）有团队在管，换人能延续吗？",en:"Are brand assets (domain, social, content) team-managed and continuable?",c:C3(["有团队在管","Team-managed"],["部分","Partly"],["全靠我","All on me"])},
+{d:5,zh:"你的产品/品牌网上搜得到、有内容沉淀吗？",en:"Can your product/brand be found online with real content?",c:C3(["搜得到，有沉淀","Yes — a real footprint"],["有一点点","A little"],["几乎搜不到","Barely findable"])},
+{d:5,zh:"有没有「不是你本人、能代表公司对外（销售/媒体）」的人？",en:"Is there someone who isn't you who can represent the company (sales, media)?",c:C3(["有，稳定一段了","Yes — steady for a while"],["有，但还在带","Yes, still mentoring"],["只有我","Only me"])},
+{d:5,zh:"过去一年，有多少时间你完全没参与、公司照常？",en:"Over the past year, how much time ran with you fully uninvolved?",c:C3(["不少，照常运转","Plenty — ran fine"],["偶尔几段","A few spells"],["几乎离不开我","Barely runs without me"])},
+{d:5,zh:"有没有人来问过你——投资、合作、或者收购？",en:"Has anyone asked about investing, partnering, or acquiring you?",c:C3(["有，有人看中","Yes — there's interest"],["偶尔有人提","Occasionally raised"],["没有","No"]),tag:'neutral_last'}
+];
+BANKS.trading=[
+// S1
+{d:0,zh:"你上一次连续离开超过一周是什么时候？那段时间生意怎样？",en:"When did you last step away for over a week, and how did business hold up?",c:C3(["今年就有过，照常运转","This year — ran fine"],["有过，但全程要远程盯","Yes, but monitored throughout"],["几乎没敢离开这么久","Hardly ever dared"])},
+{d:0,zh:"如果你今天一整天联系不上，下单、清关、交货还转得动吗？",en:"If you were unreachable all day, would ordering, customs and delivery still run?",c:C3(["能，流程很清楚","Yes — the process is clear"],["有些环节会卡住","Some parts would stall"],["容易卡住","It tends to jam up"])},
+{d:0,zh:"过去一个月，业务员因为不知道怎么办来问你，大概几次？",en:"Last month, how often did your sales staff come to you stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times a week"],["几乎每天都有","Almost daily"])},
+{d:0,zh:"价格谈判和异常处理，是不是大多要你出面？",en:"Do most price negotiations and exceptions still need you to step in?",c:C3(["不到三成要我","Under 30% need me"],["差不多一半","About half"],["几乎全部都要我","Almost all need me"])},
+{d:0,zh:"除了你，有几个人能独立跑完一单（从询价到交付）？",en:"Besides you, how many can run a full deal end-to-end (quote to delivery)?",c:C3(["好几个都行","Several can"],["勉强一两个","Barely one or two"],["只有我自己","Only me"])},
+{d:0,zh:"让一个负责人全权管一块业务——实际发生了吗？",en:"Letting someone fully own a line of business — has it actually happened?",c:C3(["已经在放手让人做","Already handed over"],["试过，但还得我盯","Tried, but I still watch"],["没人能接得住","No one can take it"])},
+{d:0,zh:"采购、报关、物流、收付款有没有书面流程？",en:"Are sourcing, customs, logistics and payment backed by written processes?",c:C3(["有完整流程","Documented"],["部分有","Partly"],["主要靠我的经验","Mostly my experience"])},
+{d:0,zh:"一个新业务员，到能独立跑单实际要多久？",en:"How long does a new trader really take to run deals solo?",c:C3(["一两个月","One or two months"],["三到六个月","Three to six months"],["很久，或者带不出来","A long time, or never quite"])},
+{d:0,zh:"订单、库存、对账数据，是系统化的吗？",en:"Are order, stock and reconciliation data systematised?",c:C3(["有系统在跑","Run on a system"],["半系统化","Semi-systematised"],["基本靠手工","Mostly manual"])},
+{d:0,zh:"上个月你花在亲自救火的时间，比三个月前多还是少？",en:"vs three months ago, is your firefighting time more or less?",c:C3(["明显变少","Clearly less"],["差不多","About the same"],["反而更多","Actually more"])},
+// S2
+{d:1,zh:"你的生意有没有写成方法，新业务员照着能做出八成？",en:"Is your model documented so a new trader could do ~80% of it?",c:C3(["有方法和供应渠道","Method and supply mapped out"],["大概有，靠口传","Roughly, but verbal"],["全靠我的关系","All on my relationships"])},
+{d:1,zh:"你的核心业务员/关键关系人请假两周，会怎样？",en:"If your core trader or key contact took two weeks off, what would happen?",c:C3(["几乎没影响","Barely affected"],["明显感觉得到","Clearly noticeable"],["基本撑不住","Can't really hold"])},
+{d:1,zh:"除了某个核心人脉，别人也能拿到同样的货/价吗？",en:"Besides one key contact, can others get the same supply and price?",c:C3(["能，有制度撑着","Yes — systemised"],["勉强","Only just"],["只有那个人能","Only that person"])},
+{d:1,zh:"你现在跑过几条产品线/几个市场？",en:"How many product lines or markets have you actually run?",c:C3(["多个，跑通了","Several — proven"],["两个，还在摸索","Two — still figuring out"],["就一个","Just one"])},
+{d:1,zh:"你做的这类生意，市场上还有很多需求没被满足吗？",en:"In your trade, is there lots of unmet demand out there?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些","Some"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有外地/海外客户专程找你采购？",en:"Do out-of-area or overseas clients come to you to source?",c:C3(["经常有","Often"],["偶尔有","Occasionally"],["基本都是本地","Almost all local"])},
+{d:1,zh:"有没有上游品牌主动找你做代理，或有人想投资你扩张？",en:"Have upstream brands offered you agency, or has anyone wanted to invest to expand?",c:C3(["有，不止一次","Yes — more than once"],["偶尔有人提","Occasionally raised"],["没有过","Never"])},
+{d:1,zh:"生意要翻一倍，你脑子里第一个想到的是？",en:"To double the business, what's your first thought?",c:C3(["现有方式加把力就行","Just push the current model"],["得多招人、铺渠道","Hire and build out channels"],["太靠我个人的人脉了","Too tied to my own network"])},
+{d:1,zh:"开拓新品类/新市场，你的方法能复制过去吗？",en:"For a new category or market, can your approach be replicated?",c:C3(["能，方法可以迁移","Yes — the method transfers"],["要重新建关系","Have to rebuild relationships"],["几乎得从零开始","Almost from scratch"])},
+{d:1,zh:"过去你有没有不靠多招人、也不多花你时间就把收入做上去过？",en:"Have you grown revenue without more hires or more of your time?",c:C3(["有，靠制度化/自营品牌","Yes — systemised or own brand"],["偶尔","Occasionally"],["没有","No"])},
+{d:1,zh:"换个市场，你的模式还成立吗？",en:"In another market, would your model still hold?",c:C3(["成立","Holds"],["要做调整","Needs adjusting"],["太靠本地关系","Too tied to local ties"])},
+// S3
+{d:2,zh:"你现在最赚钱的产品线，和刚开始做时是同一个吗？",en:"Is your most profitable product line the same as when you started?",c:C3(["完全是后来才做起来的","Came up entirely later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+{d:2,zh:"你的生意有没有遇过差点撑不下去的难关？后来怎么过的？",en:"Has the business ever hit a near-death stretch? How did you get through?",c:C3(["挺过来了，还更强","Survived — and stronger"],["勉强撑过，伤了元气","Barely, took a hit"],["还没真正遇过","Haven't faced one yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动放掉一块还在赚、但会过时的代理/产品，去转新方向？",en:"Have you deliberately dropped a still-earning but fading agency or product to pivot?",c:C3(["有，事后证明对了","Yes — proved right"],["有，但被逼/犹豫","Yes, but forced or reluctant"],["没有，赚钱的不会动","No — won't touch what earns"]),tag:'revo'},
+{d:2,zh:"这几年同行有没有因为跟不上（被脱媒、平台化）而掉队、关掉？",en:"Have peers fallen behind or closed for not keeping up (disintermediation, platforms)?",c:C3(["有，看着一些掉队了","Yes — watched some fall behind"],["好像有一些","Seem to be a few"],["没太注意，挺稳","Haven't noticed — fairly stable"]),tag:'era_neutral'},
+{d:2,zh:"这两年，客户的采购方式、上下游关系有没有明显变？",en:"In two years, have client procurement or up/downstream relationships clearly shifted?",c:C3(["变了不少","Changed a lot"],["有一点","A little"],["基本没变","Barely"]),tag:'era'},
+{d:2,zh:"你的收入是不是几乎全压在一个大客/一个供应商上？",en:"Is nearly all your revenue riding on one big client or one supplier?",c:C3(["来自好几个地方","Spread across several"],["主要一个，但有补充","Mainly one, with backup"],["几乎全压在一个上","Almost all on one"])},
+{d:2,zh:"过去两年，你有没有花钱试新东西（新品类/新市场/自营）？",en:"In two years, have you spent on trying new things (categories, markets, going direct)?",c:C3(["试了好几样","Several"],["试过一两样","One or two"],["没有","No"])},
+{d:2,zh:"你每年赚的钱，大概留多少投回生意里？",en:"Of yearly profit, roughly how much goes back into the business?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留","Barely any"]),tag:'reinvest'},
+{d:2,zh:"你的净利率和同行比，大概在什么水平？",en:"How does your net margin compare with peers?",c:C3(["跟同行差不多或略高","Similar or a touch higher"],["比同行高出一大截","A good deal above"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+// S4
+{d:3,zh:"零新单的情况下，你账上的钱能撑多久？",en:"With no new deals coming in, how long would your cash last?",c:C3(["半年以上","Over six months"],["大概三到六个月","Three to six months"],["不到三个月","Under three months"])},
+{d:3,zh:"过去一年，有没有发工资/付款很吃力的月份？",en:"In the past year, any months payments were a real strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常很紧张","Often tight"])},
+{d:3,zh:"你的应收账款回得快吗？",en:"Do your clients pay you back quickly?",c:C3(["基本30天内","Mostly within 30 days"],["大概30到90天","Around 30–90 days"],["常拖90天以上","Often past 90 days"])},
+{d:3,zh:"汇率/价格波动对你的冲击大吗？",en:"How exposed are you to currency or price swings?",c:C3(["有对冲或能转嫁","Hedged or can pass on"],["部分暴露","Partly exposed"],["几乎全暴露","Fully exposed"])},
+{d:3,zh:"你最大的一个客户或供应商，占多少？",en:"How concentrated is your biggest client or supplier?",c:C3(["都低于两成","Both under 20%"],["有一边占两到四成","One side at 20–40%"],["高度集中在一家","Heavily concentrated in one"])},
+{d:3,zh:"那个最大来源明天就没了，生意会怎样？",en:"If that biggest source vanished tomorrow, what then?",c:C3(["扛得住","We'd hold"],["伤但活得下","Hurts, but survives"],["垮一大半","Most collapses"])},
+{d:3,zh:"成本/账期被压时，你转嫁或调整得动吗？",en:"When squeezed on cost or payment terms, can you pass it on or adjust?",c:C3(["能","Yes"],["勉强","Only just"],["只能硬扛","Just eat it"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账？",en:"Could you produce clean two-year accounts right now?",c:C3(["能，随时","Yes — anytime"],["要整理一下","Need to tidy"],["拿不出来","Not really"])},
+{d:3,zh:"你的毛利率这两三年是往上还是往下？",en:"Over two or three years, is gross margin up or down?",c:C3(["往上","Up"],["基本持平","Flat"],["在往下掉","Down"])},
+// S5
+{d:4,zh:"在你经营的品类，客户会先想到你吗？",en:"In your category, are you the first name clients think of?",c:C3(["多数时候是","Mostly yes"],["有时候","Sometimes"],["基本不是","Rarely"])},
+{d:4,zh:"你拿单主要靠主动去争取，还是客户/上游主动找你？",en:"Do you win deals by chasing, or do clients/suppliers come to you?",c:C3(["他们主动来找我","They come to me"],["一半一半","A bit of both"],["全靠我去争取","All on my chasing"])},
+{d:4,zh:"过去一年，你多常靠压价/拼账期来抢单？",en:"Over the past year, how often did you cut price or stretch terms to win?",c:C3(["很少","Rarely"],["偶尔","Now and then"],["经常","Often"])},
+{d:4,zh:"你的新客里，靠老客/口碑转介绍来的占多少？",en:"What share of new clients come via referrals?",c:C3(["过半","Over half"],["有一部分","A fair portion"],["很少","Few"])},
+{d:4,zh:"有没有客户/上游主动转介绍、带客户来？",en:"Do clients or suppliers actively refer others to you?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"有没有行业里的人主动（非付费）把你当参考、引用你？",en:"Do people in the trade reference or cite you unprompted (not paid)?",c:C3(["有","Yes"],["偶尔","Occasionally"],["没有","No"])},
+{d:4,zh:"你能凭信誉拿到更好的价/账期吗？",en:"Does your reputation win you better prices or payment terms?",c:C3(["可以","Yes"],["小幅","A little"],["没有","No"])},
+{d:4,zh:"同样的货你报价比同行高，客户还选你吗？",en:"Priced above peers for the same goods, do clients still choose you?",c:C3(["贵，照样选","Yes — still pick us"],["只能贵一点点","Only a little higher"],["一贵就走","Price up and they leave"])},
+{d:4,zh:"你最近一次涨价/提价，涨了多少？",en:"Your last price increase — how much?",c:C3(["涨了不少，客户也接受","A fair bit — and accepted"],["只敢小涨","Only a small bump"],["这一两年没敢涨","Haven't dared in a year or two"]),tag:'priceup'},
+{d:4,zh:"那次涨价之后，整体营收/利润怎样？",en:"After that increase, what happened to revenue/profit?",c:C3(["不降反升","Rose instead"],["差不多","About the same"],["掉了","Dropped"]),tag:'priceres'},
+// S6
+{d:5,zh:"供应商和客户关系，靠的是公司/合约，还是你个人？",en:"Do supplier and client relationships rest on the firm and contracts, or on you?",c:C3(["靠公司/合约","On the firm/contracts"],["两个都有","Both"],["主要靠我个人","Mainly me"])},
+{d:5,zh:"公司名/商标注册了吗？",en:"Is your company name or trademark registered?",c:C3(["已经注册","Registered"],["正在办","In progress"],["还没有","Not yet"])},
+{d:5,zh:"公司有没有规范的对外资料/形象，换人能延续？",en:"Is there standardised outward material/identity someone else could continue?",c:C3(["有","Yes"],["有个基础","A basic one"],["几乎没有","Barely any"])},
+{d:5,zh:"你的公司网上找得到、有信息吗？",en:"Can your company be found online, with real information?",c:C3(["找得到","Yes"],["有一点点","A little"],["几乎没有","Barely any"])},
+{d:5,zh:"有没有「不是你本人、能独当一面谈代理/大单」的人？",en:"Is there someone who isn't you who can negotiate agencies or big deals alone?",c:C3(["有，稳定一段了","Yes — steady for a while"],["有，但还在带","Yes, still mentoring"],["只有我","Only me"])},
+{d:5,zh:"过去一年，有多少时间你完全没参与、生意照常？",en:"Over the past year, how much time ran with you fully uninvolved?",c:C3(["不少，照常运转","Plenty — ran fine"],["偶尔几段","A few spells"],["几乎离不开我","Barely runs without me"])},
+{d:5,zh:"有没有人来问过你——合作、入股、或者收购？",en:"Has anyone asked about partnering, taking a stake, or acquiring you?",c:C3(["有，有人看中","Yes — there's interest"],["偶尔有人提","Occasionally raised"],["没有","No"]),tag:'neutral_last'}
+];
+BANKS.construction=[
+// S1
+{d:0,zh:"你上一次连续离开超过一周是什么时候？工地/项目怎样？",en:"When did you last step away for over a week, and how did sites and projects hold up?",c:C3(["今年就有过，照常推进","This year — kept moving"],["有过，但全程要远程盯","Yes, but monitored throughout"],["几乎没敢离开这么久","Hardly ever dared"])},
+{d:0,zh:"如果你今天一整天联系不上，工地还能按计划推进吗？",en:"If you were unreachable all day, would the sites keep moving on plan?",c:C3(["能，有项目经理和流程","Yes — PMs and process in place"],["有些环节会卡住","Some parts would stall"],["容易停摆","It tends to stall"])},
+{d:0,zh:"过去一个月，项目经理/工头因为不知道怎么办来问你，大概几次？",en:"Last month, how often did PMs or foremen come to you stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times a week"],["几乎每天都有","Almost daily"])},
+{d:0,zh:"现场变更、索赔、纠纷，是不是大多要你出面？",en:"Do most variations, claims and disputes still need you to step in?",c:C3(["不到三成要我","Under 30% need me"],["差不多一半","About half"],["几乎全部都要我","Almost all need me"])},
+{d:0,zh:"除了你，有几个人能独立带完一个完整项目？",en:"Besides you, how many can run a full project from start to finish?",c:C3(["好几个都行","Several can"],["勉强一两个","Barely one or two"],["只有我自己","Only me"])},
+{d:0,zh:"让一个项目经理全权负责一个项目——实际发生了吗？",en:"Letting a PM fully own a project — has it actually happened?",c:C3(["已经在放手让人做","Already handed over"],["试过，但还得我盯","Tried, but I still watch"],["没人能接得住","No one can take it"])},
+{d:0,zh:"投标、施工、验收、结算有没有书面流程？",en:"Are tendering, build, handover and billing backed by written processes?",c:C3(["有完整流程","Documented"],["部分有","Partly"],["主要靠我的经验","Mostly my experience"])},
+{d:0,zh:"一个新项目经理，到能独立负责项目实际要多久？",en:"How long does a new PM really take to run a project solo?",c:C3(["几个月，有体系","A few months, with a system"],["半年到一年","Six months to a year"],["很久，或带不出来","A long time, or never quite"])},
+{d:0,zh:"项目进度、成本、材料数据，是系统化的吗？",en:"Are progress, cost and material data systematised?",c:C3(["有系统在跑","Run on a system"],["半系统化","Semi-systematised"],["基本靠手工","Mostly manual"])},
+{d:0,zh:"上个月你花在亲自跑现场救火的时间，比三个月前多还是少？",en:"vs three months ago, is your time firefighting on site more or less?",c:C3(["明显变少","Clearly less"],["差不多","About the same"],["反而更多","Actually more"])},
+// S2
+{d:1,zh:"你的施工/管理有没有标准化，新团队照着能做出八成水准？",en:"Is your build and management standardised so a new team could hit ~80%?",c:C3(["有标准体系","A standardised system"],["大概有，靠老人带","Roughly — passed down by veterans"],["全靠那几个老手","All on a few key hands"])},
+{d:1,zh:"核心项目经理/技术骨干请假，项目会怎样？",en:"If a core PM or engineer took leave, what would happen to projects?",c:C3(["几乎没影响","Barely affected"],["进度会受影响","Progress would slip"],["基本撑不住","Can't really hold"])},
+{d:1,zh:"除了那几位核心的人，别人也能管出同样质量吗？",en:"Besides those key people, can others manage to the same quality?",c:C3(["能，好几个都行","Yes — several"],["勉强","Only just"],["只有那几位","Only them"])},
+{d:1,zh:"你能同时管几个项目？现在管过最多几个？",en:"How many projects can you run at once? What's the most you've handled?",c:C3(["多个并行，跑得通","Several in parallel — workable"],["两三个","Two or three"],["一次只能一个","One at a time"])},
+{d:1,zh:"你这类工程，市场上还有很多需求没被满足吗？",en:"For your kind of work, is there lots of unmet demand out there?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些","Some"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有外地的项目主动来找你做？",en:"Do projects from other areas come looking for you?",c:C3(["经常有","Often"],["偶尔有","Occasionally"],["基本都是本地","Almost all local"])},
+{d:1,zh:"有没有人主动找你——想合作、联营、或投资你扩张？",en:"Has anyone approached about partnering, a JV, or investing to expand?",c:C3(["有，不止一次","Yes — more than once"],["偶尔有人提","Occasionally raised"],["没有过","Never"])},
+{d:1,zh:"接的活要翻一倍，你脑子里第一个想到的是？",en:"To double the projects you take on, what's your first thought?",c:C3(["现有班子扩一扩就行","Just grow the current team"],["得大量加项目经理和施工队","Add many PMs and crews"],["处处卡我，很重","Bottlenecked on me — heavy"])},
+{d:1,zh:"多接一倍项目，主要靠加管理体系，还是靠多加我盯？",en:"To double projects, do you lean on a management system, or on more of you watching?",c:C3(["靠体系","On the system"],["部分靠我","Partly on me"],["全靠我盯","All on me watching"])},
+{d:1,zh:"过去你有没有不靠多接项目、也不多花你时间，就把产值提上去过？",en:"Have you raised output without taking on more projects or more of your time?",c:C3(["有，靠标准化/专业化","Yes — standardised or specialised"],["偶尔","Occasionally"],["没有","No"])},
+// S3
+{d:2,zh:"你现在最赚钱的工程类型，和刚开始做时是同一个吗？",en:"Is your most profitable type of work the same as when you started?",c:C3(["完全是后来才转过去的","Shifted there entirely later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+{d:2,zh:"你的公司有没有遇过差点撑不下去的难关？后来怎么过的？",en:"Has the company ever hit a near-death stretch? How did you get through?",c:C3(["挺过来了，还更强","Survived — and stronger"],["勉强撑过，伤了元气","Barely, took a hit"],["还没真正遇过","Haven't faced one yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动放掉一类还在赚、但你觉得会过时/低利的活，去换新方向？",en:"Have you deliberately dropped a still-earning but fading or low-margin line to pivot?",c:C3(["有，事后证明对了","Yes — proved right"],["有，但被逼/犹豫","Yes, but forced or reluctant"],["没有，赚钱的不会动","No — won't touch what earns"]),tag:'revo'},
+{d:2,zh:"这几年同行有没有因为跟不上（新工法、绿建、数字化）而掉队、倒掉？",en:"Have peers fallen behind or folded for not keeping up (new methods, green building, digital)?",c:C3(["有，看着一些掉队了","Yes — watched some fall behind"],["好像有一些","Seem to be a few"],["没太注意，挺稳","Haven't noticed — fairly stable"]),tag:'era_neutral'},
+{d:2,zh:"这两年，业主的要求、招投标方式有没有明显变？",en:"In two years, have client demands or tendering clearly shifted?",c:C3(["变了不少","Changed a lot"],["有一点","A little"],["基本没变","Barely"]),tag:'era'},
+{d:2,zh:"你的收入是不是几乎全压在一个大业主/一类项目上？",en:"Is nearly all your revenue riding on one big client or one project type?",c:C3(["来自好几个地方","Spread across several"],["主要一个，但有补充","Mainly one, with backup"],["几乎全压在一个上","Almost all on one"])},
+{d:2,zh:"过去两年，你有没有花钱试新东西（新工法/新资质/新设备）？",en:"In two years, have you spent on trying new things (methods, credentials, equipment)?",c:C3(["试了好几样","Several"],["试过一两样","One or two"],["没有","No"])},
+{d:2,zh:"你每年赚的钱，大概留多少投回公司（资质、设备、人才）？",en:"Of yearly profit, roughly how much goes back in (credentials, equipment, talent)?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留","Barely any"]),tag:'reinvest'},
+{d:2,zh:"你的净利率和同行比，大概在什么水平？",en:"How does your net margin compare with peers?",c:C3(["跟同行差不多或略高","Similar or a touch higher"],["比同行高出一大截","A good deal above"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+// S4
+{d:3,zh:"如果半年接不到新项目，你账上的钱能撑住吗？",en:"If you won no new projects for six months, would your cash hold?",c:C3(["撑得住","It would hold"],["勉强","Only just"],["很快就出问题","Trouble would come fast"])},
+{d:3,zh:"过去一年，有没有发工资/付分包款很吃力的时候？",en:"In the past year, any times payroll or subcontractor payments were a strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常很紧张","Often tight"])},
+{d:3,zh:"工程款回收快吗？垫资压力大吗？",en:"How fast are progress payments collected, and how heavy is the upfront capital?",c:C3(["回收快，垫资小","Fast collection, light upfront"],["一般","Moderate"],["回收慢，垫资很大","Slow collection, heavy upfront"])},
+{d:3,zh:"你最大的一个项目/业主占营收多少？",en:"How much of revenue is your biggest project or client?",c:C3(["低于两成","Under 20%"],["大概两到四成","Around 20–40%"],["超过四成","Over 40%"])},
+{d:3,zh:"那个最大来源没了，公司会怎样？",en:"If that biggest source went away, what would happen?",c:C3(["扛得住","We'd hold"],["伤但活得下","Hurts, but survives"],["垮一大半","Most collapses"])},
+{d:3,zh:"分包/材料供应有没有被某一家卡死、换不掉？",en:"Are you locked to one subcontractor or supplier you can't replace?",c:C3(["没有，都有替代","No — alternatives"],["有一两个不好换","One or two hard to switch"],["有，被卡死","Yes — locked"])},
+{d:3,zh:"材料/人工涨价时，合约能转嫁吗？",en:"When material or labour costs rise, can the contract pass it on?",c:C3(["能，有调价条款","Yes — with price-adjustment clauses"],["部分能","Partly"],["只能自己硬扛","Just eat it"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账（含项目成本）？",en:"Could you produce clean two-year accounts (incl. project costing) right now?",c:C3(["能，随时","Yes — anytime"],["要整理一下","Need to tidy"],["拿不出来","Not really"])},
+{d:3,zh:"你的项目利润率这两三年是往上还是往下？",en:"Over two or three years, is your project margin up or down?",c:C3(["往上","Up"],["基本持平","Flat"],["在往下掉","Down"])},
+// S5
+{d:4,zh:"在你这类工程，业主招标时会先想到你吗？",en:"For your kind of work, are you top-of-mind when clients put a project out to tender?",c:C3(["多数会","Mostly yes"],["有时候","Sometimes"],["基本不会","Rarely"])},
+{d:4,zh:"你拿项目靠主动投标争取，还是有人主动来找你/指定你？",en:"Do you win projects by bidding hard, or do clients come to you or name you?",c:C3(["主动来找/指定我们","They come or name us"],["一半一半","A bit of both"],["全靠投标去抢","All on hard bidding"])},
+{d:4,zh:"过去一年，你多常靠压低报价来中标？",en:"Over the past year, how often did you lowball to win?",c:C3(["很少","Rarely"],["偶尔","Now and then"],["经常","Often"])},
+{d:4,zh:"你的新业主里，靠老业主转介绍来的占多少？",en:"What share of new clients come via referrals from past ones?",c:C3(["过半","Over half"],["有一部分","A fair portion"],["很少","Few"])},
+{d:4,zh:"有没有业主/同行主动转介绍、带项目来？",en:"Do clients or peers actively refer projects to you?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"你的资质等级/获奖/案例，有没有让你在投标里加分？",en:"Do your grade, awards or portfolio give you an edge in tenders?",c:C3(["明显加分","A clear edge"],["有点用","Some help"],["没什么用","Little help"])},
+{d:4,zh:"有没有行业媒体/协会主动（非付费）报道、引用你的项目？",en:"Has trade media or an association featured or cited your projects unprompted (not paid)?",c:C3(["有","Yes"],["有，但都是付费的","Yes, but only paid"],["没有","No"])},
+{d:4,zh:"同样的工程你报价比同行高，业主还选你吗？",en:"Priced above peers for the same job, do clients still choose you?",c:C3(["贵，照样选","Yes — still pick us"],["只能贵一点点","Only a little higher"],["一贵就丢标","Price up and we lose it"])},
+{d:4,zh:"你最近一次提高报价水平，提了多少？",en:"Last time you raised your pricing — how much?",c:C3(["提了不少，照样中标","A fair bit — still won"],["只敢小幅提","Only a small bump"],["不敢提","Daren't"]),tag:'priceup'},
+{d:4,zh:"那次提价之后，你的中标量/利润怎样？",en:"After that increase, what happened to your win-rate/profit?",c:C3(["不降反升","Rose instead"],["差不多","About the same"],["掉了","Dropped"]),tag:'priceres'},
+// S6
+{d:5,zh:"业主关系靠的是公司/资质，还是你个人？",en:"Do client relationships rest on the firm and its licences, or on you?",c:C3(["靠公司/资质","On the firm/licences"],["两个都有","Both"],["主要靠我个人","Mainly me"])},
+{d:5,zh:"公司名/商标/资质，是公司持有的资产吗？",en:"Are the company name, trademark and licences held as company assets?",c:C3(["是，规范持有","Yes — properly held"],["部分","Partly"],["挂在我个人名下","Under my personal name"])},
+{d:5,zh:"公司有没有规范的资质、案例、资料体系，换人能延续？",en:"Is there a documented set of credentials, case studies and materials others could continue?",c:C3(["有","Yes"],["有个基础","A basic one"],["几乎没有","Barely any"])},
+{d:5,zh:"你的公司在网上/行业里找得到、有记录吗？",en:"Can your company be found online or in the trade, with a track record?",c:C3(["找得到","Yes"],["有一点点","A little"],["几乎没有","Barely any"])},
+{d:5,zh:"有没有「不是你本人、能独当一面谈业主/投标」的负责人？",en:"Is there a leader who isn't you and can win and manage clients alone?",c:C3(["有，稳定一段了","Yes — steady for a while"],["有，但还在带","Yes, still mentoring"],["只有我","Only me"])},
+{d:5,zh:"过去一年，有多少时间你完全没参与、项目照常推进？",en:"Over the past year, how much time ran with you fully uninvolved?",c:C3(["不少，照常推进","Plenty — kept moving"],["偶尔几段","A few spells"],["几乎离不开我","Barely runs without me"])},
+{d:5,zh:"有没有人来问过你——合作、入股、或者收购？",en:"Has anyone asked about partnering, taking a stake, or acquiring you?",c:C3(["有，有人看中","Yes — there's interest"],["偶尔有人提","Occasionally raised"],["没有","No"]),tag:'neutral_last'}
+];
+BANKS.logistics=[
+// S1
+{d:0,zh:"你上一次连续离开超过一周是什么时候？调度/运营怎样？",en:"When did you last step away for over a week, and how did dispatch and ops hold up?",c:C3(["今年就有过，照常运转","This year — ran fine"],["有过，但全程要远程盯","Yes, but monitored throughout"],["几乎没敢离开这么久","Hardly ever dared"])},
+{d:0,zh:"如果你今天一整天联系不上，调度、派车、交付还转得动吗？",en:"If you were unreachable all day, would dispatch, vehicle allocation and delivery still run?",c:C3(["能，有系统和流程","Yes — system and process in place"],["有些环节会卡住","Some parts would stall"],["容易乱套","It tends to go off the rails"])},
+{d:0,zh:"过去一个月，调度/司机因为不知道怎么办来问你，大概几次？",en:"Last month, how often did dispatchers or drivers come to you stuck?",c:C3(["几乎没有","Almost never"],["每周都有几次","A few times a week"],["几乎每天都有","Almost daily"])},
+{d:0,zh:"异常（延误、事故、客诉）处理，是不是大多要你出面？",en:"Do most exceptions (delays, incidents, complaints) still need you to step in?",c:C3(["不到三成要我","Under 30% need me"],["差不多一半","About half"],["几乎全部都要我","Almost all need me"])},
+{d:0,zh:"除了你，有几个人能独立把一天的调度跑顺？",en:"Besides you, how many can run a day's dispatch smoothly on their own?",c:C3(["好几个都行","Several can"],["勉强一两个","Barely one or two"],["只有我自己","Only me"])},
+{d:0,zh:"让一个负责人全权管一个网点/一条线——实际发生了吗？",en:"Letting someone fully run a hub or a route — has it actually happened?",c:C3(["已经在放手让人做","Already handed over"],["试过，但还得我盯","Tried, but I still watch"],["没人能接得住","No one can take it"])},
+{d:0,zh:"调度、路线、签收、对账有没有书面流程？",en:"Are dispatch, routing, proof-of-delivery and reconciliation backed by written processes?",c:C3(["有完整流程","Documented"],["部分有","Partly"],["主要靠我的经验","Mostly my experience"])},
+{d:0,zh:"一个新调度/司机，到能独立上手实际要多久？",en:"How long does a new dispatcher or driver really take to work solo?",c:C3(["一两周，有培训","One or two weeks, with training"],["一个月","About a month"],["没准，全看人","No telling — depends on the person"])},
+{d:0,zh:"车辆、订单、路线、油耗数据，是系统化的吗？",en:"Are vehicle, order, route and fuel data systematised?",c:C3(["有TMS/系统在跑","Run on a TMS/system"],["半系统化","Semi-systematised"],["基本靠手工","Mostly manual"])},
+{d:0,zh:"上个月你花在亲自调度/救火的时间，比三个月前多还是少？",en:"vs three months ago, is your time dispatching or firefighting more or less?",c:C3(["明显变少","Clearly less"],["差不多","About the same"],["反而更多","Actually more"])},
+// S2
+{d:1,zh:"你的运营有没有标准化，新网点照着能做出八成水准？",en:"Is your operation standardised so a new hub could hit ~80%?",c:C3(["有标准体系","A standardised system"],["大概有，靠老人带","Roughly — passed down by veterans"],["全靠那几个老手","All on a few key hands"])},
+{d:1,zh:"核心调度/骨干请假两周，运营会怎样？",en:"If your core dispatcher took two weeks off, what would happen to operations?",c:C3(["几乎没影响","Barely affected"],["明显感觉得到","Clearly noticeable"],["基本撑不住","Can't really hold"])},
+{d:1,zh:"除了某个核心的人，别人也能调度出同样效率吗？",en:"Besides that one key person, can others dispatch at the same efficiency?",c:C3(["能，好几个都行","Yes — several"],["勉强","Only just"],["只有那个人","Only that person"])},
+{d:1,zh:"你现在跑过几条线/几个网点？",en:"How many routes or hubs have you actually run?",c:C3(["多个，跑通了","Several — proven"],["两三个","Two or three"],["就一个","Just one"])},
+{d:1,zh:"你这类运输/物流服务，市场上还有很多需求没被满足吗？",en:"For your kind of service, is there lots of unmet demand out there?",c:C3(["还很多，远没饱和","Lots — far from saturated"],["还有一些","Some"],["差不多饱和了","Pretty much saturated"])},
+{d:1,zh:"有没有外地客户专程指定要你承运？",en:"Do out-of-area clients specifically ask for you to carry their freight?",c:C3(["经常有","Often"],["偶尔有","Occasionally"],["基本都是本地","Almost all local"])},
+{d:1,zh:"有没有人主动找你——想合作、联营、或投资你扩张？",en:"Has anyone approached about partnering, a JV, or investing to expand?",c:C3(["有，不止一次","Yes — more than once"],["偶尔有人提","Occasionally raised"],["没有过","Never"])},
+{d:1,zh:"运力要翻一倍，你脑子里第一个想到的是？",en:"To double capacity, what's your first thought?",c:C3(["现有体系能扩，或可外包","The system scales, or outsource"],["得大量买车、招人、建点","Buy trucks, hire, build hubs"],["处处卡我，很重","Bottlenecked on me — heavy"])},
+{d:1,zh:"扩运力主要靠系统/外包网络，还是靠重资产买车招人？",en:"Does scaling capacity rely on system/network, or on heavy assets — buying trucks and hiring?",c:C3(["靠系统/网络，比较轻","On system/network — asset-light"],["混合","A mix"],["全靠买车招人，很重","All on trucks and people — heavy"])},
+{d:1,zh:"过去你有没有不靠多买车、也不多花你时间，就把营收做上去过？",en:"Have you grown revenue without more trucks or more of your time?",c:C3(["有，靠平台化/整合运力","Yes — platform or integrating capacity"],["偶尔","Occasionally"],["没有","No"])},
+{d:1,zh:"换个城市/换个区域，你的模式还成立吗？",en:"In another city or region, would your model still hold?",c:C3(["成立，可以复制","Holds — replicable"],["要做本地化","Needs localising"],["太靠本地关系","Too tied to local ties"])},
+// S3
+{d:2,zh:"你现在最赚钱的业务类型，和刚开始做时是同一个吗？",en:"Is your most profitable type of business the same as when you started?",c:C3(["完全是后来才转过去的","Shifted there entirely later"],["变了一部分","Partly changed"],["差不多还是那个","Much the same"]),tag:'revo'},
+{d:2,zh:"你的公司有没有遇过差点撑不下去的难关？后来怎么过的？",en:"Has the company ever hit a near-death stretch? How did you get through?",c:C3(["挺过来了，还更强","Survived — and stronger"],["勉强撑过，伤了元气","Barely, took a hit"],["还没真正遇过","Haven't faced one yet"]),tag:'revo_neutral'},
+{d:2,zh:"有没有主动放掉一块还在赚、但会过时/低利的业务，去转新方向？",en:"Have you deliberately dropped a still-earning but fading or low-margin line to pivot?",c:C3(["有，事后证明对了","Yes — proved right"],["有，但被逼/犹豫","Yes, but forced or reluctant"],["没有，赚钱的不会动","No — won't touch what earns"]),tag:'revo'},
+{d:2,zh:"这几年同行有没有因为跟不上（平台化、数字化）而掉队、倒掉？",en:"Have peers fallen behind or folded for not keeping up (platforms, digitalisation)?",c:C3(["有，看着一些掉队了","Yes — watched some fall behind"],["好像有一些","Seem to be a few"],["没太注意，挺稳","Haven't noticed — fairly stable"]),tag:'era_neutral'},
+{d:2,zh:"这两年，客户的需求、找运力的方式有没有明显变？",en:"In two years, have client needs or how they source capacity clearly shifted?",c:C3(["变了不少","Changed a lot"],["有一点","A little"],["基本没变","Barely"]),tag:'era'},
+{d:2,zh:"你的收入是不是几乎全压在一个大客/一条线上？",en:"Is nearly all your revenue riding on one big client or one route?",c:C3(["来自好几个地方","Spread across several"],["主要一个，但有补充","Mainly one, with backup"],["几乎全压在一个上","Almost all on one"])},
+{d:2,zh:"过去两年，你有没有花钱试新东西（新线路/新业务/数字化）？",en:"In two years, have you spent on trying new things (routes, services, digital)?",c:C3(["试了好几样","Several"],["试过一两样","One or two"],["没有","No"])},
+{d:2,zh:"你每年赚的钱，大概留多少投回公司（车辆、系统、网络）？",en:"Of yearly profit, roughly how much goes back in (vehicles, systems, network)?",c:C3(["相当一部分，固定会投","A meaningful share, regularly"],["只投一点点","Just a little"],["基本不留","Barely any"]),tag:'reinvest'},
+{d:2,zh:"你的净利率和同行比，大概在什么水平？",en:"How does your net margin compare with peers?",c:C3(["跟同行差不多或略高","Similar or a touch higher"],["比同行高出一大截","A good deal above"],["比同行低，或不清楚","Lower, or unsure"]),tag:'npmargin'},
+// S4
+{d:3,zh:"如果一个大客户突然断单，你账上的钱能撑多久？",en:"If a big client suddenly stopped, how long would your cash last?",c:C3(["半年以上","Over six months"],["大概三到六个月","Three to six months"],["不到三个月","Under three months"])},
+{d:3,zh:"过去一年，有没有发工资/付油款/养车很吃力的时候？",en:"In the past year, any times payroll, fuel or fleet costs were a strain?",c:C3(["没有","No"],["有过一两次","Once or twice"],["常常很紧张","Often tight"])},
+{d:3,zh:"运费回收快吗？账期压力大吗？",en:"Is freight collected quickly, and how heavy are the payment terms?",c:C3(["回收快","Collected fast"],["一般","Moderate"],["回收慢，垫资大","Slow collection, heavy upfront"])},
+{d:3,zh:"你最大的一个客户占营收多少？",en:"How much of revenue is your single biggest client?",c:C3(["低于15%","Under 15%"],["大概15%到40%","Around 15–40%"],["超过40%","Over 40%"])},
+{d:3,zh:"那个最大客户明天就走了，公司会怎样？",en:"If that biggest client left tomorrow, what would happen?",c:C3(["扛得住","We'd hold"],["伤但活得下","Hurts, but survives"],["垮一大半","Most collapses"])},
+{d:3,zh:"油价/车辆/外包运力成本涨上来时，你转嫁得动吗？",en:"When fuel, fleet or outsourced-capacity costs rise, can you pass them on?",c:C3(["能，调价消化","Yes — reprice to absorb"],["勉强吸收","Barely absorb"],["只能硬扛","Just eat it"])},
+{d:3,zh:"你的车队/资产，是重负担还是可调节？",en:"Is your fleet/asset base a heavy burden, or flexible?",c:C3(["轻，或可外包","Light, or outsourceable"],["一般","Moderate"],["很重，养车压力大","Heavy — fleet upkeep is a strain"])},
+{d:3,zh:"你能不能马上拿出过去两年清楚的账？",en:"Could you produce clean two-year accounts right now?",c:C3(["能，随时","Yes — anytime"],["要整理一下","Need to tidy"],["拿不出来","Not really"])},
+{d:3,zh:"你的毛利率这两三年是往上还是往下？",en:"Over two or three years, is gross margin up or down?",c:C3(["往上","Up"],["基本持平","Flat"],["在往下掉","Down"])},
+// S5
+{d:4,zh:"客户要找运力时，会先想到你吗？",en:"When clients need capacity, are you the first name they think of?",c:C3(["多数会","Mostly yes"],["有时候","Sometimes"],["基本不会","Rarely"])},
+{d:4,zh:"你拿单主要靠主动去争取，还是客户主动找你？",en:"Do you win work by chasing, or do clients come to you?",c:C3(["客户主动来找","Clients come to us"],["一半一半","A bit of both"],["全靠我去争取","All on my chasing"])},
+{d:4,zh:"过去一年，你多常靠压低运价来抢单？",en:"Over the past year, how often did you cut rates to win?",c:C3(["很少","Rarely"],["偶尔","Now and then"],["经常","Often"])},
+{d:4,zh:"你的新客里，靠老客转介绍来的占多少？",en:"What share of new clients come via referrals from existing ones?",c:C3(["过半","Over half"],["有一部分","A fair portion"],["很少","Few"])},
+{d:4,zh:"有没有客户主动转介绍、带客户来？",en:"Do clients actively refer others to you?",c:C3(["经常","Often"],["偶尔","Occasionally"],["几乎没有","Almost never"])},
+{d:4,zh:"你的准时率/服务口碑，有没有让客户主动留下来？",en:"Does your reliability and reputation keep clients without you chasing them?",c:C3(["明显有","Clearly yes"],["有点","Somewhat"],["没什么用","Not really"])},
+{d:4,zh:"有没有行业里的人主动（非付费）推荐、引用你？",en:"Do people in the trade recommend or cite you unprompted (not paid)?",c:C3(["有","Yes"],["偶尔","Occasionally"],["没有","No"])},
+{d:4,zh:"同样的运输你报价比同行高，客户还选你吗？",en:"Priced above peers for the same haul, do clients still choose you?",c:C3(["贵，照样选","Yes — still pick us"],["只能贵一点点","Only a little higher"],["一贵就走","Price up and they leave"])},
+{d:4,zh:"你最近一次涨运价，涨了多少？",en:"Your last rate increase — how much?",c:C3(["涨了不少，客户也接受","A fair bit — and accepted"],["只敢小涨","Only a small bump"],["这一两年没敢涨","Haven't dared in a year or two"]),tag:'priceup'},
+{d:4,zh:"那次涨价之后，整体营收/利润怎样？",en:"After that increase, what happened to revenue/profit?",c:C3(["不降反升","Rose instead"],["差不多","About the same"],["掉了","Dropped"]),tag:'priceres'},
+// S6
+{d:5,zh:"客户关系靠的是公司/合约，还是你个人？",en:"Do client relationships rest on the firm and contracts, or on you?",c:C3(["靠公司/合约","On the firm/contracts"],["两个都有","Both"],["主要靠我个人","Mainly me"])},
+{d:5,zh:"公司名/商标注册了吗？",en:"Is your company name or trademark registered?",c:C3(["已经注册","Registered"],["正在办","In progress"],["还没有","Not yet"])},
+{d:5,zh:"公司有没有规范的对外形象/资料，换人能延续？",en:"Is there a standardised outward identity and materials others could continue?",c:C3(["有","Yes"],["有个基础","A basic one"],["几乎没有","Barely any"])},
+{d:5,zh:"你的公司网上找得到、有信息吗？",en:"Can your company be found online, with real information?",c:C3(["找得到","Yes"],["有一点点","A little"],["几乎没有","Barely any"])},
+{d:5,zh:"有没有「不是你本人、能独当一面管运营/谈客户」的人？",en:"Is there someone who isn't you who can run operations and win clients alone?",c:C3(["有，稳定一段了","Yes — steady for a while"],["有，但还在带","Yes, still mentoring"],["只有我","Only me"])},
+{d:5,zh:"过去一年，有多少时间你完全没参与、公司照常？",en:"Over the past year, how much time ran with you fully uninvolved?",c:C3(["不少，照常运转","Plenty — ran fine"],["偶尔几段","A few spells"],["几乎离不开我","Barely runs without me"])},
+{d:5,zh:"有没有人来问过你——合作、入股、或者收购？",en:"Has anyone asked about partnering, taking a stake, or acquiring you?",c:C3(["有，有人看中","Yes — there's interest"],["偶尔有人提","Occasionally raised"],["没有","No"]),tag:'neutral_last'}
+];
+
+
+
+/* ════════════════════════════════════════════════════════
+   SSB Capital Readiness Test — engine
+   ════════════════════════════════════════════════════════ */
+
+let pool=[], cur=0, ans=[], userName='', userPhone='', userEmail='', userPAT=null, selectedIndustry=null, lastResult=null, lastAnswers=[];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ── industry select screen ── */
+function renderIndustries(){
+  const grid=document.getElementById('ind-grid');
+  grid.innerHTML='';
+  INDUSTRIES.forEach(ind=>{
+    const div=document.createElement('div');
+    div.className='ind-card'+(selectedIndustry===ind.id?' selected':'');
+    div.innerHTML=`<div class="ind-icon">${ind.icon}</div>
+      <div class="ind-body"><div class="ind-zh">${ind.zh}</div><div class="ind-en">${ind.en}</div></div>`;
+    div.onclick=()=>{
+      selectedIndustry=ind.id;
+      document.querySelectorAll('.ind-card').forEach((el,i)=>el.classList.toggle('selected',INDUSTRIES[i].id===ind.id));
+      document.getElementById('btn-ind-start').disabled=false;
+    };
+    grid.appendChild(div);
+  });
+}
+
+/* draws 5 per dimension (the full tailored set) and shuffles order */
+function buildPool(industryId){
+  const bank=BANKS[industryId]||[];
+  const perDim={};
+  bank.forEach(q=>{
+    if(!q.qid){
+      perDim[q.d]=(perDim[q.d]||0);
+      q.qid=industryId+'_d'+q.d+'_'+perDim[q.d];
+      perDim[q.d]++;
+    }
+  });
+  const byDim=[[],[],[],[],[],[]];
+  bank.forEach(q=>byDim[q.d].push(q));
+  byDim.forEach(d=>shuffle(d));
+  const sel=[];
+  for(let d=0;d<6;d++) for(let i=0;i<byDim[d].length;i++) sel.push(byDim[d][i]);
+  return shuffle(sel);
+}
+
+function startQuiz(){
+  if(!selectedIndustry) return;
+  pool=buildPool(selectedIndustry);
+  cur=0;
+  ans=new Array(pool.length).fill(null);
+  document.getElementById('qtotal').textContent=pool.length;
+  showScreen('s-quiz');
+  renderQ();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='s-industry') renderIndustries();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderQ(){
+  const q=pool[cur];
+  const total=pool.length;
+  document.getElementById('qnum').textContent=cur+1;
+  document.getElementById('qpct').textContent=Math.round(cur/total*100)+'%';
+  document.getElementById('prog').style.width=((cur+1)/total*100)+'%';
+  document.getElementById('q-text').textContent=q.zh;
+  document.getElementById('q-sub').textContent=q.en;
+  const cl=document.getElementById('choices');
+  cl.innerHTML='';
+  ['A','B','C','D'].slice(0,q.c.length).forEach((lb,i)=>{
+    const div=document.createElement('div');
+    div.className='choice'+(ans[cur]===i?' selected':'');
+    div.innerHTML=`<div class="choice-letter">${lb}</div><div class="choice-body"><div class="choice-zh">${q.c[i].zh}</div><div class="choice-en">${q.c[i].en}</div></div>`;
+    div.onclick=()=>{ans[cur]=i;document.querySelectorAll('.choice').forEach((el,idx)=>el.classList.toggle('selected',idx===i));};
+    cl.appendChild(div);
+  });
+  document.getElementById('btn-prev').disabled=cur===0;
+  document.getElementById('btn-next').textContent=cur===total-1?'完成 Finish ✓':'下一题 →';
+}
+
+function nextQ(){
+  if(ans[cur]===null){
+    const cl=document.getElementById('choices');
+    cl.classList.add('shake');
+    setTimeout(()=>cl.classList.remove('shake'),400);
+    return;
+  }
+  if(cur<pool.length-1){cur++;renderQ();}
+  else showScreen('s-gate');
+}
+
+function prevQ(){if(cur>0){cur--;renderQ();}}
+
+function unlockResult(){
+  const name=document.getElementById('inp-name').value.trim();
+  const phone=document.getElementById('inp-phone').value.trim();
+  const email=document.getElementById('inp-email').value.trim();
+  const patRaw=document.getElementById('inp-pat').value.replace(/[,\s]/g,'');
+  let ok=true;
+  document.getElementById('err-name').style.display='none';
+  document.getElementById('err-phone').style.display='none';
+  document.getElementById('err-email').style.display='none';
+  document.getElementById('err-pat').style.display='none';
+  if(!name){document.getElementById('err-name').style.display='block';ok=false;}
+  if(!phone||phone.replace(/[\s\-\+\(\)]/g,'').length<8){document.getElementById('err-phone').style.display='block';ok=false;}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){document.getElementById('err-email').style.display='block';ok=false;}
+  if(!patRaw||isNaN(Number(patRaw))||Number(patRaw)<=0){document.getElementById('err-pat').style.display='block';ok=false;}
+  if(!ok)return;
+  userName=name;
+  userPhone=phone;
+  userEmail=email;
+  userPAT=Number(patRaw);
+  showResults();
+}
+
+function getDimScores(){
+  // effective score per answered question (default = chosen option score)
+  const eff = pool.map((q,i)=> ans[i]===null ? null : q.c[ans[i]].s);
+
+  // helper: find index of a tagged question; returns {i, opt} or null
+  const find = t => { for(let i=0;i<pool.length;i++) if(pool[i].tag===t && ans[i]!==null) return {i,opt:ans[i]}; return null; };
+  const NEUTRAL = 1.5;
+
+  // ① neutral last option not penalised (last option = index length-1 chosen → set to neutral)
+  pool.forEach((q,i)=>{
+    if(ans[i]===null) return;
+    if((q.tag==='revo_neutral'||q.tag==='era_neutral'||q.tag==='neutral_last') && ans[i]===q.c.length-1){
+      eff[i] = NEUTRAL;
+    }
+  });
+
+  // ② net margin × reinvestment: far-above-peers margin + barely reinvest → margin question = 0
+  const np=find('npmargin'), ri=find('reinvest');
+  if(np && ri && np.opt===1 && ri.opt===2){ eff[np.i]=0; }
+
+  // ③ era × revolution: if industry NOT changing (era signals say stable) and revo actions are "none",
+  //    forgive the "none" → neutral. If industry IS changing but revo none, leave low (危险).
+  const eraPeers=find('era_neutral'), eraHabit=find('era');
+  const eraStable = (eraPeers && eraPeers.opt===2) || (eraHabit && eraHabit.opt===2); // chose "stable / barely changed"
+  if(eraStable){
+    pool.forEach((q,i)=>{
+      if(ans[i]===null) return;
+      if(q.tag==='revo' && ans[i]===q.c.length-1){ eff[i]=NEUTRAL; } // forgive "no revolution" when era is stable
+    });
+  }
+
+  // ④ price increase × result: combine into one synthesized score on BOTH questions
+  const pu=find('priceup'), pr=find('priceres');
+  if(pu && pr){
+    // result is the key. table by (priceup opt, priceres opt) → synth 0..3
+    // opt 0=best,1=mid,2=worst for both
+    let synth;
+    const up=pu.opt, res=pr.opt;
+    if(res===0){ synth = up===0?3:2.5; }        // sales rose after raising → strong (bigger raise = best)
+    else if(res===1){ synth = up===0?2:1.5; }   // sales flat
+    else { synth = 0.5; }                        // sales dropped → weak regardless of how much raised
+    if(up===2){ synth = 0.5; }                   // never dared raise → weak
+    eff[pu.i]=synth; eff[pr.i]=synth;
+  }
+
+  // ⑤ ad spend × stop-ads: claims low spend BUT stopping kills new customers → treat as real dependence (low)
+  const ad=find('adspend'), as=find('adstop');
+  if(ad && as && ad.opt===0 && as.opt===2){ eff[ad.i]=0; eff[as.i]=0; }
+
+  // aggregate by sub-dimension
+  const acc=[[],[],[],[],[],[]];
+  pool.forEach((q,i)=>{ if(eff[i]!==null) acc[q.d].push(eff[i]); });
+  return acc.map(sc=>{
+    if(!sc.length) return 0;
+    return Math.round(sc.reduce((a,b)=>a+b,0)/(sc.length*3)*100);
+  });
+}
+
+function showResults(){
+  const scores=getDimScores();  // 6 sub-scores S1..S6 (0-100)
+
+  // ── 3 main pillar scores (average of their two sub-dimensions) ──
+  const pScores=PILLARS.map(p=>Math.round((scores[p.dims[0]]+scores[p.dims[1]])/2));
+  const [sScale,sSustain,sBrand]=pScores;
+
+  // ── three-band pattern (H ≥75 / M ≥40 / L <40) → 27 patterns ──
+  const band=v=>v>=75?'H':v>=40?'M':'L';
+  const pat=band(sScale)+band(sSustain)+band(sBrand);
+  const info=PATTERNS[pat]||PATTERNS['LLL'];
+  const ind=INDUSTRIES.find(i=>i.id===selectedIndustry);
+
+  // ── weighted total → PE (1..15) → valuation ──
+  const weighted=pScores[0]*PILLAR_WEIGHTS[0]+pScores[1]*PILLAR_WEIGHTS[1]+pScores[2]*PILLAR_WEIGHTS[2]; // 0..100
+  const PE=1+(weighted/100)*14;            // 1..15
+  const valuation=Math.round(userPAT*PE);
+
+  document.getElementById('r-greeting').textContent=userName+'，这是你的 SSB 资本准备度报告 / '+userName+', here is your SSB Capital Readiness Report';
+  document.getElementById('r-pattern').textContent='SSB Pattern: '+pat;
+  document.getElementById('r-ind').textContent=ind?(ind.icon+' '+ind.zh):'';
+  const bandZh=v=>v>=75?'强':v>=40?'中':'弱';
+  document.getElementById('r-arch').innerHTML='复制能力 <b>'+bandZh(sScale)+'</b> · 护城河 <b>'+bandZh(sSustain)+'</b> · 话语权 <b>'+bandZh(sBrand)+'</b>';
+  document.getElementById('r-desc').textContent=info.desc;
+  document.getElementById('r-move').textContent=info.move;
+
+  // valuation display (RM only)
+  document.getElementById('r-valuation').textContent='RM '+valuation.toLocaleString('en-US');
+  document.getElementById('r-val-note').innerHTML='以你提供的下一财年预计净利估算。<br><span>Based on your projected next-FY profit after tax. Indicative only — actual transaction value depends on industry, deal structure, audited financials, and buyer type.</span>';
+
+  showScreen('s-result');
+  setTimeout(()=>renderTriangle(pScores),80);
+  renderDims3(pScores);
+
+  // assemble the full record and save it
+  lastResult={
+    timestamp: new Date().toISOString(),
+    name: userName,
+    email: userEmail,
+    phone: userPhone,
+    projectedPAT: userPAT,
+    estimatedPE: Math.round(PE*100)/100,
+    estimatedValuation: valuation,
+    industry: ind?ind.id:selectedIndustry,
+    industryLabel: ind?ind.zh:'',
+    pattern: pat,
+    summary: info.en,
+    Scalability: sScale,
+    Sustainability: sSustain,
+    BrandInfluence: sBrand,
+    S1: scores[0], S2: scores[1], S3: scores[2],
+    S4: scores[3], S5: scores[4], S6: scores[5],
+    S1_系统化: scores[0],
+    S2_复制性: scores[1],
+    S3_护城河: scores[2],
+    S4_财务韧性: scores[3],
+    S5_话语权: scores[4],
+    S6_品牌独立: scores[5]
+  };
+
+  lastAnswers=[];
+  pool.forEach((q,i)=>{
+    if(ans[i]===null)return;
+    const choice=q.c[ans[i]];
+    lastAnswers.push({
+      questionId:q.qid||null,
+      dimension:q.d,
+      questionZh:q.zh,
+      chosenZh:choice.zh,
+      chosenEn:choice.en,
+      score:choice.s
+    });
+  });
+
+  saveLead(lastResult);
+}
+
+/* ── PART 2a: triangle spider chart (3 pillars) ── */
+function renderTriangle(p){ // p = [scale, sustain, brand]
+  const canvas=document.getElementById('hexC');
+  const ctx=canvas.getContext('2d');
+  const W=360,H=320, cx=180, cy=158, R=110;
+  const n=3;
+  // top, lower-right, lower-left
+  const angles=[-Math.PI/2, -Math.PI/2+2*Math.PI/3, -Math.PI/2+4*Math.PI/3];
+  ctx.clearRect(0,0,W,H);
+
+  const gridC='rgba(255,255,255,0.10)';
+  // rings
+  for(let r=1;r<=4;r++){
+    const rr=R*r/4;
+    ctx.beginPath();
+    for(let i=0;i<n;i++){const x=cx+rr*Math.cos(angles[i]),y=cy+rr*Math.sin(angles[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();
+  }
+  // axes
+  for(let i=0;i<n;i++){
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*Math.cos(angles[i]),cy+R*Math.sin(angles[i]));
+    ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
+  }
+  // data polygon
+  const pts=p.map((v,i)=>[cx+R*v/100*Math.cos(angles[i]), cy+R*v/100*Math.sin(angles[i])]);
+  ctx.beginPath();
+  pts.forEach((pt,i)=>i===0?ctx.moveTo(pt[0],pt[1]):ctx.lineTo(pt[0],pt[1]));
+  ctx.closePath();
+  ctx.fillStyle='rgba(245,166,35,0.22)';
+  ctx.fill();
+  ctx.strokeStyle='#F5A623';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  const dotC=['#5b6cb8','#4fb085','#F5A623'];
+  pts.forEach((pt,i)=>{ctx.beginPath();ctx.arc(pt[0],pt[1],5,0,Math.PI*2);ctx.fillStyle=dotC[i];ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();});
+
+  // labels at vertices
+  const labs=[['复制能力','SCALABILITY'],['护城河','SUSTAINABILITY'],['话语权','BRAND INFLUENCE']];
+  const labelR=R+30;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  labs.forEach((lb,i)=>{
+    let x=cx+labelR*Math.cos(angles[i]), y=cy+labelR*Math.sin(angles[i]);
+    if(i>0) y+=6;
+    ctx.font='600 13px Montserrat, sans-serif';ctx.fillStyle='#fff';
+    ctx.fillText(lb[0],x,y-7);
+    ctx.font='500 8.5px "JetBrains Mono", monospace';ctx.fillStyle=dotC[i];
+    ctx.fillText(lb[1],x,y+6);
+    // score % near the dot
+    const v=p[i], r=R*v/100;
+    const sx=cx+r*Math.cos(angles[i]), sy=cy+r*Math.sin(angles[i]);
+    ctx.font='700 12px Montserrat, sans-serif';ctx.fillStyle='#FFB942';
+    const off = i===0 ? -16 : 16;
+    ctx.fillText(v+'%', sx, sy+off);
+  });
+}
+
+/* find the user's weakest answered question within a pillar's two sub-dims */
+function getPillarGap(pillar){
+  let weakest=null;
+  pool.forEach((q,i)=>{
+    if(!pillar.dims.includes(q.d)||ans[i]===null)return;
+    const picked=q.c[ans[i]].s;
+    if(weakest===null||picked<weakest.picked){
+      const best=q.c.reduce((m,c)=>c.s>m.s?c:m,q.c[0]);
+      weakest={picked,qzh:q.zh,bestZh:best.zh};
+    }
+  });
+  if(!weakest||weakest.picked>=2)return null;
+  return weakest;
+}
+
+/* ── PART 2b: 3 detailed pillar cards ── */
+function renderDims3(pScores){
+  const wrap=document.getElementById('dims-3');
+  wrap.innerHTML='';
+  PILLARS.forEach((p,i)=>{
+    const score=pScores[i];
+    const level=score>=75?'high':score>=40?'mid':'low';
+    const label=level==='high'?'强 STRONG':level==='mid'?'中 MODERATE':'弱 WEAK';
+    const e=PILLAR_ELAB[p.key][level];
+    const gap=getPillarGap(p);
+    const wPct=Math.round(PILLAR_WEIGHTS[i]*100);
+    let gapHtml='';
+    if(gap){
+      gapHtml=`<div class="dim-gap">
+        <span class="dim-gap-label">待补强 / Your gap</span>
+        ${gap.qzh}<br>
+        <span class="dim-gap-better">→ 更强的状态：${gap.bestZh}</span>
+      </div>`;
+    }
+    const card=document.createElement('div');
+    card.className='dim-card';
+    card.style.setProperty('--pc',p.color);
+    card.innerHTML=`
+      <div class="dim-top">
+        <div>
+          <div class="dim-name">${p.zh} <span class="dim-weight">权重 ${wPct}%</span></div>
+          <div class="dim-name-en">${p.en} · ${p.sub}</div>
+        </div>
+        <div class="dim-badge badge-${level}">${label}</div>
+      </div>
+      <div class="dim-score-row">
+        <div class="dim-score">${score}<span class="dim-score-pct">%</span></div>
+        <div class="dim-bar-wrap"><div class="dim-bar" style="width:${score}%;background:${p.color}"></div></div>
+      </div>
+      <div class="dim-block dim-good">
+        <span class="dim-block-label good">✓ 好的地方 / What's working</span>
+        ${e.good}
+      </div>
+      <div class="dim-block dim-risk">
+        <span class="dim-block-label risk">! 风险 / The risk</span>
+        ${e.risk}
+      </div>
+      <div class="dim-elab-en">${e.en}</div>
+      ${gapHtml}`;
+    wrap.appendChild(card);
+  });
+}
+
+/* ════════════════ PERSISTENCE & PDF ════════════════ */
+
+/* local backup store (survives on your deployed site; may not persist in the in-chat preview) */
+function readLocalLeads(){
+  try{ return JSON.parse(localStorage.getItem('ssb_leads')||'[]'); }catch(e){ return []; }
+}
+function writeLocalLeads(arr){
+  try{ localStorage.setItem('ssb_leads', JSON.stringify(arr)); }catch(e){}
+}
+
+/* save one submission: POST to your Google Sheet endpoint (if set) + always keep a local backup */
+function saveLead(record){
+  const all=readLocalLeads();
+  all.push(record);
+  writeLocalLeads(all);
+  submitToBackend();
+}
+
+let _pdfBase64=null;
+let _pdfFilename=null;
+let _submitted=false;
+
+async function buildPdfBase64(){
+  if(_pdfBase64) return _pdfBase64;
+  const target=document.getElementById('s-result');
+  const actions=document.querySelector('#s-result .action-row');
+  if(actions) actions.style.visibility='hidden';
+  const safeName=(userName||'report').replace(/[^\w\u4e00-\u9fa5]+/g,'_');
+  _pdfFilename=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const opt={
+    margin:[8,8,8,8],
+    filename:_pdfFilename,
+    image:{type:'jpeg',quality:0.85},
+    html2canvas:{scale:1.5,backgroundColor:'#14152E',useCORS:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['css','legacy']}
+  };
+  try{
+    const dataUri=await html2pdf().set(opt).from(target).outputPdf('datauristring');
+    _pdfBase64=dataUri.split(',')[1];
+  }catch(e){ console.error('PDF build failed',e); _pdfBase64=null; }
+  finally{ if(actions) actions.style.visibility=''; }
+  return _pdfBase64;
+}
+
+async function submitToBackend(){
+  if(_submitted||!CONFIG.API_ENDPOINT) return;
+  _submitted=true;
+  const pdfBase64=await buildPdfBase64();
+  try{
+    await fetch(CONFIG.API_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({submission:lastResult, answers:lastAnswers, pdfBase64:pdfBase64||''})
+    });
+  }catch(e){ console.error('submit failed',e); _submitted=false; }
+}
+
+async function downloadPDF(){
+  const btn=document.getElementById('btn-pdf');
+  if(btn){ btn.disabled=true; btn.textContent='生成中… Generating…'; }
+  try{
+    const b64=await buildPdfBase64();
+    if(!b64) throw new Error('no pdf');
+    const a=document.createElement('a');
+    a.href='data:application/pdf;base64,'+b64;
+    a.download=_pdfFilename||'SSB_Report.pdf';
+    a.click();
+  }catch(e){
+    alert('PDF 生成失败，请重试 / PDF generation failed, please try again.');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='⬇ 下载 PDF Download Report'; }
+  }
+}
+
+/* OWNER TOOL: export all locally-stored submissions as CSV.
+   Open the page with #leads at the end of the URL to reveal the export button. */
+function exportLeadsCSV(){
+  const leads=readLocalLeads();
+  if(!leads.length){ alert('No submissions stored locally yet.'); return; }
+  const cols=['timestamp','name','phone','projectedPAT','estimatedPE','estimatedValuation','industry','industryLabel','pattern','summary',
+              'Scalability','Sustainability','BrandInfluence',
+              'S1_系统化','S2_复制性','S3_护城河','S4_财务韧性','S5_话语权','S6_品牌独立'];
+  const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[cols.join(',')].concat(leads.map(l=>cols.map(c=>esc(l[c])).join(',')));
+  const blob=new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ssb_leads_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+/* reveal the owner export button on the intro screen when URL ends with #leads */
+function maybeShowAdmin(){
+  if(location.hash.toLowerCase()!=='#leads')return;
+  if(document.getElementById('admin-export'))return;
+  const intro=document.getElementById('s-intro');
+  const n=readLocalLeads().length;
+  const box=document.createElement('div');
+  box.id='admin-export';
+  box.style.cssText='margin-top:20px;padding:14px 16px;border:.5px solid var(--border2);border-radius:8px;background:var(--surface)';
+  box.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Owner tools · '+n+' submissions stored in this browser</div>';
+  const b=document.createElement('button');
+  b.className='btn'; b.textContent='⬇ Export all leads (CSV)';
+  b.onclick=exportLeadsCSV;
+  box.appendChild(b);
+  intro.appendChild(box);
+}
+
+function restartQuiz(){
+  cur=0;ans=[];userName='';userPhone='';userEmail='';userPAT=null;selectedIndustry=null;lastResult=null;lastAnswers=[];
+  _pdfBase64=null;_pdfFilename=null;_submitted=false;
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-phone').value='';
+  document.getElementById('inp-email').value='';
+  document.getElementById('inp-pat').value='';
+  document.getElementById('btn-ind-start').disabled=true;
+  showScreen('s-intro');
+}
+
+window.addEventListener('load', maybeShowAdmin);
+window.addEventListener('hashchange', maybeShowAdmin);
+
+// PAT input: digits only, with thousands separators for readability
+window.addEventListener('load', function(){
+  const pat=document.getElementById('inp-pat');
+  if(!pat)return;
+  pat.addEventListener('input', function(){
+    const digits=this.value.replace(/[^\d]/g,'');
+    this.value=digits?Number(digits).toLocaleString('en-US'):'';
+  });
+});
+
+</script>
+</body>
+</html>
