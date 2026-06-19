@@ -166,6 +166,18 @@
   }
   .note-box span { color:var(--mute) !important; font-family:var(--font-mono); letter-spacing:.04em; }
 
+  /* ── email send status banner ── */
+  .email-status {
+    border-radius:var(--radius-md);
+    padding:12px 16px; margin-bottom:16px;
+    font-size:14px; line-height:1.5;
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .email-status .es-sub { display:block; font-family:var(--font-mono); font-size:12px; letter-spacing:.03em; opacity:.85; margin-top:2px; }
+  .email-status.es-pending { background:var(--ivory); color:var(--mute); border:1px solid var(--line); }
+  .email-status.es-ok { background:#E8F3EE; color:var(--success); border:1px solid #BFE0D0; }
+  .email-status.es-fail { background:#FBECEC; color:var(--danger); border:1px solid #ECC4C6; }
+
   /* ── buttons ── */
   .btn {
     display:inline-flex; align-items:center; gap:10px;
@@ -489,7 +501,7 @@
         <span class="intro-desc-en">5 minutes to find out what your business is really worth — through the 3 dimensions capital cares about.</span>
       </p>
     </div>
-    <div class="pillars-intro">资本只看三件事，这30道题就在帮你打分：</div>
+    <div class="pillars-intro">资本只看三件事，这套问卷就在帮你打分：</div>
     <div class="pillars-row">
       <div class="pillar-card">
         <div class="pillar-num">01</div>
@@ -511,8 +523,8 @@
       </div>
     </div>
     <div class="note-box">
-      30道题，凭直觉选最像你生意现状的答案就好。<br>
-      <span>30 questions · answer honestly, not aspirationally.</span>
+      一套问卷，凭直觉选最像你生意现状的答案就好。<br>
+      <span>One quick quiz · answer honestly, not aspirationally.</span>
     </div>
     <button class="btn primary" onclick="showScreen('s-industry')">
       测测我的生意值多少 &nbsp;→
@@ -645,6 +657,8 @@
       <div class="move-label">最关键的一步 / The One Next Move</div>
       <div class="move-text" id="r-move"></div>
     </div>
+
+    <div id="email-status" class="email-status" style="display:none"></div>
 
     <div class="action-row">
       <button class="btn primary" id="btn-pdf" onclick="downloadPDF()">⬇ 下载 PDF Download Report</button>
@@ -1802,17 +1816,44 @@ async function buildPdfBase64(){
   return _pdfBase64;
 }
 
+function setEmailStatus(kind,zh,en){
+  const el=document.getElementById('email-status');
+  if(!el) return;
+  el.style.display='flex';
+  el.className='email-status es-'+kind;
+  const icon=kind==='ok'?'✓':kind==='fail'?'⚠':'…';
+  el.innerHTML='<span>'+icon+'</span><span>'+zh+(en?'<span class="es-sub">'+en+'</span>':'')+'</span>';
+}
+
 async function submitToBackend(){
   if(_submitted||!CONFIG.API_ENDPOINT) return;
   _submitted=true;
+  const to=(userEmail||'').replace(/</g,'&lt;');
+  setEmailStatus('pending','正在把报告发送到你的邮箱…','Sending your report to '+to+' …');
   const pdfBase64=await buildPdfBase64();
   try{
-    await fetch(CONFIG.API_ENDPOINT,{
+    const resp=await fetch(CONFIG.API_ENDPOINT,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({submission:lastResult, answers:lastAnswers, pdfBase64:pdfBase64||''})
     });
-  }catch(e){ console.error('submit failed',e); _submitted=false; }
+    let data={};
+    try{ data=await resp.json(); }catch(e){}
+    if(!resp.ok){
+      _submitted=false;
+      setEmailStatus('fail','报告暂时无法发送（服务器返回 '+resp.status+'）。请点下方「下载 PDF」自行保存，结果不会丢失。','Couldn’t send right now (HTTP '+resp.status+'). Use “Download Report” below — your result is safe.');
+      return;
+    }
+    if(data.emailStatus==='sent'){
+      setEmailStatus('ok','报告已发送到 '+to+'，请查收（若没看到，请检查垃圾邮件箱）。','Report sent to '+to+' — please check your inbox and spam folder.');
+    }else{
+      // request succeeded but email was skipped/failed on the backend
+      setEmailStatus('fail','结果已保存，但邮件发送未成功。请点下方「下载 PDF」保存你的报告。','Saved, but the email didn’t go through. Please use “Download Report” below.');
+    }
+  }catch(e){
+    console.error('submit failed',e); _submitted=false;
+    setEmailStatus('fail','网络异常，报告未能发送。请点下方「下载 PDF」自行保存，结果不会丢失。','Network error — report not sent. Use “Download Report” below; your result is safe.');
+  }
 }
 
 async function downloadPDF(){
@@ -1873,6 +1914,7 @@ function restartQuiz(){
   document.getElementById('inp-phone').value='';
   document.getElementById('inp-email').value='';
   document.getElementById('inp-pat').value='';
+  const es=document.getElementById('email-status'); if(es){ es.style.display='none'; es.innerHTML=''; }
   document.getElementById('btn-ind-start').disabled=true;
   showScreen('s-intro');
 }
