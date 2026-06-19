@@ -1845,7 +1845,7 @@ async function buildPdfBase64(){
   const opt={
     margin:[M,M,M,M],
     filename:_pdfFilename,
-    image:{type:'png'},               // PNG → no JPEG haze over the light background
+    image:{type:'jpeg',quality:0.95}, // JPEG at high quality: sharp but small enough for the 8MB upload limit
     html2canvas:{scale:2,backgroundColor:'#FAF8F4',useCORS:true},
     jsPDF:{unit:'px',format:[w+2*M, h+2*M+4],orientation:'portrait'},
     pagebreak:{mode:[]}
@@ -1876,7 +1876,11 @@ async function submitToBackend(){
   _submitted=true;
   const to=(userEmail||'').replace(/</g,'&lt;');
   setEmailStatus('pending','正在把报告发送到你的邮箱…','Sending your report to '+to+' …');
-  const pdfBase64=await buildPdfBase64();
+  let pdfBase64=await buildPdfBase64();
+  // Safety: the backend caps uploads at 8MB. If the PDF is too big, drop the
+  // attachment so the summary email + DB record still go through (better than a
+  // failed request). ~6MB of base64 is a safe ceiling under the 8MB JSON limit.
+  if(pdfBase64 && pdfBase64.length>6000000){ console.warn('PDF too large, sending without attachment'); pdfBase64=''; }
   try{
     const resp=await fetch(CONFIG.API_ENDPOINT,{
       method:'POST',
