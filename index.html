@@ -1843,7 +1843,9 @@ async function buildPdfBase64(){
     image:{type:'png'},               // PNG → no JPEG haze over the light background
     html2canvas:{scale:1.5,backgroundColor:'#FAF8F4',useCORS:true},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['css','legacy']}
+    // keep cards/sections from splitting across a page boundary (which made
+    // a split block render blank, e.g. the "Next Move" box)
+    pagebreak:{mode:['css','legacy'],avoid:['.val-card','.move-box','.hex-section','.dim-card','.section-head']}
   };
   try{
     const dataUri=await html2pdf().set(opt).from(target).outputPdf('datauristring');
