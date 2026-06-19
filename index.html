@@ -178,15 +178,6 @@
   .email-status.es-ok { background:#E8F3EE; color:var(--success); border:1px solid #BFE0D0; }
   .email-status.es-fail { background:#FBECEC; color:var(--danger); border:1px solid #ECC4C6; }
 
-  /* ── PDF capture mode (applied only while html2pdf renders the report) ── */
-  body.pdf-capturing { display:block !important; padding:0 !important; background:#FAF8F4 !important; }
-  body.pdf-capturing .wrap { max-width:none !important; width:760px !important; margin:0 !important; padding:28px 32px !important; }
-  body.pdf-capturing #s-result .action-row,
-  body.pdf-capturing #s-result #email-status { display:none !important; }
-  /* fixed sizes so vw-based clamps don't blow up / overflow during capture */
-  body.pdf-capturing .result-arch { font-size:34px !important; }
-  body.pdf-capturing .val-amount { font-size:46px !important; }
-
   /* ── buttons ── */
   .btn {
     display:inline-flex; align-items:center; gap:10px;
@@ -1805,22 +1796,26 @@ let _submitted=false;
 async function buildPdfBase64(){
   if(_pdfBase64) return _pdfBase64;
   const target=document.getElementById('s-result');
+  const actions=document.querySelector('#s-result .action-row');
+  const banner=document.getElementById('email-status');
+  if(actions) actions.style.visibility='hidden';
+  const bannerPrev=banner?banner.style.display:'';
+  if(banner) banner.style.display='none';
   const safeName=(userName||'report').replace(/[^\w\u4e00-\u9fa5]+/g,'_');
   _pdfFilename=`SSB_${safeName}_${(lastResult?lastResult.pattern:'')}_${new Date().toISOString().slice(0,10)}.pdf`;
   const opt={
-    margin:[10,10,12,10],
+    margin:[8,8,8,8],
     filename:_pdfFilename,
-    image:{type:'jpeg',quality:0.92},
-    html2canvas:{scale:2,backgroundColor:'#FAF8F4',useCORS:true,windowWidth:760,scrollX:0,scrollY:0},
+    image:{type:'jpeg',quality:0.9},
+    html2canvas:{scale:1.5,backgroundColor:'#FAF8F4',useCORS:true},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['css','legacy'],avoid:['.val-card','.move-box','.dim-card','.hex-section','.section-head']}
+    pagebreak:{mode:['css','legacy']}
   };
-  document.body.classList.add('pdf-capturing');
   try{
     const dataUri=await html2pdf().set(opt).from(target).outputPdf('datauristring');
     _pdfBase64=dataUri.split(',')[1];
   }catch(e){ console.error('PDF build failed',e); _pdfBase64=null; }
-  finally{ document.body.classList.remove('pdf-capturing'); }
+  finally{ if(actions) actions.style.visibility=''; if(banner) banner.style.display=bannerPrev; }
   return _pdfBase64;
 }
 
