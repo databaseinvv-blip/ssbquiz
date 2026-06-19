@@ -187,7 +187,6 @@ function buildEmail(s) {
   const pattern = s.pattern || '';
   const val = s.estimatedValuation != null
     ? 'RM ' + Number(s.estimatedValuation).toLocaleString('en-US') : '—';
-  const pe = s.estimatedPE != null ? Number(s.estimatedPE).toFixed(1) + '×' : '—';
   const subject = `你的 SSB 资本准备度报告 / Your SSB Capital Readiness Report`;
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#14152E;line-height:1.6">
@@ -207,11 +206,6 @@ function buildEmail(s) {
       <tr>
         <td style="padding:12px 14px;background:#F2EFE8;border-radius:8px 0 0 8px;font-size:13px;color:#8A8576">资本估值 / Est. Valuation</td>
         <td style="padding:12px 14px;background:#F2EFE8;border-radius:0 8px 8px 0;font-weight:700;text-align:right">${val}</td>
-      </tr>
-      <tr><td style="height:8px"></td><td></td></tr>
-      <tr>
-        <td style="padding:12px 14px;background:#F2EFE8;border-radius:8px 0 0 8px;font-size:13px;color:#8A8576">估值倍数 / PE Multiple</td>
-        <td style="padding:12px 14px;background:#F2EFE8;border-radius:0 8px 8px 0;font-weight:700;text-align:right">${pe}</td>
       </tr>
     </table>
     <p style="font-size:12px;color:#8A8576;margin:18px 0 0">
