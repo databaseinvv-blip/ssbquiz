@@ -1421,7 +1421,7 @@ BANKS.logistics=[
    SSB Capital Readiness Test — engine
    ════════════════════════════════════════════════════════ */
 
-let pool=[], cur=0, ans=[], userName='', userPhone='', userEmail='', userPAT=null, selectedIndustry=null, lastResult=null, lastAnswers=[];
+let pool=[], cur=0, ans=[], userName='', userPhone='', userEmail='', userPAT=null, selectedIndustry=null, lastResult=null, lastAnswers=[], lastPScores=null;
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -1624,6 +1624,7 @@ function showResults(){
   document.getElementById('r-val-note').innerHTML='以你提供的下一财年预计净利估算。<br><span>Based on your projected next-FY profit after tax. Indicative only — actual transaction value depends on industry, deal structure, audited financials, and buyer type.</span>';
 
   showScreen('s-result');
+  lastPScores=pScores;
   setTimeout(()=>renderTriangle(pScores),80);
   renderDims3(pScores);
 
@@ -1822,12 +1823,20 @@ async function buildPdfBase64(){
   if(actions) actions.style.display='none';
   if(banner) banner.style.display='none';
 
+  // The result screen fades in (opacity 0->1 + translateY over 0.4s) and the
+  // email PDF is built immediately — freeze it to the settled state, else the
+  // capture is washed-out, shifted, and spills onto a 2nd page.
+  const animPrev=target.style.animation, opacPrev=target.style.opacity, tfPrev=target.style.transform;
+  target.style.animation='none'; target.style.opacity='1'; target.style.transform='none';
+
   // html2canvas often drops live <canvas> pixels \u2192 swap the spider chart for a
   // static PNG snapshot during capture so it appears in the emailed PDF.
   const chart=document.getElementById('hexC');
   let chartImg=null;
   if(chart){
     try{
+      // ensure the chart is actually drawn — the 80ms render timer may not have fired yet
+      if(typeof renderTriangle==='function' && lastPScores) renderTriangle(lastPScores);
       chartImg=document.createElement('img');
       chartImg.src=chart.toDataURL('image/png');
       chartImg.width=chart.width; chartImg.height=chart.height;
@@ -1847,7 +1856,7 @@ async function buildPdfBase64(){
     filename:_pdfFilename,
     image:{type:'jpeg',quality:0.95}, // JPEG at high quality: sharp but small enough for the 8MB upload limit
     html2canvas:{scale:2,backgroundColor:'#FAF8F4',useCORS:true},
-    jsPDF:{unit:'px',format:[w+2*M, h+2*M+4],orientation:'portrait'},
+    jsPDF:{unit:'px',format:[w+2*M, h+2*M+30],orientation:'portrait'},
     pagebreak:{mode:[]}
   };
   try{
@@ -1857,6 +1866,7 @@ async function buildPdfBase64(){
   finally{
     if(actions) actions.style.display=actPrev;
     if(banner) banner.style.display=banPrev;
+    target.style.animation=animPrev; target.style.opacity=opacPrev; target.style.transform=tfPrev;
     if(chartImg){ chartImg.remove(); chart.style.display=''; }
   }
   return _pdfBase64;
