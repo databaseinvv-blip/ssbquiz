@@ -1606,9 +1606,17 @@ function showResults(){
   const info=PATTERNS[pat]||PATTERNS['LLL'];
   const ind=INDUSTRIES.find(i=>i.id===selectedIndustry);
 
-  // ── weighted total → PE (1..15) → valuation ──
+  // ── weighted total → PE (tiered 1..15) → valuation ──
   const weighted=pScores[0]*PILLAR_WEIGHTS[0]+pScores[1]*PILLAR_WEIGHTS[1]+pScores[2]*PILLAR_WEIGHTS[2]; // 0..100
-  const PE=1+(weighted/100)*14;            // 1..15
+  // Tiered PE: only a high overall score unlocks a high PE band.
+  //   score ≥ 80 → PE 10–15
+  //   score ≥ 50 → PE 5–10
+  //   score < 50 → PE 1–5
+  // (linear within each band, continuous at the 50 / 80 boundaries)
+  let PE;
+  if(weighted>=80)      PE = 10 + (weighted-80)/20*5;   //  80→10 … 100→15
+  else if(weighted>=50) PE = 5  + (weighted-50)/30*5;   //  50→5  …  80→10
+  else                  PE = 1  + weighted/50*4;        //   0→1  …  50→5
   const valuation=Math.round(userPAT*PE);
 
   document.getElementById('r-greeting').textContent=userName+'，这是你的 SSB 资本准备度报告 / '+userName+', here is your SSB Capital Readiness Report';
